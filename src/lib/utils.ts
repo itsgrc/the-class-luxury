@@ -13,6 +13,18 @@ export function formatPrice(price: number, currency = '€'): string {
   return `${currency}${price.toLocaleString('it-IT')}`
 }
 
-export function slugify(str: string): string {
-  return str.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
+export function addRipple(e: React.MouseEvent<HTMLElement>) {
+  const btn = e.currentTarget
+  const circle = document.createElement('span')
+  const diameter = Math.max(btn.clientWidth, btn.clientHeight)
+  const radius = diameter / 2
+  const rect = btn.getBoundingClientRect()
+  circle.style.cssText = `
+    width:${diameter}px;height:${diameter}px;
+    left:${e.clientX - rect.left - radius}px;
+    top:${e.clientY - rect.top - radius}px;
+  `
+  circle.classList.add('ripple')
+  btn.querySelector('.ripple')?.remove()
+  btn.appendChild(circle)
 }

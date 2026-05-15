@@ -14,13 +14,9 @@
   --font-family-mono: 'DM Mono', ui-monospace, monospace;
 }
 
-*, *::before, *::after {
-  box-sizing: border-box;
-}
+*, *::before, *::after { box-sizing: border-box; }
 
-html {
-  scroll-behavior: auto;
-}
+html { scroll-behavior: auto; }
 
 body {
   margin: 0;
@@ -36,53 +32,29 @@ body {
   overflow-x: hidden;
 }
 
-#root {
-  min-height: 100vh;
-}
+#root { min-height: 100vh; }
 
-/* Custom scrollbar */
-::-webkit-scrollbar {
-  width: 6px;
-}
-::-webkit-scrollbar-track {
-  background: #FDF9F2;
-}
-::-webkit-scrollbar-thumb {
-  background: rgba(197, 160, 89, 0.4);
-  border-radius: 3px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(197, 160, 89, 0.7);
-}
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: #FDF9F2; }
+::-webkit-scrollbar-thumb { background: rgba(197,160,89,0.35); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(197,160,89,0.65); }
 
-/* Glassmorphism utility */
+/* ── GLASSMORPHISM ── */
 .glass {
   background: rgba(253, 249, 242, 0.75);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border: 0.5px solid rgba(197, 160, 89, 0.3);
 }
-
-/* Gold underline animation */
-.gold-underline {
-  position: relative;
-  display: inline-block;
-}
-.gold-underline::after {
-  content: '';
-  position: absolute;
-  bottom: -2px;
-  left: 0;
-  width: 0;
-  height: 1px;
-  background: #C5A059;
-  transition: width 0.3s ease-out;
-}
-.gold-underline:hover::after {
-  width: 100%;
+.glass-dark {
+  background: rgba(28, 28, 28, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 0.5px solid rgba(197, 160, 89, 0.2);
 }
 
-/* Card shine effect */
+/* ── CARD SHINE (diagonal sweep on hover) ── */
 .card-shine {
   position: relative;
   overflow: hidden;
@@ -90,111 +62,127 @@ body {
 .card-shine::before {
   content: '';
   position: absolute;
-  top: -50%;
-  left: -75%;
-  width: 50%;
-  height: 200%;
+  top: 0; left: -100%;
+  width: 60%; height: 100%;
   background: linear-gradient(
-    to right,
-    rgba(255, 255, 255, 0) 0%,
-    rgba(255, 255, 255, 0.15) 50%,
-    rgba(255, 255, 255, 0) 100%
+    105deg,
+    transparent 40%,
+    rgba(255,255,255,0.18) 50%,
+    transparent 60%
   );
-  transform: skewX(-25deg);
-  transition: left 0.6s ease;
+  transition: left 0.55s ease;
   pointer-events: none;
   z-index: 10;
 }
-.card-shine:hover::before {
-  left: 125%;
-}
+.card-shine:hover::before { left: 140%; }
 
-/* Golden loader */
-@keyframes goldSpin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-@keyframes goldPulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
-}
-.gold-loader {
-  width: 48px;
-  height: 48px;
-  border: 2px solid rgba(197, 160, 89, 0.2);
-  border-top-color: #C5A059;
-  border-radius: 50%;
-  animation: goldSpin 1s linear infinite;
-}
-
-/* Heart explosion animation */
-@keyframes heartPop {
-  0% { transform: scale(1); }
-  30% { transform: scale(1.4); }
-  60% { transform: scale(0.9); }
-  100% { transform: scale(1); }
-}
-.heart-pop {
-  animation: heartPop 0.4s ease-out;
-}
-
-/* Noise texture overlay */
-.noise-bg {
+/* ── GOLD UNDERLINE LINK ── */
+.gold-underline {
   position: relative;
+  display: inline-block;
 }
-.noise-bg::after {
+.gold-underline::after {
   content: '';
   position: absolute;
-  inset: 0;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
-  pointer-events: none;
-  z-index: 0;
+  bottom: -1px; left: 0;
+  width: 0; height: 1px;
+  background: #C5A059;
+  transition: width 0.3s ease-out;
+}
+.gold-underline:hover::after { width: 100%; }
+
+/* ── HEART EXPLOSION ── */
+@keyframes heartPop {
+  0%   { transform: scale(1); }
+  30%  { transform: scale(1.4); }
+  65%  { transform: scale(0.88); }
+  100% { transform: scale(1); }
+}
+.heart-pop { animation: heartPop 0.42s cubic-bezier(0.36,0.07,0.19,0.97); }
+
+/* ── GOLD LOADER RING ── */
+@keyframes goldSpin {
+  to { transform: rotate(360deg); }
+}
+.gold-loader {
+  width: 44px; height: 44px;
+  border: 2px solid rgba(197,160,89,0.2);
+  border-top-color: #C5A059;
+  border-radius: 50%;
+  animation: goldSpin 0.9s linear infinite;
 }
 
-/* Gradient text */
+/* ── GRADIENT TEXT ── */
 .gold-gradient-text {
-  background: linear-gradient(135deg, #C5A059 0%, #E8C87A 50%, #C5A059 100%);
+  background: linear-gradient(135deg, #b8924a 0%, #d4aa5a 45%, #C5A059 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
-/* Smooth reveal */
+/* ── NOISE TEXTURE ── */
+.noise-bg { position: relative; }
+.noise-bg::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* ── IMAGE OVERLAY ── */
+.img-overlay {
+  background: linear-gradient(to top, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.08) 45%, transparent 100%);
+}
+
+/* ── RIPPLE BUTTON ── */
+.btn-ripple {
+  position: relative;
+  overflow: hidden;
+}
+.btn-ripple .ripple {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.35);
+  transform: scale(0);
+  animation: rippleAnim 0.55s linear;
+  pointer-events: none;
+}
+@keyframes rippleAnim {
+  to { transform: scale(4); opacity: 0; }
+}
+
+/* ── TOOLTIP ── */
+.tooltip-glass {
+  background: rgba(253,249,242,0.95);
+  backdrop-filter: blur(8px);
+  border: 0.5px solid rgba(197,160,89,0.3);
+  box-shadow: 0 8px 32px rgba(28,28,28,0.1);
+  animation: tooltipUp 0.2s 0.3s ease-out both;
+}
+@keyframes tooltipUp {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── SCROLL REVEAL (set by GSAP) ── */
 .reveal {
   opacity: 0;
-  transform: translateY(30px);
+  transform: translateY(36px);
 }
 
-/* Image overlay gradient */
-.img-overlay {
-  background: linear-gradient(
-    to top,
-    rgba(0,0,0,0.5) 0%,
-    rgba(0,0,0,0.1) 40%,
-    transparent 100%
-  );
+/* ── CALENDAR OVERRIDES ── */
+.rdp-root {
+  --rdp-accent-color: #C5A059 !important;
+  --rdp-accent-background-color: rgba(197,160,89,0.1) !important;
+  --rdp-day-height: 36px;
+  --rdp-day-width: 36px;
+  font-family: 'Inter', sans-serif;
+  font-weight: 300;
+  font-size: 13px;
 }
-
-/* Tooltip */
-.tooltip-glass {
-  background: rgba(253, 249, 242, 0.95);
-  backdrop-filter: blur(8px);
-  border: 0.5px solid rgba(197, 160, 89, 0.3);
-  box-shadow: 0 8px 32px rgba(28, 28, 28, 0.1);
-}
-
-/* Step indicator */
-.step-active {
-  background: #C5A059;
-  color: #FDF9F2;
-}
-.step-inactive {
-  background: transparent;
-  border: 1px solid rgba(197, 160, 89, 0.4);
-  color: #5A4F44;
-}
-.step-done {
-  background: rgba(197, 160, 89, 0.15);
-  border: 1px solid #C5A059;
-  color: #C5A059;
+.rdp-selected .rdp-day_button {
+  background: #C5A059 !important;
+  color: white !important;
 }

@@ -5,13 +5,13 @@ export interface ConciergeRequest {
   id: string
   prompt: string
   timestamp: number
-  status: 'in-attesa' | 'gestita'
+  status: 'pending' | 'handled'
 }
 
 export function useConcierge() {
   const [requests, setRequests] = useState<ConciergeRequest[]>(() => {
     try {
-      const stored = localStorage.getItem('tc_concierge')
+      const stored = localStorage.getItem('theclass_concierge')
       return stored ? JSON.parse(stored) : []
     } catch {
       return []
@@ -19,17 +19,12 @@ export function useConcierge() {
   })
 
   useEffect(() => {
-    localStorage.setItem('tc_concierge', JSON.stringify(requests))
+    localStorage.setItem('theclass_concierge', JSON.stringify(requests))
   }, [requests])
 
   const addRequest = useCallback((prompt: string): string => {
     const id = generateId()
-    const request: ConciergeRequest = {
-      id,
-      prompt,
-      timestamp: Date.now(),
-      status: 'in-attesa',
-    }
+    const request: ConciergeRequest = { id, prompt, timestamp: Date.now(), status: 'pending' }
     setRequests(prev => [request, ...prev])
     return id
   }, [])
