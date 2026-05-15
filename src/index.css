@@ -1,0 +1,200 @@
+@import "tailwindcss";
+
+@theme {
+  --color-ivory: #FDF9F2;
+  --color-ivory-card: #FCFAF5;
+  --color-velvet: #1C1C1C;
+  --color-taupe: #5A4F44;
+  --color-gold: #C5A059;
+  --color-gold-light: rgba(197, 160, 89, 0.3);
+
+  --font-family-display: 'Playfair Display', Georgia, serif;
+  --font-family-serif: 'Cormorant Garamond', Georgia, serif;
+  --font-family-sans: 'Inter', system-ui, sans-serif;
+  --font-family-mono: 'DM Mono', ui-monospace, monospace;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: auto;
+}
+
+body {
+  margin: 0;
+  background-color: #FDF9F2;
+  color: #1C1C1C;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-weight: 300;
+  font-size: 16px;
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  overflow-x: hidden;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #FDF9F2;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(197, 160, 89, 0.4);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(197, 160, 89, 0.7);
+}
+
+/* Glassmorphism utility */
+.glass {
+  background: rgba(253, 249, 242, 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 0.5px solid rgba(197, 160, 89, 0.3);
+}
+
+/* Gold underline animation */
+.gold-underline {
+  position: relative;
+  display: inline-block;
+}
+.gold-underline::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 1px;
+  background: #C5A059;
+  transition: width 0.3s ease-out;
+}
+.gold-underline:hover::after {
+  width: 100%;
+}
+
+/* Card shine effect */
+.card-shine {
+  position: relative;
+  overflow: hidden;
+}
+.card-shine::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -75%;
+  width: 50%;
+  height: 200%;
+  background: linear-gradient(
+    to right,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.15) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  transform: skewX(-25deg);
+  transition: left 0.6s ease;
+  pointer-events: none;
+  z-index: 10;
+}
+.card-shine:hover::before {
+  left: 125%;
+}
+
+/* Golden loader */
+@keyframes goldSpin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+@keyframes goldPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+.gold-loader {
+  width: 48px;
+  height: 48px;
+  border: 2px solid rgba(197, 160, 89, 0.2);
+  border-top-color: #C5A059;
+  border-radius: 50%;
+  animation: goldSpin 1s linear infinite;
+}
+
+/* Heart explosion animation */
+@keyframes heartPop {
+  0% { transform: scale(1); }
+  30% { transform: scale(1.4); }
+  60% { transform: scale(0.9); }
+  100% { transform: scale(1); }
+}
+.heart-pop {
+  animation: heartPop 0.4s ease-out;
+}
+
+/* Noise texture overlay */
+.noise-bg {
+  position: relative;
+}
+.noise-bg::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Gradient text */
+.gold-gradient-text {
+  background: linear-gradient(135deg, #C5A059 0%, #E8C87A 50%, #C5A059 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Smooth reveal */
+.reveal {
+  opacity: 0;
+  transform: translateY(30px);
+}
+
+/* Image overlay gradient */
+.img-overlay {
+  background: linear-gradient(
+    to top,
+    rgba(0,0,0,0.5) 0%,
+    rgba(0,0,0,0.1) 40%,
+    transparent 100%
+  );
+}
+
+/* Tooltip */
+.tooltip-glass {
+  background: rgba(253, 249, 242, 0.95);
+  backdrop-filter: blur(8px);
+  border: 0.5px solid rgba(197, 160, 89, 0.3);
+  box-shadow: 0 8px 32px rgba(28, 28, 28, 0.1);
+}
+
+/* Step indicator */
+.step-active {
+  background: #C5A059;
+  color: #FDF9F2;
+}
+.step-inactive {
+  background: transparent;
+  border: 1px solid rgba(197, 160, 89, 0.4);
+  color: #5A4F44;
+}
+.step-done {
+  background: rgba(197, 160, 89, 0.15);
+  border: 1px solid #C5A059;
+  color: #C5A059;
+}
