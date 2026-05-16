@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { Link, useNavigate } from '@tanstack/react-router'
-import { motion, useInView } from 'framer-motion'
+import { motion, useInView, useScroll, useTransform } from 'framer-motion'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { toast } from 'sonner'
@@ -14,10 +14,10 @@ gsap.registerPlugin(ScrollTrigger)
 const HERO_VIDEO = 'https://player.vimeo.com/external/371433846.sd.mp4'
 
 const SERVICES = [
-  { icon: Anchor, title: 'Yacht', desc: 'Da 18 a 60 metri. Motoryacht, velieri d\'epoca, catamarani.', href: '/servizi?cats=yacht', img: 'https://images.unsplash.com/photo-1567899378494-47b22a2ae96a?w=700&q=80' },
-  { icon: Plane, title: 'Jet Privati', desc: 'Light jet, heavy jet, VVIP airliner. Partenza in 2 ore.', href: '/servizi?cats=jet', img: 'https://images.unsplash.com/photo-1540962351504-03099e0a754b?w=700&q=80' },
-  { icon: Car, title: 'Auto di Lusso', desc: 'Ferrari, Rolls-Royce, Bentley. Con o senza autista.', href: '/servizi?cats=auto', img: 'https://images.unsplash.com/photo-1592198084033-aade902d1aae?w=700&q=80' },
-  { icon: Sparkles, title: 'Esperienze', desc: 'Fine dining, aste d\'arte, wellness esclusivo.', href: '/servizi?cats=esperienza', img: 'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=700&q=80' },
+  { icon: Anchor, title: 'Yacht', desc: 'Da 18 a 60 metri. Motoryacht, velieri d\'epoca, catamarani.', href: '/servizi?cats=yacht', img: 'https://images.unsplash.com/photo-1567899378494-47b22a2ae96a?w=700&q=80&fm=webp' },
+  { icon: Plane, title: 'Jet Privati', desc: 'Light jet, heavy jet, VVIP airliner. Partenza in 2 ore.', href: '/servizi?cats=jet', img: 'https://images.unsplash.com/photo-1540962351504-03099e0a754b?w=700&q=80&fm=webp' },
+  { icon: Car, title: 'Auto di Lusso', desc: 'Ferrari, Rolls-Royce, Bentley. Con o senza autista.', href: '/servizi?cats=auto', img: 'https://images.unsplash.com/photo-1592198084033-aade902d1aae?w=700&q=80&fm=webp' },
+  { icon: Sparkles, title: 'Esperienze', desc: 'Fine dining, aste d\'arte, wellness esclusivo.', href: '/servizi?cats=esperienza', img: 'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=700&q=80&fm=webp' },
 ]
 
 const WHY = [
@@ -94,6 +94,8 @@ function MagneticButton({ children, className, onClick }: {
 export function HomePage() {
   const navigate = useNavigate()
   const [prompt, setPrompt] = useState('')
+  const { scrollY } = useScroll()
+  const heroY = useTransform(scrollY, [0, 600], [0, 180])
 
   const yachtCount = listings.filter(l => l.category === 'yacht').length
   const jetCount = listings.filter(l => l.category === 'jet').length
@@ -143,13 +145,15 @@ export function HomePage() {
     <div>
       {/* ══ HERO ══ */}
       <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
-        {/* Video background */}
-        <video
-          className="absolute inset-0 w-full h-full object-cover"
-          src={HERO_VIDEO}
-          autoPlay muted loop playsInline
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-[#1C1C1C]/70 via-[#1C1C1C]/40 to-[#FDF9F2]" />
+        {/* Video background with parallax */}
+        <motion.div style={{ y: heroY }} className="absolute inset-0 w-full h-full">
+          <video
+            className="absolute inset-0 w-full h-full object-cover"
+            src={HERO_VIDEO}
+            autoPlay muted loop playsInline
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-[#1C1C1C]/70 via-[#1C1C1C]/40 to-[#FDF9F2]" />
+        </motion.div>
 
         <div className="relative z-10 text-center px-6 max-w-4xl mx-auto pt-16">
           <motion.p

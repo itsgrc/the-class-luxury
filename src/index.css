@@ -38,6 +38,19 @@ body {
 
 #root { min-height: 100vh; }
 
+/* ── SCROLL PROGRESS BAR ── */
+.scroll-progress-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #C5A059, #e8c97a, #C5A059);
+  z-index: 9999;
+  transform-origin: left;
+  box-shadow: 0 0 8px rgba(197, 160, 89, 0.6), 0 0 20px rgba(197, 160, 89, 0.3);
+  transition: none;
+}
+
 /* ── SCROLLBAR ── */
 ::-webkit-scrollbar { width: 5px; }
 ::-webkit-scrollbar-track { background: #FDF9F2; }

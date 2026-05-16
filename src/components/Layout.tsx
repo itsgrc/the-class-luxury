@@ -7,6 +7,8 @@ import { cn } from '@/lib/utils'
 import { SkipToMain } from './SkipToMain'
 import { OfflineBanner } from './OfflineBanner'
 import { useLang } from '@/context/LangContext'
+import { ScrollProgressBar } from './ScrollProgressBar'
+import { BackToTop } from './BackToTop'
 
 const NAV = [
   { to: '/servizi', label: 'Servizi' },
@@ -34,6 +36,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen flex flex-col">
       <SkipToMain />
+      <ScrollProgressBar />
       {/* ── HEADER ── */}
       <header
         className={cn(
@@ -217,6 +220,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           </div>
         </div>
       </footer>
+      <BackToTop />
     </div>
   )
 }
