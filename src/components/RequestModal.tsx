@@ -77,7 +77,7 @@ export function RequestModal({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 16, scale: 0.98 }}
             transition={{ duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
-            className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-full max-w-xl max-h-[90vh] overflow-y-auto bg-[#FDF9F2] rounded-2xl border border-[rgba(197,160,89,0.3)] shadow-2xl"
+            className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-full max-w-xl max-h-[90vh] overflow-y-auto bg-[#FDF9F2] rounded-2xl border border-[rgba(197,160,89,0.3)] shadow-[0_24px_64px_rgba(26,24,22,0.14)]"
           >
             {/* Header */}
             <div className="sticky top-0 bg-[#FDF9F2] border-b border-[rgba(197,160,89,0.2)] px-7 py-5 flex items-start justify-between">

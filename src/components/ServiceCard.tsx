@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect } from 'react'
+import { useState, useRef, useCallback } from 'react'
 import { Link } from '@tanstack/react-router'
 import { motion } from 'framer-motion'
 import { Heart, Star, MapPin } from 'lucide-react'
@@ -12,21 +12,45 @@ interface ServiceCardProps {
   delay?: number
 }
 
+// MODIFICATO: particelle oro al click del cuore
+function spawnParticles(btn: HTMLElement) {
+  const rect = btn.getBoundingClientRect()
+  const cx = btn.offsetLeft + btn.offsetWidth / 2
+  const cy = btn.offsetTop + btn.offsetHeight / 2
+  for (let i = 0; i < 6; i++) {
+    const p = document.createElement('span')
+    p.classList.add('gold-particle')
+    const angle = (i / 6) * Math.PI * 2
+    const dist = 16 + Math.random() * 10
+    p.style.setProperty('--tx', `${Math.cos(angle) * dist}px`)
+    p.style.setProperty('--ty', `${Math.sin(angle) * dist}px`)
+    p.style.left = `${cx}px`
+    p.style.top = `${cy}px`
+    btn.parentElement?.appendChild(p)
+    setTimeout(() => p.remove(), 550)
+  }
+  void rect // avoid unused warning
+}
+
 export function ServiceCard({ listing, delay = 0 }: ServiceCardProps) {
   const { toggle, isFavorite } = useFavorites()
   const [heartAnim, setHeartAnim] = useState(false)
   const cardRef = useRef<HTMLDivElement>(null)
+  const heartRef = useRef<HTMLButtonElement>(null)
   const fav = isFavorite(listing.id)
 
-  // Magnetic effect on the card border glow
+  // Magnetic mousemove: max 4px translate
   const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     const card = cardRef.current
     if (!card) return
     const rect = card.getBoundingClientRect()
-    const x = ((e.clientX - rect.left) / rect.width) * 100
-    const y = ((e.clientY - rect.top) / rect.height) * 100
-    card.style.setProperty('--mouse-x', `${x}%`)
-    card.style.setProperty('--mouse-y', `${y}%`)
+    const dx = ((e.clientX - rect.left) / rect.width - 0.5) * 4
+    const dy = ((e.clientY - rect.top) / rect.height - 0.5) * 4
+    card.style.transform = `translate(${dx}px, ${dy}px)`
+  }, [])
+
+  const handleMouseLeave = useCallback(() => {
+    if (cardRef.current) cardRef.current.style.transform = ''
   }, [])
 
   const handleHeart = useCallback((e: React.MouseEvent) => {
@@ -34,6 +58,7 @@ export function ServiceCard({ listing, delay = 0 }: ServiceCardProps) {
     e.stopPropagation()
     toggle(listing.id)
     setHeartAnim(true)
+    if (heartRef.current) spawnParticles(heartRef.current)
     setTimeout(() => setHeartAnim(false), 500)
   }, [toggle, listing.id])
 
@@ -48,7 +73,9 @@ export function ServiceCard({ listing, delay = 0 }: ServiceCardProps) {
         <div
           ref={cardRef}
           onMouseMove={handleMouseMove}
-          className="group relative bg-[#FCFAF5] rounded-2xl overflow-hidden border border-[rgba(197,160,89,0.15)] shadow-sm transition-all duration-400 hover:border-[rgba(197,160,89,0.55)] hover:shadow-[0_12px_48px_rgba(197,160,89,0.13)] card-shine cursor-pointer"
+          onMouseLeave={handleMouseLeave}
+          style={{ transition: 'transform 0.3s cubic-bezier(0.2,0.9,0.4,1.1), box-shadow 0.5s cubic-bezier(0.25,0.46,0.45,0.94)' }}
+          className="group relative bg-[#FCFAF5] rounded-2xl overflow-hidden border border-[rgba(197,160,89,0.15)] shadow-[0_2px_8px_rgba(26,24,22,0.06)] hover:border-[rgba(197,160,89,0.55)] hover:shadow-[0_12px_32px_rgba(197,160,89,0.14)] card-shine cursor-pointer"
         >
           {/* Image */}
           <div className="relative h-56 overflow-hidden">
@@ -72,8 +99,9 @@ export function ServiceCard({ listing, delay = 0 }: ServiceCardProps) {
               )}
             </div>
 
-            {/* Heart */}
+            {/* Heart – MODIFICATO: ref per particelle oro */}
             <button
+              ref={heartRef}
               onClick={handleHeart}
               className="absolute top-3 right-3 z-10 w-8 h-8 rounded-full glass flex items-center justify-center hover:scale-110 transition-transform duration-200"
             >

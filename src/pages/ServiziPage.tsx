@@ -32,7 +32,7 @@ function MapModal({ open, onClose, count }: { open: boolean; onClose: () => void
       <motion.div
         initial={{ scale: 0.92, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.92, opacity: 0 }}
         onClick={e => e.stopPropagation()}
-        className="bg-[#FDF9F2] rounded-2xl border border-[rgba(197,160,89,0.3)] shadow-2xl max-w-lg w-full overflow-hidden"
+        className="bg-[#FDF9F2] rounded-2xl border border-[rgba(197,160,89,0.3)] shadow-[0_24px_64px_rgba(26,24,22,0.13)] max-w-lg w-full overflow-hidden"
       >
         <div className="px-6 py-4 border-b border-[rgba(197,160,89,0.2)] flex items-center justify-between">
           <h3 className="font-[family-name:var(--font-family-display)] text-lg font-medium text-[#1C1C1C]">

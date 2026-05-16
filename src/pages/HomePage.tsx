@@ -101,13 +101,14 @@ export function HomePage() {
 
   useEffect(() => {
     const ctx = gsap.context(() => {
+      // MODIFICATO: y 15px (spec), easing seta, soglia 85%
       gsap.utils.toArray<HTMLElement>('.reveal').forEach(el => {
         gsap.fromTo(el,
-          { opacity: 0, y: 40 },
+          { opacity: 0, y: 15 },
           {
             opacity: 1, y: 0,
-            duration: 0.9,
-            ease: 'power3.out',
+            duration: 0.75,
+            ease: 'power2.out',
             scrollTrigger: { trigger: el, start: 'top 85%', once: true },
           },
         )
