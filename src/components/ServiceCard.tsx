@@ -5,11 +5,13 @@ import { Heart, Star, MapPin } from 'lucide-react'
 import type { Listing } from '@/data/listings'
 import { getCategoryLabel } from '@/data/listings'
 import { useFavorites } from '@/hooks/useFavorites'
-import { formatPrice, cn } from '@/lib/utils'
+import { formatPrice, cn, getABVariant } from '@/lib/utils'
 
 interface ServiceCardProps {
   listing: Listing
   delay?: number
+  compareSelected?: boolean
+  onCompareToggle?: () => void
 }
 
 // MODIFICATO: particelle oro al click del cuore
@@ -32,12 +34,13 @@ function spawnParticles(btn: HTMLElement) {
   void rect // avoid unused warning
 }
 
-function ServiceCardInner({ listing, delay = 0 }: ServiceCardProps) {
+function ServiceCardInner({ listing, delay = 0, compareSelected, onCompareToggle }: ServiceCardProps) {
   const { toggle, isFavorite } = useFavorites()
   const [heartAnim, setHeartAnim] = useState(false)
   const cardRef = useRef<HTMLDivElement>(null)
   const heartRef = useRef<HTMLButtonElement>(null)
   const fav = isFavorite(listing.id)
+  const variant = getABVariant()
 
   // Magnetic mousemove: max 4px translate
   const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
@@ -88,13 +91,25 @@ function ServiceCardInner({ listing, delay = 0 }: ServiceCardProps) {
             <div className="absolute inset-0 img-overlay" />
 
             {/* Badges */}
-            <div className="absolute top-3 left-3 flex gap-2 z-10">
-              <span className="glass text-[11px] font-medium px-2.5 py-1 rounded-full text-[#1C1C1C]">
-                {getCategoryLabel(listing.category)}
-              </span>
-              {listing.trending && (
-                <span className="bg-[#C5A059] text-white text-[9px] font-semibold px-2.5 py-1 rounded-full uppercase tracking-widest">
-                  Trending
+            <div className="absolute top-3 left-3 flex flex-col gap-1.5 z-10">
+              <div className="flex gap-2">
+                <span className="glass text-[11px] font-medium px-2.5 py-1 rounded-full text-[#1C1C1C]">
+                  {getCategoryLabel(listing.category)}
+                </span>
+                {listing.trending && (
+                  <span className="bg-[#C5A059] text-white text-[9px] font-semibold px-2.5 py-1 rounded-full uppercase tracking-widest">
+                    Trending
+                  </span>
+                )}
+              </div>
+              {listing.lastMinute && (
+                <span className="bg-red-500 text-white text-[9px] font-semibold px-2 py-0.5 rounded-full uppercase tracking-wider w-fit">
+                  Last Minute −20%
+                </span>
+              )}
+              {listing.classApproved && (
+                <span className="bg-[#1C1C1C] text-[#C5A059] text-[8px] font-semibold px-2 py-0.5 rounded-full uppercase tracking-[0.12em] flex items-center gap-1 w-fit">
+                  ✦ The Class Approved
                 </span>
               )}
             </div>
@@ -142,6 +157,31 @@ function ServiceCardInner({ listing, delay = 0 }: ServiceCardProps) {
                 <span className="text-[11px] text-[#5A4F44]">({listing.reviews})</span>
               </div>
             </div>
+
+            {listing.qualityScore !== undefined && (
+              <div className="mt-2 flex items-center gap-1.5">
+                <div className="flex-1 h-1 bg-[rgba(197,160,89,0.15)] rounded-full overflow-hidden">
+                  <div className="h-full bg-[#C5A059] rounded-full" style={{ width: `${listing.qualityScore}%` }} />
+                </div>
+                <span className="font-[family-name:var(--font-family-mono)] text-[10px] text-[#5A4F44]">
+                  {listing.qualityScore}/100
+                </span>
+              </div>
+            )}
+
+            {onCompareToggle && (
+              <button
+                onClick={e => { e.preventDefault(); e.stopPropagation(); onCompareToggle() }}
+                className={cn(
+                  'mt-2 w-full py-1.5 rounded-xl text-[11px] font-medium transition-colors border',
+                  compareSelected
+                    ? `${variant === 'B' ? 'bg-[rgba(138,154,170,0.15)] border-[#8A9AAA] text-[#8A9AAA]' : 'bg-[rgba(197,160,89,0.15)] border-[#C5A059] text-[#C5A059]'}`
+                    : `bg-transparent border-[rgba(197,160,89,0.2)] text-[#5A4F44] hover:border-[#C5A059] hover:text-[#C5A059]`,
+                )}
+              >
+                {compareSelected ? '✓ Selezionato' : '+ Confronta'}
+              </button>
+            )}
           </div>
         </div>
       </Link>

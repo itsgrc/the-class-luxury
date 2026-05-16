@@ -6,6 +6,9 @@ import { listings, type Category, getCategoryLabel, ALL_CATEGORIES } from '@/dat
 import { ServiceCard } from '@/components/ServiceCard'
 import { cn } from '@/lib/utils'
 import * as Slider from '@radix-ui/react-slider'
+import { useComparison } from '@/hooks/useComparison'
+import { CompareBar } from '@/components/CompareBar'
+import { CompareModal } from '@/components/CompareModal'
 
 // ── Map Modal ──
 function MapModal({ open, onClose, count }: { open: boolean; onClose: () => void; count: number }) {
@@ -96,8 +99,11 @@ export function ServiziPage() {
   const [selectedCats, setSelectedCats] = useState<Category[]>([])
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 130000])
   const [location, setLocation] = useState('')
+  const [minQuality, setMinQuality] = useState(0)
   const [showMap, setShowMap] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [showCompare, setShowCompare] = useState(false)
+  const { comparing, toggle: toggleCompare, clear: clearCompare, isSelected } = useComparison()
 
   useEffect(() => {
     const t = setTimeout(() => setLoading(false), 350)
@@ -130,12 +136,14 @@ export function ServiziPage() {
   const activeFilters =
     selectedCats.length +
     (priceRange[0] > 0 || priceRange[1] < 130000 ? 1 : 0) +
-    (location ? 1 : 0)
+    (location ? 1 : 0) +
+    (minQuality > 0 ? 1 : 0)
 
   const resetFilters = () => {
     setSelectedCats([])
     setPriceRange([0, 130000])
     setLocation('')
+    setMinQuality(0)
     window.history.replaceState({}, '', window.location.pathname)
   }
 
@@ -143,8 +151,11 @@ export function ServiziPage() {
     if (selectedCats.length && !selectedCats.includes(l.category)) return false
     if (l.price < priceRange[0] || l.price > priceRange[1]) return false
     if (location && !l.location.toLowerCase().includes(location.toLowerCase())) return false
+    if (minQuality > 0 && (l.qualityScore ?? 0) < minQuality) return false
     return true
-  }), [selectedCats, priceRange, location])
+  }), [selectedCats, priceRange, location, minQuality])
+
+  const comparingListings = listings.filter(l => comparing.includes(l.id))
 
   return (
     <div className="min-h-screen bg-[#FDF9F2] pt-16">
@@ -262,6 +273,28 @@ export function ServiziPage() {
                   )}
                 </div>
               </div>
+
+              {/* Quality filter */}
+              <div className="mt-6">
+                <p className="text-[10px] text-[#5A4F44] uppercase tracking-wider mb-3">Qualità minima</p>
+                <Slider.Root
+                  value={[minQuality]}
+                  onValueChange={v => setMinQuality(v[0])}
+                  min={0} max={100} step={5}
+                  className="relative flex items-center select-none touch-none w-full h-5 mb-2"
+                >
+                  <Slider.Track className="bg-[rgba(197,160,89,0.18)] relative grow rounded-full h-[2px]">
+                    <Slider.Range className="absolute bg-[#C5A059] rounded-full h-full" />
+                  </Slider.Track>
+                  <Slider.Thumb className="block w-4 h-4 bg-white border-2 border-[#C5A059] rounded-full focus:outline-none hover:scale-110 transition-transform cursor-pointer shadow-sm" />
+                </Slider.Root>
+                <div className="flex justify-between">
+                  <span className="font-[family-name:var(--font-family-mono)] text-[11px] text-[#5A4F44]">
+                    {minQuality > 0 ? `≥ ${minQuality}` : 'Tutti'}
+                  </span>
+                  <span className="font-[family-name:var(--font-family-mono)] text-[11px] text-[#5A4F44]">100</span>
+                </div>
+              </div>
             </div>
           </aside>
 
@@ -300,7 +333,15 @@ export function ServiziPage() {
                       </button>
                     </div>
                   ) : (
-                    filtered.map((l, i) => <ServiceCard key={l.id} listing={l} delay={i * 0.04} />)
+                    filtered.map((l, i) => (
+                      <ServiceCard
+                        key={l.id}
+                        listing={l}
+                        delay={i * 0.04}
+                        compareSelected={isSelected(l.id)}
+                        onCompareToggle={() => toggleCompare(l.id)}
+                      />
+                    ))
                   )}
                 </motion.div>
               )}
@@ -312,6 +353,9 @@ export function ServiziPage() {
       <AnimatePresence>
         <MapModal open={showMap} onClose={() => setShowMap(false)} count={filtered.length} />
       </AnimatePresence>
+
+      <CompareBar listings={comparingListings} onClear={clearCompare} onCompare={() => setShowCompare(true)} />
+      {showCompare && <CompareModal listings={comparingListings} onClose={() => setShowCompare(false)} />}
     </div>
   )
 }

@@ -148,6 +148,10 @@ export function HomePage() {
     navigate({ to: '/concierge', search: { ref: id } })
   }, [prompt, navigate])
 
+  const openConcierge = (msg: string) => {
+    window.dispatchEvent(new CustomEvent('theclass:concierge:open', { detail: { message: msg } }))
+  }
+
   return (
     <div className="snap-container">
       {/* ══ HERO ══ */}
@@ -223,6 +227,31 @@ export function HomePage() {
         >
           <div className="w-px h-14 bg-gradient-to-b from-[#C5A059] to-transparent mx-auto" />
         </motion.div>
+      </section>
+
+      {/* ══ CONCIERGE QUICK-FILL ══ */}
+      <section className="py-14 bg-[#FCFAF5]">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8">
+          <p className="text-[11px] tracking-[0.22em] text-[#C5A059] font-[family-name:var(--font-family-mono)] uppercase mb-3 text-center">Concierge</p>
+          <h2 className="font-[family-name:var(--font-family-display)] text-3xl font-medium text-[#1C1C1C] mb-8 text-center">Cosa desideri oggi?</h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {[
+              { icon: '⛵', label: 'Yacht', msg: 'Vorrei noleggiare uno yacht di lusso con equipaggio per 8 persone nel Mediterraneo.' },
+              { icon: '✈️', label: 'Jet Privato', msg: 'Ho bisogno di un jet privato per una tratta europea, partenza entro 48 ore.' },
+              { icon: '🚗', label: 'Auto', msg: "Cerco un'auto di lusso con autista per il weekend, preferibilmente Ferrari o Rolls-Royce." },
+              { icon: '🏛️', label: 'Villa', msg: 'Sto cercando una villa esclusiva con piscina privata per una settimana in Toscana o Amalfi.' },
+            ].map(item => (
+              <button
+                key={item.label}
+                onClick={() => openConcierge(item.msg)}
+                className="group p-6 bg-white border border-[rgba(197,160,89,0.15)] rounded-2xl hover:border-[#C5A059] hover:shadow-[0_8px_32px_rgba(197,160,89,0.12)] transition-all text-center"
+              >
+                <span className="text-3xl mb-3 block">{item.icon}</span>
+                <p className="text-sm font-medium text-[#1C1C1C] group-hover:text-[#C5A059] transition-colors">{item.label}</p>
+              </button>
+            ))}
+          </div>
+        </div>
       </section>
 
       {/* ══ SERVICES ══ */}
@@ -351,6 +380,28 @@ export function HomePage() {
               <p className="text-white/45 font-light text-sm mt-2 tracking-wide">{stat.label}</p>
             </div>
           ))}
+        </div>
+      </section>
+
+      {/* ══ PRESS ══ */}
+      <section className="py-16 bg-[#FCFAF5] border-t border-[rgba(197,160,89,0.15)]">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8">
+          <p className="text-center text-[11px] text-[#C5A059] tracking-[0.25em] uppercase font-[family-name:var(--font-family-mono)] mb-8">
+            Nella Stampa
+          </p>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-10">
+            {[
+              { name: 'Forbes', quote: '"Il futuro del lusso è su the Class"' },
+              { name: 'Financial Times', quote: '"Disrupting the luxury travel market"' },
+              { name: 'Robb Report', quote: '"The gold standard of Italian luxury"' },
+              { name: 'Condé Nast', quote: '"Must-have per chi viaggia in stile"' },
+            ].map(pub => (
+              <div key={pub.name} className="text-center">
+                <p className="font-[family-name:var(--font-family-display)] text-lg font-medium text-[rgba(197,160,89,0.5)] mb-2">{pub.name}</p>
+                <p className="text-xs text-[#5A4F44] italic font-light leading-relaxed">{pub.quote}</p>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
     </div>

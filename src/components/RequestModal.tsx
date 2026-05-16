@@ -297,6 +297,19 @@ export function RequestModal({
                 />
               </div>
 
+              {/* Cauzione */}
+              <div className="p-4 bg-[rgba(197,160,89,0.06)] rounded-xl border border-[rgba(197,160,89,0.15)]">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-xs text-[#5A4F44]">Deposito cauzionale (10%)</span>
+                  <span className="font-[family-name:var(--font-family-mono)] text-sm text-[#1C1C1C]">
+                    €{Math.round(listing.price * 0.1).toLocaleString('it-IT')}
+                  </span>
+                </div>
+                <p className="text-[10px] text-[#5A4F44]/60">
+                  Trattenuto fino alla conferma. Restituito entro 48h in caso di cancellazione.
+                </p>
+              </div>
+
               {/* Submit */}
               <button
                 type="submit"

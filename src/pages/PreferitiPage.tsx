@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link } from '@tanstack/react-router'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Heart, Trash2, Package } from 'lucide-react'
+import { Heart, Trash2, Package, Share2 } from 'lucide-react'
+import { toast } from 'sonner'
 import { listings } from '@/data/listings'
 import { useFavorites } from '@/hooks/useFavorites'
 import { ServiceCard } from '@/components/ServiceCard'
@@ -12,8 +13,36 @@ export function PreferitiPage() {
   const { favorites, clear } = useFavorites()
   const [bulkModal, setBulkModal] = useState(false)
   const [confirmClear, setConfirmClear] = useState(false)
+  const [sharedIds, setSharedIds] = useState<string[]>([])
   const favListings = listings.filter(l => favorites.includes(l.id))
   const totalValue = favListings.reduce((s, l) => s + l.price, 0)
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const share = params.get('share')
+    if (share) {
+      try {
+        const data = JSON.parse(atob(share))
+        if (data.exp > Date.now()) {
+          setSharedIds(data.ids as string[])
+        }
+      } catch {}
+    }
+  }, [])
+
+  const shareWishlist = () => {
+    if (favListings.length === 0) return
+    const expiry = Date.now() + 7 * 24 * 60 * 60 * 1000
+    const encoded = btoa(JSON.stringify({ ids: favorites, exp: expiry }))
+    const url = `${window.location.origin}/preferiti?share=${encoded}`
+    navigator.clipboard.writeText(url).then(() => {
+      toast.success('Link copiato! Valido per 7 giorni.')
+    })
+  }
+
+  const displayListings = sharedIds.length > 0
+    ? listings.filter(l => sharedIds.includes(l.id))
+    : favListings
 
   return (
     <div className="min-h-screen bg-[#FDF9F2] pt-24 pb-24">
@@ -40,8 +69,16 @@ export function PreferitiPage() {
           )}
         </div>
 
+        {sharedIds.length > 0 && (
+          <div className="mb-6 p-4 bg-[rgba(197,160,89,0.08)] border border-[rgba(197,160,89,0.2)] rounded-xl">
+            <p className="text-sm text-[#5A4F44] font-light">
+              Stai visualizzando una wishlist condivisa con {displayListings.length} servizi.
+            </p>
+          </div>
+        )}
+
         <AnimatePresence mode="wait">
-          {favListings.length === 0 ? (
+          {displayListings.length === 0 ? (
             <motion.div
               key="empty"
               initial={{ opacity: 0, y: 16 }}
@@ -74,6 +111,15 @@ export function PreferitiPage() {
                   <Package size={13} />
                   Richiedi preventivo per tutti
                 </button>
+                {sharedIds.length === 0 && (
+                  <button
+                    onClick={shareWishlist}
+                    className="flex items-center gap-2 border border-[rgba(197,160,89,0.28)] text-[#5A4F44] px-5 py-2.5 rounded-full text-sm font-light hover:border-[#C5A059] hover:text-[#C5A059] transition-colors"
+                  >
+                    <Share2 size={13} />
+                    Condividi wishlist
+                  </button>
+                )}
                 {!confirmClear ? (
                   <button
                     onClick={() => setConfirmClear(true)}
@@ -102,7 +148,7 @@ export function PreferitiPage() {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {favListings.map((l, i) => (
+                {displayListings.map((l, i) => (
                   <ServiceCard key={l.id} listing={l} delay={i * 0.05} />
                 ))}
               </div>

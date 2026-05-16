@@ -35,6 +35,11 @@ export interface Listing {
   images?: string[]
   amenities?: string[]
   host?: { name: string; avatar: string }
+  qualityScore?: number
+  certifications?: string[]
+  safetyRating?: number
+  classApproved?: boolean
+  lastMinute?: boolean
 }
 
 const sharedUpgrades: UpgradeOption[] = [
@@ -90,6 +95,11 @@ export const listings: Listing[] = [
     ],
     minNights: 3,
     maxNights: 14,
+    qualityScore: 98,
+    certifications: ['RINA', 'Luxury Verified', 'MYS'],
+    safetyRating: 5,
+    classApproved: true,
+    lastMinute: true,
   },
   {
     id: 'tc-002',
@@ -112,6 +122,10 @@ export const listings: Listing[] = [
     ],
     minNights: 3,
     maxNights: 14,
+    qualityScore: 97,
+    certifications: ['RINA', 'Luxury Verified'],
+    safetyRating: 5,
+    classApproved: true,
   },
   {
     id: 'tc-003',
@@ -134,6 +148,10 @@ export const listings: Listing[] = [
     ],
     minNights: 3,
     maxNights: 14,
+    qualityScore: 99,
+    certifications: ['Luxury Verified', 'Safety First'],
+    safetyRating: 5,
+    classApproved: true,
   },
   {
     id: 'tc-004',
@@ -153,6 +171,10 @@ export const listings: Listing[] = [
       { label: 'Natale & Capodanno', multiplier: 1.3, months: [12, 1] },
       { label: 'Estate', multiplier: 1.2, months: [7, 8] },
     ],
+    qualityScore: 94,
+    certifications: ['Luxury Verified'],
+    safetyRating: 5,
+    classApproved: true,
   },
   {
     id: 'tc-005',
@@ -169,6 +191,11 @@ export const listings: Listing[] = [
     reviews: 19,
     upgrades: sharedUpgrades,
     coords: { lat: 44.53, lng: 10.86 },
+    qualityScore: 96,
+    certifications: ['Luxury Verified', 'Green Award'],
+    safetyRating: 5,
+    classApproved: true,
+    lastMinute: true,
   },
   {
     id: 'tc-006',
@@ -184,6 +211,10 @@ export const listings: Listing[] = [
     reviews: 84,
     upgrades: sharedUpgrades,
     coords: { lat: 45.46, lng: 9.19 },
+    qualityScore: 98,
+    certifications: ['Luxury Verified', 'MYS'],
+    safetyRating: 5,
+    classApproved: true,
   },
   {
     id: 'tc-007',
@@ -200,6 +231,10 @@ export const listings: Listing[] = [
     reviews: 12,
     upgrades: sharedUpgrades,
     coords: { lat: 43.77, lng: 11.26 },
+    qualityScore: 99,
+    certifications: ['Luxury Verified'],
+    safetyRating: 5,
+    classApproved: true,
   },
   {
     id: 'tc-008',
@@ -215,6 +250,10 @@ export const listings: Listing[] = [
     reviews: 7,
     upgrades: sharedUpgrades,
     coords: { lat: 46.23, lng: 6.11 },
+    qualityScore: 91,
+    certifications: ['Luxury Verified', 'Safety First'],
+    safetyRating: 5,
+    classApproved: true,
   },
   {
     id: 'tc-009',
@@ -230,6 +269,11 @@ export const listings: Listing[] = [
     reviews: 156,
     upgrades: sharedUpgrades,
     coords: { lat: 45.46, lng: 9.19 },
+    qualityScore: 95,
+    certifications: ['Luxury Verified'],
+    safetyRating: 5,
+    classApproved: true,
+    lastMinute: true,
   },
   {
     id: 'tc-010',
@@ -251,6 +295,10 @@ export const listings: Listing[] = [
     ],
     minNights: 3,
     maxNights: 14,
+    qualityScore: 93,
+    certifications: ['Luxury Verified', 'Safety First'],
+    safetyRating: 5,
+    classApproved: true,
   },
   {
     id: 'tc-011',
@@ -267,6 +315,10 @@ export const listings: Listing[] = [
     reviews: 4,
     upgrades: sharedUpgrades,
     coords: { lat: 45.43, lng: 12.33 },
+    qualityScore: 88,
+    certifications: ['Luxury Verified'],
+    safetyRating: 4,
+    classApproved: true,
   },
   {
     id: 'tc-012',
@@ -282,6 +334,10 @@ export const listings: Listing[] = [
     reviews: 15,
     upgrades: sharedUpgrades,
     coords: { lat: 46.5, lng: 11.35 },
+    qualityScore: 90,
+    certifications: ['Luxury Verified', 'Green Award'],
+    safetyRating: 4,
+    classApproved: true,
   },
   {
     id: 'tc-013',
@@ -310,6 +366,10 @@ export const listings: Listing[] = [
       { label: 'Mezza stagione', multiplier: 1.2, months: [5, 9] },
     ],
     minNights: 2,
+    qualityScore: 92,
+    certifications: ['RINA', 'Luxury Verified'],
+    safetyRating: 5,
+    classApproved: true,
   },
   {
     id: 'tc-014',
@@ -335,6 +395,10 @@ export const listings: Listing[] = [
     seasonalPricing: [
       { label: 'Natale & Capodanno', multiplier: 1.4, months: [12, 1] },
     ],
+    qualityScore: 95,
+    certifications: ['Luxury Verified', 'Safety First'],
+    safetyRating: 5,
+    classApproved: true,
   },
   {
     id: 'tc-015',
@@ -358,6 +422,10 @@ export const listings: Listing[] = [
     trending: true,
     upgrades: sharedUpgrades,
     coords: { lat: 43.7, lng: 7.27 },
+    qualityScore: 97,
+    certifications: ['Luxury Verified', 'MYS'],
+    safetyRating: 5,
+    classApproved: true,
   },
   {
     id: 'tc-016',
@@ -380,6 +448,10 @@ export const listings: Listing[] = [
     reviews: 9,
     upgrades: sharedUpgrades,
     coords: { lat: 44.7, lng: 8.03 },
+    qualityScore: 93,
+    certifications: ['Luxury Verified'],
+    safetyRating: 5,
+    classApproved: true,
   },
   {
     id: 'tc-017',
@@ -408,6 +480,10 @@ export const listings: Listing[] = [
       { label: 'Giugno/Settembre', multiplier: 1.25, months: [6, 9] },
     ],
     minNights: 1,
+    qualityScore: 94,
+    certifications: ['RINA', 'Luxury Verified'],
+    safetyRating: 5,
+    classApproved: true,
   },
   {
     id: 'tc-018',
@@ -430,6 +506,10 @@ export const listings: Listing[] = [
     reviews: 27,
     upgrades: sharedUpgrades,
     coords: { lat: 43.77, lng: 11.25 },
+    qualityScore: 89,
+    certifications: ['Luxury Verified', 'Green Award'],
+    safetyRating: 4,
+    classApproved: true,
   },
   {
     id: 'tc-019',
@@ -453,6 +533,10 @@ export const listings: Listing[] = [
     trending: true,
     upgrades: sharedUpgrades,
     coords: { lat: 45.79, lng: 6.97 },
+    qualityScore: 96,
+    certifications: ['Safety First', 'Luxury Verified'],
+    safetyRating: 5,
+    classApproved: true,
   },
   {
     id: 'tc-020',
@@ -481,6 +565,10 @@ export const listings: Listing[] = [
       { label: 'Alta stagione', multiplier: 1.4, months: [7, 8] },
     ],
     minNights: 2,
+    qualityScore: 97,
+    certifications: ['Luxury Verified', 'MYS'],
+    safetyRating: 5,
+    classApproved: true,
   },
   {
     id: 'tc-021',
@@ -508,6 +596,10 @@ export const listings: Listing[] = [
       { label: 'Primavera', multiplier: 1.2, months: [4, 5] },
     ],
     minNights: 5,
+    qualityScore: 96,
+    certifications: ['Luxury Verified', 'MYS'],
+    safetyRating: 5,
+    classApproved: true,
   },
   {
     id: 'tc-022',
@@ -534,6 +626,10 @@ export const listings: Listing[] = [
       { label: 'Estate', multiplier: 1.5, months: [6, 7, 8] },
     ],
     minNights: 7,
+    qualityScore: 97,
+    certifications: ['Luxury Verified', 'MYS'],
+    safetyRating: 5,
+    classApproved: true,
   },
   {
     id: 'tc-023',
@@ -559,6 +655,10 @@ export const listings: Listing[] = [
       { label: 'Estate', multiplier: 1.3, months: [7, 8] },
     ],
     minNights: 3,
+    qualityScore: 88,
+    certifications: ['Luxury Verified'],
+    safetyRating: 4,
+    classApproved: true,
   },
   {
     id: 'tc-024',
@@ -586,6 +686,10 @@ export const listings: Listing[] = [
       { label: 'Giugno/Settembre', multiplier: 1.3, months: [6, 9] },
     ],
     minNights: 5,
+    qualityScore: 95,
+    certifications: ['Luxury Verified', 'MYS'],
+    safetyRating: 5,
+    classApproved: true,
   },
   {
     id: 'tc-025',
@@ -611,6 +715,10 @@ export const listings: Listing[] = [
       { label: 'Estate', multiplier: 1.35, months: [7, 8] },
     ],
     minNights: 3,
+    qualityScore: 85,
+    certifications: ['Luxury Verified'],
+    safetyRating: 4,
+    classApproved: false,
   },
 ]
 

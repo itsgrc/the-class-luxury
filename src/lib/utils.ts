@@ -13,6 +13,11 @@ export function formatPrice(price: number, currency = '€'): string {
   return `${currency}${price.toLocaleString('it-IT')}`
 }
 
+export function getABVariant(): 'A' | 'B' {
+  const params = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '')
+  return params.get('variant') === 'B' ? 'B' : 'A'
+}
+
 export function addRipple(e: React.MouseEvent<HTMLElement>) {
   const btn = e.currentTarget
   const circle = document.createElement('span')

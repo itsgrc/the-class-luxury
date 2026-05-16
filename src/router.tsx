@@ -110,6 +110,12 @@ const eventiRoute = createRoute({
   component: lazy(() => import('./pages/EventiPage').then(m => ({ default: m.EventiPage }))),
 })
 
+const pacchettiRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/pacchetti',
+  component: lazy(() => import('./pages/PacchettiPage').then(m => ({ default: m.PacchettiPage }))),
+})
+
 const routeTree = rootRoute.addChildren([
   indexRoute,
   serviziRoute,
@@ -127,6 +133,7 @@ const routeTree = rootRoute.addChildren([
   storiesRoute,
   storyDetailRoute,
   eventiRoute,
+  pacchettiRoute,
 ])
 
 export const router = createRouter({

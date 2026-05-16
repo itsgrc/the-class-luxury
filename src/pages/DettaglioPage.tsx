@@ -2,9 +2,10 @@ import { useState, useMemo } from 'react'
 import { Helmet } from 'react-helmet-async'
 import { useParams, Link } from '@tanstack/react-router'
 import { motion } from 'framer-motion'
-import { ArrowLeft, Star, MapPin, Check, Heart, Sparkles, Calendar, Share2 } from 'lucide-react'
+import { ArrowLeft, Star, MapPin, Check, Heart, Sparkles, Calendar, Share2, Gift } from 'lucide-react'
 import { DayPicker, type DateRange } from 'react-day-picker'
 import { it } from 'date-fns/locale'
+import { toast } from 'sonner'
 import { listings, getCategoryLabel } from '@/data/listings'
 import { useFavorites } from '@/hooks/useFavorites'
 import { RequestModal } from '@/components/RequestModal'
@@ -13,6 +14,8 @@ import { getDynamicPrice } from '@/lib/pricing'
 import { downloadICS, googleCalendarUrl } from '@/lib/calendar'
 import { formatPrice, cn } from '@/lib/utils'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
+import { WeatherWidget } from '@/components/WeatherWidget'
+import { GiftModal } from '@/components/GiftModal'
 
 function getDisabledDates(seed: string): Date[] {
   const hash = seed.split('').reduce((a, c) => a + c.charCodeAt(0), 0)
@@ -34,6 +37,7 @@ export function DettaglioPage() {
   const [range, setRange] = useState<DateRange>()
   const [selectedUpgrades, setSelectedUpgrades] = useState<string[]>([])
   const [modalOpen, setModalOpen] = useState(false)
+  const [giftOpen, setGiftOpen] = useState(false)
   const { toggle, isFavorite } = useFavorites()
   const [heartAnim, setHeartAnim] = useState(false)
   const disabled = useMemo(() => (listing ? getDisabledDates(listing.id) : []), [id])
@@ -76,7 +80,7 @@ export function DettaglioPage() {
         <meta property="og:type" content="product" />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
           '@context': 'https://schema.org',
-          '@type': 'Product',
+          '@type': listing.category === 'jet' ? 'Flight' : (listing.category === 'yacht' || listing.category === 'villa') ? 'LodgingBusiness' : 'Product',
           name: listing.title,
           description: listing.description.slice(0, 155),
           image: listing.image,
@@ -84,7 +88,6 @@ export function DettaglioPage() {
             '@type': 'Offer',
             price: listing.price,
             priceCurrency: 'EUR',
-            priceSpecification: listing.priceUnit,
             availability: 'https://schema.org/InStock',
           },
           aggregateRating: listing.reviews > 0 ? {
@@ -93,6 +96,11 @@ export function DettaglioPage() {
             reviewCount: listing.reviews,
             bestRating: 5,
           } : undefined,
+          provider: {
+            '@type': 'Organization',
+            name: 'the Class',
+            url: 'https://the-class-luxury.pages.dev',
+          },
         }) }} />
       </Helmet>
       {/* Hero */}
@@ -177,6 +185,82 @@ export function DettaglioPage() {
                 ))}
               </div>
             </div>
+
+            {/* Quality Score & Certifications */}
+            {(listing.qualityScore !== undefined || listing.certifications?.length) && (
+              <div className="mt-8 p-6 bg-[#FCFAF5] rounded-2xl border border-[rgba(197,160,89,0.18)]">
+                <h3 className="font-[family-name:var(--font-family-display)] text-lg font-medium text-[#1C1C1C] mb-4">
+                  Qualità & Certificazioni
+                </h3>
+                <div className="flex flex-wrap gap-4 items-start">
+                  {listing.qualityScore !== undefined && (
+                    <div className="flex flex-col items-center justify-center w-20 h-20 rounded-full border-2 border-[#C5A059] bg-white shadow-[0_4px_16px_rgba(197,160,89,0.15)]">
+                      <span className="font-[family-name:var(--font-family-mono)] text-xl font-bold text-[#C5A059]">
+                        {listing.qualityScore}
+                      </span>
+                      <span className="text-[9px] text-[#5A4F44] tracking-wide">/100</span>
+                    </div>
+                  )}
+                  <div className="flex-1">
+                    {listing.safetyRating !== undefined && (
+                      <div className="flex items-center gap-2 mb-3">
+                        <span className="text-xs text-[#5A4F44]">Sicurezza:</span>
+                        <div className="flex gap-1">
+                          {Array.from({ length: 5 }).map((_, i) => (
+                            <span key={i} className={i < (listing.safetyRating ?? 0) ? 'text-[#C5A059]' : 'text-[rgba(197,160,89,0.2)]'}>★</span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {listing.certifications && (
+                      <div className="flex flex-wrap gap-2">
+                        {listing.certifications.map(cert => (
+                          <span key={cert} className="px-2.5 py-1 bg-white border border-[rgba(197,160,89,0.3)] rounded-full text-[10px] text-[#5A4F44] font-medium">
+                            ✓ {cert}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                    {listing.classApproved && (
+                      <div className="mt-3 inline-flex items-center gap-2 px-3 py-1.5 bg-[#1C1C1C] rounded-full">
+                        <span className="text-[#C5A059]">✦</span>
+                        <span className="text-[11px] text-white font-medium tracking-wide">The Class Approved</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* WeatherWidget */}
+            <div className="mt-6">
+              <WeatherWidget location={listing.location.split(',')[0]} />
+            </div>
+
+            {/* CO2 Offset */}
+            {(listing.category === 'jet' || listing.category === 'yacht') && (
+              <div className="mt-6 p-5 bg-emerald-50 border border-emerald-200 rounded-2xl">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p className="text-sm font-medium text-emerald-800 mb-1">🌿 Impatto CO₂ stimato</p>
+                    <p className="text-xs text-emerald-700 font-light">
+                      {listing.category === 'jet'
+                        ? `Questa tratta produce circa ${Math.round(listing.price * 0.08)} kg CO₂.`
+                        : `Questo noleggio genera circa ${Math.round(listing.price * 0.03)} kg CO₂.`}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      toast.success(`+€${Math.round(listing.price * 0.05).toLocaleString('it-IT')} CO₂ offset aggiunto`)
+                      if (navigator.vibrate) navigator.vibrate(40)
+                    }}
+                    className="shrink-0 px-4 py-2 rounded-xl bg-emerald-600 text-white text-xs font-medium hover:bg-emerald-700 transition-colors whitespace-nowrap"
+                  >
+                    Compensa (+5%)
+                  </button>
+                </div>
+              </div>
+            )}
 
             {/* Calendar */}
             <div>
@@ -324,6 +408,13 @@ export function DettaglioPage() {
                 Richiedi Disponibilità
               </button>
 
+              <button
+                onClick={() => setGiftOpen(true)}
+                className="w-full flex items-center justify-center gap-2 border border-[rgba(197,160,89,0.3)] text-[#5A4F44] py-2.5 rounded-xl text-sm font-light hover:border-[#C5A059] hover:text-[#C5A059] transition-colors mb-3"
+              >
+                <Gift size={13} /> Regala questa esperienza
+              </button>
+
               <p className="text-[11px] text-[#5A4F44] text-center font-light leading-relaxed mb-3">
                 Risposta entro 2 ore. Nessun pagamento anticipato.
               </p>
@@ -356,6 +447,14 @@ export function DettaglioPage() {
                   >
                     Google Cal
                   </a>
+                  <a
+                    href={`https://outlook.live.com/calendar/0/deeplink/compose?subject=${encodeURIComponent(listing.title)}&location=${encodeURIComponent(listing.location)}&body=${encodeURIComponent('Prenotazione via the Class')}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 flex items-center justify-center gap-1.5 border border-[rgba(197,160,89,0.3)] text-[#5A4F44] text-xs py-2.5 rounded-xl hover:border-[#C5A059] transition-colors"
+                  >
+                    Outlook
+                  </a>
                 </div>
               )}
 
@@ -382,6 +481,8 @@ export function DettaglioPage() {
         defaultDates={range}
         preselectedUpgrades={selectedUpgrades}
       />
+
+      {giftOpen && <GiftModal listing={listing} onClose={() => setGiftOpen(false)} />}
     </div>
   )
 }

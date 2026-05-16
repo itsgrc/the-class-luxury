@@ -100,6 +100,16 @@ export function AIConcierge() {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages, typing])
 
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const { message } = (e as CustomEvent).detail
+      setOpen(true)
+      setInput(message)
+    }
+    window.addEventListener('theclass:concierge:open', handler)
+    return () => window.removeEventListener('theclass:concierge:open', handler)
+  }, [])
+
   const send = async (text: string) => {
     const t = text.trim()
     if (!t) return

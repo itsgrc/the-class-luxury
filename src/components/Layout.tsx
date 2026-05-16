@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link, useLocation } from '@tanstack/react-router'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Heart, Menu, X, User, Moon, Sun } from 'lucide-react'
+import { toast } from 'sonner'
 import { useFavorites } from '@/hooks/useFavorites'
 import { cn } from '@/lib/utils'
 import { SkipToMain } from './SkipToMain'
@@ -13,6 +14,13 @@ import { BrandLogo } from './BrandLogo'
 import { AIConcierge } from './AIConcierge'
 import { useTheme } from '@/context/ThemeContext'
 import { useCurrency, RATES, type Currency } from '@/context/CurrencyContext'
+
+const SURPRISES = [
+  'Yacht Azimut a metà prezzo domani — solo per te 🎁',
+  'Jet privato Roma-Parigi con champagne incluso',
+  'Ferrari SF90 per il weekend: prenota entro 1h',
+  'Villa Capri — ultima disponibilità luglio',
+]
 
 const NAV = [
   { to: '/servizi', label: 'Servizi' },
@@ -54,7 +62,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <div className="max-w-7xl mx-auto px-6 lg:px-8 h-16 flex items-center justify-between">
           {/* Logo */}
           <Link to="/" className="shrink-0 flex items-center gap-2">
-            <BrandLogo size={28} light={!scrolled} />
+            <BrandLogo size={32} light={!scrolled} animated={true} />
             <span
               className="font-[family-name:var(--font-family-display)] text-xl font-medium tracking-[-0.02em]"
               style={{ color: scrolled ? '#1C1C1C' : 'white' }}
@@ -104,6 +112,16 @@ export function Layout({ children }: { children: React.ReactNode }) {
               <span className={lang === 'it' ? 'text-[#C5A059]' : 'opacity-40'}>IT</span>
               <span className="opacity-30">/</span>
               <span className={lang === 'en' ? 'text-[#C5A059]' : 'opacity-40'}>EN</span>
+            </button>
+            <button
+              onClick={() => toast(SURPRISES[Math.floor(Math.random() * SURPRISES.length)], {
+                description: 'Offerta valida per le prossime 2 ore',
+                action: { label: 'Scopri', onClick: () => {} },
+              })}
+              className={cn('hidden md:flex items-center gap-1.5 text-[10px] tracking-widest font-[family-name:var(--font-family-mono)] transition-colors', scrolled ? 'text-[#5A4F44]' : 'text-white/60')}
+              aria-label="Offerta Sorpresa"
+            >
+              ✦
             </button>
             <Link to="/profilo" aria-label="Profilo utente" className="flex items-center">
               <User size={16} className={scrolled ? 'text-[#5A4F44]' : 'text-white/80'} />
@@ -224,6 +242,18 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 </ul>
               </div>
             ))}
+          </div>
+
+          {/* Partner logos */}
+          <div className="pb-6 border-b border-[rgba(197,160,89,0.1)] mb-6">
+            <p className="text-[10px] text-[#5A4F44]/50 text-center tracking-widest uppercase mb-4">Partner di Lusso</p>
+            <div className="flex flex-wrap justify-center gap-8">
+              {['Ferrari', 'Rolex', 'Louis Vuitton', 'Moët & Chandon', 'Bulgari'].map(brand => (
+                <span key={brand} className="font-[family-name:var(--font-family-display)] text-sm text-[rgba(197,160,89,0.35)] tracking-widest hover:text-[rgba(197,160,89,0.6)] transition-colors cursor-default">
+                  {brand}
+                </span>
+              ))}
+            </div>
           </div>
 
           <div className="pt-6 border-t border-[rgba(197,160,89,0.2)] flex flex-col md:flex-row items-center justify-between gap-4">

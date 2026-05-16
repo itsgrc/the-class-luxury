@@ -7,6 +7,7 @@ import { safeRead } from '@/lib/errorHandler'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
 import { LoyaltyBadge } from '@/components/LoyaltyBadge'
+import { QRCodeSVG } from 'qrcode.react'
 
 interface StoredRequest {
   id: string
@@ -178,6 +179,49 @@ export function ProfiloPage() {
           </h2>
           <LoyaltyBadge email={user.email} />
         </div>
+
+        {/* QR Concierge */}
+        {user && (
+          <div className="mt-6 mb-10 p-5 bg-[#FCFAF5] rounded-2xl border border-[rgba(197,160,89,0.15)] text-center">
+            <p className="text-xs text-[#5A4F44] mb-3 uppercase tracking-wider">Il tuo QR Concierge</p>
+            <div className="inline-block p-3 bg-white rounded-xl border border-[rgba(197,160,89,0.2)] shadow-sm">
+              <QRCodeSVG value={`theclass:user:${user.id}`} size={96} fgColor="#1C1C1C" bgColor="#FFFFFF" level="M" />
+            </div>
+            <p className="text-[10px] text-[#5A4F44] mt-2 font-light">Mostra al concierge per essere riconosciuto</p>
+          </div>
+        )}
+
+        {/* Activity timeline */}
+        {user && (() => {
+          const items: Array<{ type: string; label: string; ts: number }> = []
+          const requests = safeRead<Array<{ listingTitle: string; timestamp: number }>>('theclass_requests', [])
+          requests.forEach(r => items.push({ type: 'request', label: `Richiesta: ${r.listingTitle}`, ts: r.timestamp }))
+          const reviews = safeRead<Array<{ timestamp: number }>>('theclass_reviews', [])
+          reviews.forEach(r => items.push({ type: 'review', label: 'Recensione per servizio', ts: r.timestamp }))
+          const timeline = items.sort((a, b) => b.ts - a.ts).slice(0, 10)
+          if (timeline.length === 0) return null
+          return (
+            <div className="mb-10">
+              <h2 className="font-[family-name:var(--font-family-display)] text-lg font-medium text-[#1C1C1C] mb-4">
+                Cronologia attività
+              </h2>
+              <div className="relative pl-6 border-l-2 border-[rgba(197,160,89,0.2)] space-y-4">
+                {timeline.map((item, i) => (
+                  <div key={i} className="relative">
+                    <div className={cn(
+                      'absolute -left-[1.375rem] w-3.5 h-3.5 rounded-full border-2 border-white',
+                      item.type === 'request' ? 'bg-[#C5A059]' : 'bg-blue-400',
+                    )} />
+                    <p className="text-sm text-[#1C1C1C] font-light">{item.label}</p>
+                    <p className="text-[10px] text-[#5A4F44] mt-0.5">
+                      {new Date(item.ts).toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric' })}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )
+        })()}
 
         {/* Booking history */}
         <div>
