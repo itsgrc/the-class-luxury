@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link, useLocation } from '@tanstack/react-router'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Heart, Menu, X, User } from 'lucide-react'
+import { Heart, Menu, X, User, Moon, Sun } from 'lucide-react'
 import { useFavorites } from '@/hooks/useFavorites'
 import { cn } from '@/lib/utils'
 import { SkipToMain } from './SkipToMain'
@@ -9,12 +9,17 @@ import { OfflineBanner } from './OfflineBanner'
 import { useLang } from '@/context/LangContext'
 import { ScrollProgressBar } from './ScrollProgressBar'
 import { BackToTop } from './BackToTop'
+import { BrandLogo } from './BrandLogo'
+import { AIConcierge } from './AIConcierge'
+import { useTheme } from '@/context/ThemeContext'
+import { useCurrency, RATES, type Currency } from '@/context/CurrencyContext'
 
 const NAV = [
   { to: '/servizi', label: 'Servizi' },
   { to: '/itinerari', label: 'Itinerari' },
   { to: '/concierge', label: 'Concierge' },
   { to: '/richiesta-su-misura', label: 'Su Misura' },
+  { to: '/eventi', label: 'Eventi' },
   { to: '/stories', label: 'Stories' },
 ]
 
@@ -24,6 +29,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const { count } = useFavorites()
   const location = useLocation()
   const { lang, toggle } = useLang()
+  const { isDark, toggle: toggleTheme } = useTheme()
+  const { currency, setCurrency } = useCurrency()
 
   useEffect(() => {
     const fn = () => setScrolled(window.scrollY > 48)
@@ -46,7 +53,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
       >
         <div className="max-w-7xl mx-auto px-6 lg:px-8 h-16 flex items-center justify-between">
           {/* Logo */}
-          <Link to="/" className="shrink-0">
+          <Link to="/" className="shrink-0 flex items-center gap-2">
+            <BrandLogo size={28} light={!scrolled} />
             <span
               className="font-[family-name:var(--font-family-display)] text-xl font-medium tracking-[-0.02em]"
               style={{ color: scrolled ? '#1C1C1C' : 'white' }}
@@ -78,6 +86,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
           {/* Right */}
           <div className="flex items-center gap-4">
+            <button
+              onClick={toggleTheme}
+              aria-label="Cambia tema"
+              className={cn('hidden md:flex items-center transition-colors', scrolled ? 'text-[#5A4F44]' : 'text-white/70')}
+            >
+              {isDark ? <Sun size={15} /> : <Moon size={15} />}
+            </button>
             <button
               onClick={toggle}
               aria-label="Cambia lingua"
@@ -215,13 +230,25 @@ export function Layout({ children }: { children: React.ReactNode }) {
             <span className="font-[family-name:var(--font-family-display)] text-lg">
               the <span className="gold-gradient-text">Class</span>
             </span>
-            <p className="text-xs text-[#5A4F44] font-light">
-              © {new Date().getFullYear()} the Class S.r.l. — L'arte del viaggio senza confini.
-            </p>
+            <div className="flex items-center gap-4">
+              <select
+                value={currency}
+                onChange={e => setCurrency(e.target.value as Currency)}
+                className="text-xs text-[#5A4F44] bg-transparent border border-[rgba(197,160,89,0.2)] rounded-lg px-2 py-1 focus:outline-none focus:border-[#C5A059]"
+              >
+                {(Object.keys(RATES) as Currency[]).map(c => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+              </select>
+              <p className="text-xs text-[#5A4F44] font-light">
+                © {new Date().getFullYear()} the Class S.r.l. — L'arte del viaggio senza confini.
+              </p>
+            </div>
           </div>
         </div>
       </footer>
       <BackToTop />
+      <AIConcierge />
     </div>
   )
 }

@@ -1,4 +1,4 @@
-export type Category = 'yacht' | 'jet' | 'auto' | 'esperienza' | 'fractional' | 'concierge' | 'staff' | 'asta'
+export type Category = 'yacht' | 'jet' | 'auto' | 'esperienza' | 'fractional' | 'concierge' | 'staff' | 'asta' | 'villa'
 
 export interface UpgradeOption {
   id: string
@@ -482,6 +482,136 @@ export const listings: Listing[] = [
     ],
     minNights: 2,
   },
+  {
+    id: 'tc-021',
+    title: 'Villa Aurora – Capri, Terrazza sull\'Infinito',
+    category: 'villa' as Category,
+    price: 8500,
+    priceUnit: 'notte',
+    location: 'Capri, Campania',
+    image: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&q=80&fm=webp',
+    images: [
+      'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&q=80&fm=webp',
+      'https://images.unsplash.com/photo-1455587734955-081b22074882?w=800&q=80&fm=webp',
+    ],
+    description: 'Villa Aurora si aggrappa alla roccia di Capri con 6 camere, piscina a sfioro sulla scogliera e terrazza panoramica dai Faraglioni al Golfo di Napoli. Costruita negli anni \'50 e ristrutturata nel 2022 da un architetto milanese con materiali locali: pietra di Capri, ceramiche vietrese, eucalipto. Staff incluso: cuoca locale, cameriera, giardiniere. La cucina a vista si affaccia sul mare. Elicottero pad privato per l\'arrivo diretto dall\'aeroporto.',
+    features: ['6 camere', 'Piscina sfioro', 'Staff incluso', 'Elipad', 'Vista Faraglioni'],
+    amenities: ['Chef privato su richiesta', 'Garage yacht tender', 'Cinema room', 'Wi-Fi Starlink', 'Air conditioning'],
+    host: { name: 'Chiara Esposito', avatar: 'https://i.pravatar.cc/150?img=22' },
+    rating: 5.0,
+    reviews: 11,
+    trending: true,
+    upgrades: sharedUpgrades,
+    coords: { lat: 40.55, lng: 14.24 },
+    seasonalPricing: [
+      { label: 'Alta stagione', multiplier: 1.6, months: [6, 7, 8] },
+      { label: 'Primavera', multiplier: 1.2, months: [4, 5] },
+    ],
+    minNights: 5,
+  },
+  {
+    id: 'tc-022',
+    title: 'Villa Oleandra – Lago di Como, Residenza Storica',
+    category: 'villa' as Category,
+    price: 12000,
+    priceUnit: 'notte',
+    location: 'Laglio, Lago di Como',
+    image: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=800&q=80&fm=webp',
+    images: [
+      'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=800&q=80&fm=webp',
+      'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&q=80&fm=webp',
+    ],
+    description: 'Una delle ville storiche più celebri del Lago di Como, del 1850, affacciata direttamente sull\'acqua con darsena privata per tre barche. Otto camere da letto con affreschi originali, salone da ballo, biblioteca, cantina con 2.000 etichette. Il giardino all\'italiana scende a terrazza sul lago con piscina riscaldata. Équipe completa: maggiordomo inglese, chef tristellato disponibile su prenotazione, 2 cameriere.',
+    features: ['8 camere', 'Darsena privata', 'Piscina riscaldata', 'Giardino italiano', 'Cantina 2000 etichette'],
+    amenities: ['Maggiordomo inglese', 'Barca inclusa', 'Cinema room', 'Sala musica Steinway', 'Sicurezza discreta'],
+    host: { name: 'Beatrice Fontana', avatar: 'https://i.pravatar.cc/150?img=31' },
+    rating: 5.0,
+    reviews: 5,
+    trending: true,
+    upgrades: sharedUpgrades,
+    coords: { lat: 45.89, lng: 9.15 },
+    seasonalPricing: [
+      { label: 'Estate', multiplier: 1.5, months: [6, 7, 8] },
+    ],
+    minNights: 7,
+  },
+  {
+    id: 'tc-023',
+    title: 'Masseria Bianca – Puglia, Trulli e Infinito',
+    category: 'villa' as Category,
+    price: 3800,
+    priceUnit: 'notte',
+    location: 'Alberobello, Puglia',
+    image: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800&q=80&fm=webp',
+    images: [
+      'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800&q=80&fm=webp',
+      'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&q=80&fm=webp',
+    ],
+    description: 'Masseria del 1700 restaurata con 12 trulli convertiti in suite autonome, piscina sfioro tra gli ulivi millenari e cucina puglisese a km 0. Ogni trullo è un gioiello: pietra viva, letto a baldacchino, bagno in calce bianca. La cuoca Carmela prepara orecchiette, bombette e cartellate ogni giorno con prodotti dell\'orto. Tasting di vini Primitivo e Negroamaro in cantina. Massaggio ayurvedico disponibile.',
+    features: ['12 trulli-suite', 'Piscina ulivi', 'Cucina puglisese', 'Orto biologico', 'Forno a legna'],
+    amenities: ['Cuoca Carmela inclusa', 'Degustazione vini', 'Massaggio su richiesta', 'Mountain bike', 'Transfer aeroporto'],
+    host: { name: 'Francesco Palmieri', avatar: 'https://i.pravatar.cc/150?img=57' },
+    rating: 4.9,
+    reviews: 19,
+    upgrades: sharedUpgrades,
+    coords: { lat: 40.78, lng: 17.24 },
+    seasonalPricing: [
+      { label: 'Estate', multiplier: 1.3, months: [7, 8] },
+    ],
+    minNights: 3,
+  },
+  {
+    id: 'tc-024',
+    title: 'Villa Letizia – Portofino, Baia Privata',
+    category: 'villa' as Category,
+    price: 15000,
+    priceUnit: 'notte',
+    location: 'Portofino, Liguria',
+    image: 'https://images.unsplash.com/photo-1602343168117-bb8ffe3e2e9f?w=800&q=80&fm=webp',
+    images: [
+      'https://images.unsplash.com/photo-1602343168117-bb8ffe3e2e9f?w=800&q=80&fm=webp',
+      'https://images.unsplash.com/photo-1605281317010-fe5ffe798166?w=800&q=80&fm=webp',
+    ],
+    description: 'Villa privata con accesso esclusivo a una caletta di 40 metri nel Parco Naturale di Portofino. Costruita nel 1965 e ristrutturata nel 2024 mantenendo l\'estetica ligure: intonaci colorati, persiane verde Portofino, terrazza con glicine. Cinque suite con vista mare, piscina bordo scogliera, pontile per ormeggio diretto. Il concierge locale gestisce escursioni a Santa Margherita, Camogli e alle 5 Terre.',
+    features: ['Caletta privata', '5 suite', 'Piscina scogliera', 'Pontile ormeggio', 'Parco Naturale'],
+    amenities: ['Concierge locale', 'Kayak e SUP', 'Cucina chef privato', 'Transfer motoscafo', 'Giardino mediterraneo'],
+    host: { name: 'Giulia Mazzini', avatar: 'https://i.pravatar.cc/150?img=48' },
+    rating: 5.0,
+    reviews: 8,
+    trending: true,
+    upgrades: sharedUpgrades,
+    coords: { lat: 44.3, lng: 9.21 },
+    seasonalPricing: [
+      { label: 'Alta stagione', multiplier: 1.7, months: [7, 8] },
+      { label: 'Giugno/Settembre', multiplier: 1.3, months: [6, 9] },
+    ],
+    minNights: 5,
+  },
+  {
+    id: 'tc-025',
+    title: 'Su Gologone – Costa Smeralda, Architettura Sarda',
+    category: 'villa' as Category,
+    price: 6500,
+    priceUnit: 'notte',
+    location: 'Oliena, Nuoro, Sardegna',
+    image: 'https://images.unsplash.com/photo-1564501049412-61c2a3083791?w=800&q=80&fm=webp',
+    images: [
+      'https://images.unsplash.com/photo-1564501049412-61c2a3083791?w=800&q=80&fm=webp',
+      'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&q=80&fm=webp',
+    ],
+    description: 'Un\'oasi nell\'entroterra sardo, a 20 minuti di elicottero dalla Costa Smeralda. La villa è un capolavoro dell\'architettura vernacolare: pareti in granito rosa, archi in pietra, tetti in legno di leccio. Sette suite dipinte a mano da artisti locali, piscina naturale alimentata dalla sorgente di Su Gologone, cucina sarda autentica con ricette del 1200. Tour in quad tra i nuraghi, trekking guidato nella foresta di Lanaittu.',
+    features: ['7 suite dipinte', 'Piscina sorgente', 'Cucina sarda 1200', 'Tour nuraghi', 'Elicottero 20min SmCosta'],
+    amenities: ['Chef pasticcere incluso', 'Degustazione cannonau', 'Quad tour', 'Sauna grotta', 'Pane carasau farm'],
+    host: { name: 'Tonino Corrias', avatar: 'https://i.pravatar.cc/150?img=61' },
+    rating: 4.8,
+    reviews: 13,
+    upgrades: sharedUpgrades,
+    coords: { lat: 40.27, lng: 9.42 },
+    seasonalPricing: [
+      { label: 'Estate', multiplier: 1.35, months: [7, 8] },
+    ],
+    minNights: 3,
+  },
 ]
 
 export const getCategoryLabel = (cat: Category): string => ({
@@ -493,6 +623,7 @@ export const getCategoryLabel = (cat: Category): string => ({
   concierge: 'Concierge',
   staff: 'Staff',
   asta: 'Asta',
-}[cat])
+  villa: 'Villa',
+}[cat] ?? cat)
 
-export const ALL_CATEGORIES: Category[] = ['yacht', 'jet', 'auto', 'esperienza', 'fractional', 'concierge', 'staff', 'asta']
+export const ALL_CATEGORIES: Category[] = ['yacht', 'jet', 'auto', 'esperienza', 'fractional', 'concierge', 'staff', 'asta', 'villa']

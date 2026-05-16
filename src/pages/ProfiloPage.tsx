@@ -6,6 +6,7 @@ import { useAuth } from '@/context/AuthContext'
 import { safeRead } from '@/lib/errorHandler'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
+import { LoyaltyBadge } from '@/components/LoyaltyBadge'
 
 interface StoredRequest {
   id: string
@@ -168,6 +169,14 @@ export function ProfiloPage() {
               <p className="text-xs text-[#5A4F44] mt-0.5">{label}</p>
             </div>
           ))}
+        </div>
+
+        {/* Loyalty Club */}
+        <div className="mb-10">
+          <h2 className="font-[family-name:var(--font-family-display)] text-lg font-medium text-[#1C1C1C] mb-4">
+            The Class Club
+          </h2>
+          <LoyaltyBadge email={user.email} />
         </div>
 
         {/* Booking history */}

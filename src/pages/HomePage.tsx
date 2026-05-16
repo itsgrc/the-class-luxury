@@ -8,6 +8,7 @@ import { ArrowRight, Anchor, Plane, Car, Sparkles, Shield, Clock, Globe } from '
 import { generateId, addRipple, cn } from '@/lib/utils'
 import { listings } from '@/data/listings'
 import { safeRead } from '@/lib/errorHandler'
+import { ForYouSection } from '@/components/ForYouSection'
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -337,6 +338,9 @@ export function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* ══ FOR YOU ══ */}
+      <ForYouSection />
 
       {/* ══ STATS ══ */}
       <section className="snap-section py-20 px-6 bg-[#1C1C1C]">
