@@ -6,6 +6,7 @@ import { toast } from 'sonner'
 import { generateId, formatPrice, cn } from '@/lib/utils'
 import type { Listing, UpgradeOption } from '@/data/listings'
 import { notifyRequestReceived, notifyAdmin } from '@/lib/notifications'
+import { validateCoupon, redeemCoupon } from '@/lib/coupons'
 
 interface RequestModalProps {
   open: boolean
@@ -25,6 +26,9 @@ export function RequestModal({
   const [upgrades, setUpgrades] = useState<string[]>(preselectedUpgrades)
   const [status, setStatus] = useState<'idle' | 'loading' | 'success'>('idle')
   const lastId = useRef<string>('')
+  const [couponCode, setCouponCode] = useState('')
+  const [couponDiscount, setCouponDiscount] = useState(0)
+  const [couponApplied, setCouponApplied] = useState<string | null>(null)
 
   const upgradeTotal = listing.upgrades
     .filter(u => upgrades.includes(u.id))
@@ -32,6 +36,18 @@ export function RequestModal({
 
   const toggleUpgrade = (id: string) =>
     setUpgrades(prev => prev.includes(id) ? prev.filter(u => u !== id) : [...prev, id])
+
+  const totalForCoupon = listing.price + upgradeTotal
+  const applyCoupon = () => {
+    const result = validateCoupon(couponCode, totalForCoupon)
+    if (result.valid && result.coupon && result.discountAmount !== undefined) {
+      setCouponDiscount(result.discountAmount)
+      setCouponApplied(result.coupon.description)
+      toast.success(`Codice applicato: ${result.coupon.description}`)
+    } else {
+      toast.error(result.error ?? 'Codice non valido')
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -54,6 +70,10 @@ export function RequestModal({
     }
     const existing = JSON.parse(localStorage.getItem('theclass_requests') ?? '[]')
     localStorage.setItem('theclass_requests', JSON.stringify([payload, ...existing]))
+
+    if (couponApplied && form.email) {
+      redeemCoupon(couponCode.trim().toUpperCase(), form.email)
+    }
 
     notifyRequestReceived(form.name, form.email, id, listing.title)
     notifyAdmin(id, 'standard', `${listing.title} — ${form.name}`)
@@ -130,6 +150,40 @@ export function RequestModal({
                 />
               </div>
 
+              {/* Coupon */}
+              <div>
+                <label className="text-[10px] text-[#5A4F44] uppercase tracking-wider mb-1.5 block">
+                  Codice Promozionale
+                </label>
+                {couponApplied ? (
+                  <div className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-emerald-50 border border-emerald-200">
+                    <Check size={13} className="text-emerald-600 shrink-0" />
+                    <span className="text-sm text-emerald-700 flex-1">{couponApplied}</span>
+                    <span className="font-[family-name:var(--font-family-mono)] text-sm text-emerald-700 font-medium">
+                      -{formatPrice(couponDiscount)}
+                    </span>
+                  </div>
+                ) : (
+                  <div className="flex gap-2">
+                    <input
+                      value={couponCode}
+                      onChange={e => setCouponCode(e.target.value.toUpperCase())}
+                      onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), applyCoupon())}
+                      placeholder="es. LUXURY10"
+                      className="flex-1 bg-white border border-[rgba(197,160,89,0.22)] rounded-xl px-3.5 py-2.5 text-sm text-[#1C1C1C] placeholder:text-[#5A4F44]/35 focus:outline-none focus:border-[#C5A059] transition-colors font-[family-name:var(--font-family-mono)] tracking-widest"
+                    />
+                    <button
+                      type="button"
+                      onClick={applyCoupon}
+                      disabled={!couponCode.trim()}
+                      className="px-4 py-2.5 rounded-xl border border-[rgba(197,160,89,0.3)] text-[#C5A059] text-xs hover:border-[#C5A059] transition-colors disabled:opacity-40"
+                    >
+                      Applica
+                    </button>
+                  </div>
+                )}
+              </div>
+
               {/* Dates */}
               {defaultDates?.from && (
                 <div className="p-3.5 rounded-xl bg-[rgba(197,160,89,0.05)] border border-[rgba(197,160,89,0.18)]">
@@ -184,6 +238,12 @@ export function RequestModal({
                         +{formatPrice(upgradeTotal)}
                       </span>
                     </p>
+                  )}
+                  {couponDiscount > 0 && (
+                    <div className="flex justify-between items-center text-xs px-1 mt-1">
+                      <span className="text-[#5A4F44]">Sconto coupon</span>
+                      <span className="font-[family-name:var(--font-family-mono)] text-emerald-600">-{formatPrice(couponDiscount)}</span>
+                    </div>
                   )}
                 </div>
               )}

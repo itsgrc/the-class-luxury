@@ -7,6 +7,7 @@ import Lenis from 'lenis'
 import './index.css'
 import { router } from './router'
 import { AuthProvider } from './context/AuthContext'
+import { LangProvider } from './context/LangContext'
 
 // Lenis smooth scroll
 const lenis = new Lenis({
@@ -21,6 +22,7 @@ createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <HelmetProvider>
       <AuthProvider>
+        <LangProvider>
         <RouterProvider router={router} />
         <Toaster
           position="bottom-right"
@@ -35,6 +37,7 @@ createRoot(document.getElementById('root')!).render(
             },
           }}
         />
+        </LangProvider>
       </AuthProvider>
     </HelmetProvider>
   </StrictMode>,

@@ -6,6 +6,7 @@ import { useFavorites } from '@/hooks/useFavorites'
 import { cn } from '@/lib/utils'
 import { SkipToMain } from './SkipToMain'
 import { OfflineBanner } from './OfflineBanner'
+import { useLang } from '@/context/LangContext'
 
 const NAV = [
   { to: '/servizi', label: 'Servizi' },
@@ -19,6 +20,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const [mobileOpen, setMobileOpen] = useState(false)
   const { count } = useFavorites()
   const location = useLocation()
+  const { lang, toggle } = useLang()
 
   useEffect(() => {
     const fn = () => setScrolled(window.scrollY > 48)
@@ -72,6 +74,18 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
           {/* Right */}
           <div className="flex items-center gap-4">
+            <button
+              onClick={toggle}
+              aria-label="Cambia lingua"
+              className={cn(
+                'hidden md:flex items-center gap-1 text-[11px] font-[family-name:var(--font-family-mono)] tracking-widest transition-colors',
+                scrolled ? 'text-[#5A4F44]' : 'text-white/70',
+              )}
+            >
+              <span className={lang === 'it' ? 'text-[#C5A059]' : 'opacity-40'}>IT</span>
+              <span className="opacity-30">/</span>
+              <span className={lang === 'en' ? 'text-[#C5A059]' : 'opacity-40'}>EN</span>
+            </button>
             <Link to="/profilo" aria-label="Profilo utente" className="flex items-center">
               <User size={16} className={scrolled ? 'text-[#5A4F44]' : 'text-white/80'} />
             </Link>
@@ -127,6 +141,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
                   <Heart size={13} />
                   Preferiti{count > 0 ? ` (${count})` : ''}
                 </Link>
+                <button onClick={toggle} className="text-sm font-light text-[#5A4F44] py-1 flex items-center gap-2">
+                  {lang === 'it' ? '🇬🇧 English' : '🇮🇹 Italiano'}
+                </button>
                 <Link to="/profilo" className="text-sm font-light text-[#5A4F44] py-1 flex items-center gap-2">
                   <User size={13} />
                   Profilo
