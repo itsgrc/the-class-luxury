@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Star } from 'lucide-react'
 import { useReviews } from '@/hooks/useReviews'
+import { seedReviews } from '@/data/reviews'
 import { useAuth } from '@/context/AuthContext'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
@@ -39,7 +40,18 @@ function Stars({ rating, interactive, onRate }: { rating: number; interactive?: 
 }
 
 export function ReviewSection({ listingId, listingTitle }: Props) {
-  const { reviews, addReview, avgRating } = useReviews(listingId)
+  const { reviews: localReviews, addReview, avgRating: _localAvg } = useReviews(listingId)
+  // Merge: localStorage reviews override seed reviews for same userId
+  const seedForListing = seedReviews.filter(r => r.listingId === listingId)
+  const allReviews = [
+    ...localReviews,
+    ...seedForListing.filter(s => !localReviews.some(l => l.userId === s.userId)),
+  ].sort((a, b) => b.timestamp - a.timestamp)
+  const avgRating = allReviews.length
+    ? allReviews.reduce((s, r) => s + r.rating, 0) / allReviews.length
+    : 0
+  const reviews = allReviews
+  void _localAvg
   const { user } = useAuth()
   const [form, setForm] = useState({ rating: 0, text: '' })
   const [showForm, setShowForm] = useState(false)

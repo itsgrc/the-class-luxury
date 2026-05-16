@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react'
+import { Helmet } from 'react-helmet-async'
 import { useParams, Link } from '@tanstack/react-router'
 import { motion } from 'framer-motion'
 import { ArrowLeft, Star, MapPin, Check, Heart, Sparkles, Calendar, Share2 } from 'lucide-react'
@@ -11,6 +12,7 @@ import { ReviewSection } from '@/components/ReviewSection'
 import { getDynamicPrice } from '@/lib/pricing'
 import { downloadICS, googleCalendarUrl } from '@/lib/calendar'
 import { formatPrice, cn } from '@/lib/utils'
+import { Breadcrumbs } from '@/components/Breadcrumbs'
 
 function getDisabledDates(seed: string): Date[] {
   const hash = seed.split('').reduce((a, c) => a + c.charCodeAt(0), 0)
@@ -65,6 +67,34 @@ export function DettaglioPage() {
 
   return (
     <div className="min-h-screen bg-[#FDF9F2] pt-16">
+      <Helmet>
+        <title>{listing.title} — the Class</title>
+        <meta name="description" content={listing.description.slice(0, 155)} />
+        <meta property="og:title" content={listing.title} />
+        <meta property="og:description" content={listing.description.slice(0, 155)} />
+        <meta property="og:image" content={listing.image} />
+        <meta property="og:type" content="product" />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
+          '@context': 'https://schema.org',
+          '@type': 'Product',
+          name: listing.title,
+          description: listing.description.slice(0, 155),
+          image: listing.image,
+          offers: {
+            '@type': 'Offer',
+            price: listing.price,
+            priceCurrency: 'EUR',
+            priceSpecification: listing.priceUnit,
+            availability: 'https://schema.org/InStock',
+          },
+          aggregateRating: listing.reviews > 0 ? {
+            '@type': 'AggregateRating',
+            ratingValue: listing.rating,
+            reviewCount: listing.reviews,
+            bestRating: 5,
+          } : undefined,
+        }) }} />
+      </Helmet>
       {/* Hero */}
       <div className="relative h-[52vh] overflow-hidden">
         <img src={listing.image} alt={listing.title} className="w-full h-full object-cover" />
@@ -100,6 +130,7 @@ export function DettaglioPage() {
       </div>
 
       <div className="max-w-6xl mx-auto px-6 lg:px-8 py-12">
+        <Breadcrumbs currentLabel={listing.title} className="mb-4" />
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
 
           {/* Left column */}

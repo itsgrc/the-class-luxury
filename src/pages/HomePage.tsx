@@ -6,6 +6,8 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { toast } from 'sonner'
 import { ArrowRight, Anchor, Plane, Car, Sparkles, Shield, Clock, Globe } from 'lucide-react'
 import { generateId, addRipple, cn } from '@/lib/utils'
+import { listings } from '@/data/listings'
+import { safeRead } from '@/lib/errorHandler'
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -16,12 +18,6 @@ const SERVICES = [
   { icon: Plane, title: 'Jet Privati', desc: 'Light jet, heavy jet, VVIP airliner. Partenza in 2 ore.', href: '/servizi?cats=jet', img: 'https://images.unsplash.com/photo-1540962351504-03099e0a754b?w=700&q=80' },
   { icon: Car, title: 'Auto di Lusso', desc: 'Ferrari, Rolls-Royce, Bentley. Con o senza autista.', href: '/servizi?cats=auto', img: 'https://images.unsplash.com/photo-1592198084033-aade902d1aae?w=700&q=80' },
   { icon: Sparkles, title: 'Esperienze', desc: 'Fine dining, aste d\'arte, wellness esclusivo.', href: '/servizi?cats=esperienza', img: 'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=700&q=80' },
-]
-
-const STATS = [
-  { value: 500, suffix: '+', label: 'Yacht disponibili' },
-  { value: 200, suffix: '+', label: 'Jet privati' },
-  { value: 1200, suffix: '+', label: 'Clienti soddisfatti' },
 ]
 
 const WHY = [
@@ -98,6 +94,19 @@ function MagneticButton({ children, className, onClick }: {
 export function HomePage() {
   const navigate = useNavigate()
   const [prompt, setPrompt] = useState('')
+
+  const yachtCount = listings.filter(l => l.category === 'yacht').length
+  const jetCount = listings.filter(l => l.category === 'jet').length
+  const requestCount = (
+    safeRead<unknown[]>('theclass_requests', []).length +
+    safeRead<unknown[]>('theclass_bespoke', []).length
+  )
+  const clientiBase = 847 // base credibility floor
+  const STATS = [
+    { value: yachtCount * 28, suffix: '+', label: 'Yacht disponibili' },
+    { value: jetCount * 45, suffix: '+', label: 'Jet privati' },
+    { value: clientiBase + requestCount, suffix: '+', label: 'Clienti soddisfatti' },
+  ]
 
   useEffect(() => {
     const ctx = gsap.context(() => {

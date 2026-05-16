@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { SlidersHorizontal, X, MapPin, RotateCcw, Map } from 'lucide-react'
+import { Helmet } from 'react-helmet-async'
 import { listings, type Category, getCategoryLabel, ALL_CATEGORIES } from '@/data/listings'
 import { ServiceCard } from '@/components/ServiceCard'
 import { cn } from '@/lib/utils'
@@ -147,6 +148,10 @@ export function ServiziPage() {
 
   return (
     <div className="min-h-screen bg-[#FDF9F2] pt-16">
+      <Helmet>
+        <title>Servizi Luxury — Yacht, Jet, Auto, Esperienze | the Class</title>
+        <meta name="description" content="Scopri il catalogo esclusivo di the Class: yacht da charter, jet privati, auto di lusso e esperienze uniche in tutto il mondo." />
+      </Helmet>
       {/* Page header */}
       <div className="bg-[#FCFAF5] border-b border-[rgba(197,160,89,0.18)] px-6 py-14">
         <div className="max-w-7xl mx-auto">

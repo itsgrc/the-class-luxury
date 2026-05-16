@@ -68,6 +68,42 @@ const adminRoute = createRoute({
   component: lazy(() => import('./pages/AdminPage').then(m => ({ default: m.AdminPage }))),
 })
 
+const chiSiamoRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/chi-siamo',
+  component: lazy(() => import('./pages/ChiSiamoPage').then(m => ({ default: m.ChiSiamoPage }))),
+})
+
+const contattiRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/contatti',
+  component: lazy(() => import('./pages/ContattiPage').then(m => ({ default: m.ContattiPage }))),
+})
+
+const terminiRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/termini',
+  component: lazy(() => import('./pages/TerminiPage').then(m => ({ default: m.TerminiPage }))),
+})
+
+const faqRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/faq',
+  component: lazy(() => import('./pages/FaqPage').then(m => ({ default: m.FaqPage }))),
+})
+
+const storiesRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/stories',
+  component: lazy(() => import('./pages/StoriesPage').then(m => ({ default: m.StoriesPage }))),
+})
+
+const storyDetailRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/stories/$slug',
+  component: lazy(() => import('./pages/StoryDetailPage').then(m => ({ default: m.StoryDetailPage }))),
+})
+
 const routeTree = rootRoute.addChildren([
   indexRoute,
   serviziRoute,
@@ -78,6 +114,12 @@ const routeTree = rootRoute.addChildren([
   suMisuraRoute,
   profiloRoute,
   adminRoute,
+  chiSiamoRoute,
+  contattiRoute,
+  terminiRoute,
+  faqRoute,
+  storiesRoute,
+  storyDetailRoute,
 ])
 
 export const router = createRouter({

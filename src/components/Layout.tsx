@@ -13,6 +13,7 @@ const NAV = [
   { to: '/itinerari', label: 'Itinerari' },
   { to: '/concierge', label: 'Concierge' },
   { to: '/richiesta-su-misura', label: 'Su Misura' },
+  { to: '/stories', label: 'Stories' },
 ]
 
 export function Layout({ children }: { children: React.ReactNode }) {
@@ -162,10 +163,28 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <div className="max-w-7xl mx-auto px-6 lg:px-8 pt-16 pb-10">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
             {[
-              { title: 'Servizi', items: ['Yacht', 'Jet Privati', 'Auto di Lusso', 'Fractional Ownership'] },
-              { title: 'Esperienze', items: ['Fine Dining', 'Aste d\'Arte', 'Wellness Privato', 'Avventura'] },
-              { title: 'Info', items: ['Chi Siamo', 'Privacy Policy', 'Termini di Servizio', 'Contatti'] },
-              { title: 'Seguici', items: ['Instagram', 'LinkedIn', 'WhatsApp Business'] },
+              { title: 'Servizi', items: [
+                { label: 'Yacht', href: '/servizi?cats=yacht' },
+                { label: 'Jet Privati', href: '/servizi?cats=jet' },
+                { label: 'Auto di Lusso', href: '/servizi?cats=auto' },
+                { label: 'Esperienze', href: '/servizi?cats=esperienza' },
+              ]},
+              { title: 'Magazine', items: [
+                { label: 'Stories', href: '/stories' },
+                { label: 'Chi Siamo', href: '/chi-siamo' },
+                { label: 'FAQ', href: '/faq' },
+                { label: 'Contatti', href: '/contatti' },
+              ]},
+              { title: 'Legale', items: [
+                { label: 'Termini di Servizio', href: '/termini' },
+                { label: 'Privacy Policy', href: '/termini' },
+                { label: 'Cookie Policy', href: '/termini' },
+              ]},
+              { title: 'Seguici', items: [
+                { label: 'Instagram', href: '#' },
+                { label: 'LinkedIn', href: '#' },
+                { label: 'WhatsApp Business', href: '#' },
+              ]},
             ].map(col => (
               <div key={col.title}>
                 <h4 className="font-[family-name:var(--font-family-display)] text-sm font-medium text-[#1C1C1C] mb-4">
@@ -173,8 +192,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 </h4>
                 <ul className="space-y-2">
                   {col.items.map(item => (
-                    <li key={item}>
-                      <span className="gold-underline text-xs text-[#5A4F44] cursor-pointer">{item}</span>
+                    <li key={item.label}>
+                      {item.href.startsWith('/') ? (
+                        <Link to={item.href as '/'} className="gold-underline text-xs text-[#5A4F44] cursor-pointer hover:text-[#C5A059] transition-colors">
+                          {item.label}
+                        </Link>
+                      ) : (
+                        <span className="gold-underline text-xs text-[#5A4F44] cursor-pointer">{item.label}</span>
+                      )}
                     </li>
                   ))}
                 </ul>
