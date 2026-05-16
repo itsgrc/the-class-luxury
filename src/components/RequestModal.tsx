@@ -39,6 +39,7 @@ export function RequestModal({
     await new Promise(r => setTimeout(r, 900))
 
     const id = generateId()
+    lastId.current = id
     const payload = {
       id,
       listingId: listing.id,
@@ -54,13 +55,16 @@ export function RequestModal({
     const existing = JSON.parse(localStorage.getItem('theclass_requests') ?? '[]')
     localStorage.setItem('theclass_requests', JSON.stringify([payload, ...existing]))
 
+    notifyRequestReceived(form.name, form.email, id, listing.title)
+    notifyAdmin(id, 'standard', `${listing.title} — ${form.name}`)
+
     setStatus('success')
     toast.success('Richiesta inviata!', { description: `ID: ${id} — risposta entro 2 ore.` })
     setTimeout(() => {
       onOpenChange(false)
       setStatus('idle')
       setForm({ name: '', email: '', phone: '', message: '', contact: 'email' })
-    }, 1500)
+    }, 4000)
   }
 
   return (
@@ -258,6 +262,33 @@ export function RequestModal({
                   )}
                 </AnimatePresence>
               </button>
+
+              {status === 'success' && (
+                <motion.button
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  type="button"
+                  onClick={async () => {
+                    const { generateQuotePDF } = await import('@/lib/pdfExport')
+                    await generateQuotePDF({
+                      requestId: lastId.current ?? '—',
+                      clientName: form.name,
+                      listingTitle: listing.title,
+                      location: listing.location,
+                      basePrice: listing.price,
+                      upgradeItems: listing.upgrades
+                        .filter(u => upgrades.includes(u.id))
+                        .map(u => ({ name: u.name, price: u.price })),
+                      discount: 0,
+                      discountLabel: '',
+                      total: listing.price + upgradeTotal,
+                    })
+                  }}
+                  className="w-full border border-[rgba(197,160,89,0.4)] text-[#C5A059] py-3 rounded-xl text-sm hover:border-[#C5A059] transition-colors flex items-center justify-center gap-2"
+                >
+                  <FileText size={14} /> Scarica Preventivo PDF
+                </motion.button>
+              )}
             </form>
           </motion.div>
         </Dialog.Content>

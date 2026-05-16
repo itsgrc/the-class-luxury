@@ -1,12 +1,15 @@
 import { useState, useMemo } from 'react'
 import { useParams, Link } from '@tanstack/react-router'
 import { motion } from 'framer-motion'
-import { ArrowLeft, Star, MapPin, Check, Heart, Sparkles } from 'lucide-react'
+import { ArrowLeft, Star, MapPin, Check, Heart, Sparkles, Calendar, Share2 } from 'lucide-react'
 import { DayPicker, type DateRange } from 'react-day-picker'
 import { it } from 'date-fns/locale'
 import { listings, getCategoryLabel } from '@/data/listings'
 import { useFavorites } from '@/hooks/useFavorites'
 import { RequestModal } from '@/components/RequestModal'
+import { ReviewSection } from '@/components/ReviewSection'
+import { getDynamicPrice } from '@/lib/pricing'
+import { downloadICS, googleCalendarUrl } from '@/lib/calendar'
 import { formatPrice, cn } from '@/lib/utils'
 
 function getDisabledDates(seed: string): Date[] {
@@ -76,6 +79,15 @@ export function DettaglioPage() {
           className="absolute top-6 right-6 glass-dark w-9 h-9 flex items-center justify-center rounded-full">
           <Heart size={15} className={cn('transition-all', heartAnim && 'heart-pop', fav ? 'fill-[#C5A059] text-[#C5A059]' : 'text-white')} />
         </button>
+
+        {typeof navigator !== 'undefined' && navigator.share && (
+          <button
+            onClick={() => navigator.share({ title: listing.title, url: window.location.href })}
+            className="absolute top-6 right-20 glass-dark w-9 h-9 flex items-center justify-center rounded-full"
+          >
+            <Share2 size={14} className="text-white" />
+          </button>
+        )}
 
         <div className="absolute bottom-0 left-0 right-0 px-8 lg:px-14 pb-8">
           <span className="glass text-[11px] font-medium px-2.5 py-1 rounded-full text-[#1C1C1C] inline-block mb-3">
@@ -164,6 +176,9 @@ export function DettaglioPage() {
               )}
             </div>
 
+            {/* Reviews */}
+            <ReviewSection listingId={listing.id} listingTitle={listing.title} />
+
             {/* Upgrades */}
             <div>
               <h2 className="font-[family-name:var(--font-family-display)] text-xl font-medium text-[#1C1C1C] mb-2 flex items-center gap-2">
@@ -220,7 +235,41 @@ export function DettaglioPage() {
                 <span className="text-sm text-[#5A4F44] font-light ml-2">/ {listing.priceUnit}</span>
               </div>
 
-              {upgradeTotal > 0 && (
+              {range?.from && range?.to && (() => {
+                const bd = getDynamicPrice(listing, range.from, range.to, selectedUpgrades)
+                return (
+                  <div className="bg-[#FCFAF5] border border-[rgba(197,160,89,0.2)] rounded-xl p-4 space-y-1.5 text-xs mb-4">
+                    <div className="flex justify-between text-[#5A4F44]">
+                      <span>Base ({bd.nights} notti × {formatPrice(bd.baseNightly)})</span>
+                      <span>{formatPrice(bd.baseNightly * bd.nights)}</span>
+                    </div>
+                    {bd.seasonalMultiplier !== 1 && (
+                      <div className="flex justify-between text-[#C5A059]">
+                        <span>{bd.seasonalLabel}</span>
+                        <span>×{bd.seasonalMultiplier.toFixed(2)}</span>
+                      </div>
+                    )}
+                    {bd.upgradeTotal > 0 && (
+                      <div className="flex justify-between text-[#5A4F44]">
+                        <span>Upgrade</span>
+                        <span>+{formatPrice(bd.upgradeTotal)}</span>
+                      </div>
+                    )}
+                    {bd.discount > 0 && (
+                      <div className="flex justify-between text-emerald-600">
+                        <span>{bd.discountLabel}</span>
+                        <span>-{formatPrice(bd.discount)}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between font-medium text-[#1C1C1C] pt-1.5 border-t border-[rgba(197,160,89,0.2)]">
+                      <span>Totale stimato</span>
+                      <span className="font-[family-name:var(--font-family-mono)] text-[#C5A059]">{formatPrice(bd.total)}</span>
+                    </div>
+                  </div>
+                )
+              })()}
+
+              {upgradeTotal > 0 && !(range?.from && range?.to) && (
                 <div className="mb-4 text-sm space-y-1">
                   <div className="flex justify-between text-[#5A4F44] font-light">
                     <span>Base</span>
@@ -244,19 +293,49 @@ export function DettaglioPage() {
                 Richiedi Disponibilità
               </button>
 
-              <p className="text-[11px] text-[#5A4F44] text-center font-light leading-relaxed">
+              <p className="text-[11px] text-[#5A4F44] text-center font-light leading-relaxed mb-3">
                 Risposta entro 2 ore. Nessun pagamento anticipato.
               </p>
 
-              {range?.from && (
+              {range?.from && range?.to && (
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => downloadICS({
+                      title: listing.title,
+                      description: listing.description.slice(0, 100),
+                      location: listing.location,
+                      start: range.from!,
+                      end: range.to!,
+                    })}
+                    className="flex-1 flex items-center justify-center gap-1.5 border border-[rgba(197,160,89,0.3)] text-[#5A4F44] text-xs py-2.5 rounded-xl hover:border-[#C5A059] transition-colors"
+                  >
+                    <Calendar size={12} /> Calendario
+                  </button>
+                  <a
+                    href={googleCalendarUrl({
+                      title: listing.title,
+                      details: listing.description.slice(0, 100),
+                      location: listing.location,
+                      start: range.from!,
+                      end: range.to!,
+                    })}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 flex items-center justify-center gap-1.5 border border-[rgba(197,160,89,0.3)] text-[#5A4F44] text-xs py-2.5 rounded-xl hover:border-[#C5A059] transition-colors"
+                  >
+                    Google Cal
+                  </a>
+                </div>
+              )}
+
+              {range?.from && !range?.to && (
                 <motion.div
                   initial={{ opacity: 0 }} animate={{ opacity: 1 }}
                   className="mt-4 p-3 rounded-xl bg-[rgba(197,160,89,0.05)] border border-[rgba(197,160,89,0.18)]"
                 >
                   <p className="text-[11px] text-[#5A4F44] font-light">
-                    <span className="text-[#1C1C1C] font-medium block mb-0.5">Date selezionate</span>
+                    <span className="text-[#1C1C1C] font-medium block mb-0.5">Data inizio selezionata</span>
                     {range.from.toLocaleDateString('it-IT')}
-                    {range.to ? ` — ${range.to.toLocaleDateString('it-IT')}` : ''}
                   </p>
                 </motion.div>
               )}
