@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react'
 import { createRouter, createRoute, createRootRoute, Outlet } from '@tanstack/react-router'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Layout } from './components/Layout'
@@ -20,7 +21,9 @@ const rootRoute = createRootRoute({
           exit={{ opacity: 0, y: -4 }}
           transition={{ duration: 0.28, ease: [0.25, 0.46, 0.45, 0.94] }}
         >
-          <Outlet />
+          <Suspense fallback={<div className="min-h-screen bg-[#FDF9F2]" />}>
+            <Outlet />
+          </Suspense>
         </motion.div>
       </AnimatePresence>
     </Layout>
@@ -53,6 +56,18 @@ const suMisuraRoute = createRoute({
   getParentRoute: () => rootRoute, path: '/richiesta-su-misura', component: RichiestaSuMisuraPage,
 })
 
+const profiloRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/profilo',
+  component: lazy(() => import('./pages/ProfiloPage').then(m => ({ default: m.ProfiloPage }))),
+})
+
+const adminRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/admin',
+  component: lazy(() => import('./pages/AdminPage').then(m => ({ default: m.AdminPage }))),
+})
+
 const routeTree = rootRoute.addChildren([
   indexRoute,
   serviziRoute,
@@ -61,6 +76,8 @@ const routeTree = rootRoute.addChildren([
   itinerariRoute,
   conciergeRoute,
   suMisuraRoute,
+  profiloRoute,
+  adminRoute,
 ])
 
 export const router = createRouter({

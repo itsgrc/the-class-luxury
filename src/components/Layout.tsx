@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react'
 import { Link, useLocation } from '@tanstack/react-router'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Heart, Menu, X } from 'lucide-react'
+import { Heart, Menu, X, User } from 'lucide-react'
 import { useFavorites } from '@/hooks/useFavorites'
 import { cn } from '@/lib/utils'
+import { SkipToMain } from './SkipToMain'
+import { OfflineBanner } from './OfflineBanner'
 
 const NAV = [
   { to: '/servizi', label: 'Servizi' },
@@ -28,6 +30,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <SkipToMain />
       {/* ── HEADER ── */}
       <header
         className={cn(
@@ -69,7 +72,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
           {/* Right */}
           <div className="flex items-center gap-4">
-            <Link to="/preferiti" className="relative flex items-center group">
+            <Link to="/profilo" aria-label="Profilo utente" className="flex items-center">
+              <User size={16} className={scrolled ? 'text-[#5A4F44]' : 'text-white/80'} />
+            </Link>
+            <Link to="/preferiti" aria-label="Preferiti" className="relative flex items-center group">
               <Heart
                 size={18}
                 className={cn(
@@ -121,13 +127,18 @@ export function Layout({ children }: { children: React.ReactNode }) {
                   <Heart size={13} />
                   Preferiti{count > 0 ? ` (${count})` : ''}
                 </Link>
+                <Link to="/profilo" className="text-sm font-light text-[#5A4F44] py-1 flex items-center gap-2">
+                  <User size={13} />
+                  Profilo
+                </Link>
               </nav>
             </motion.div>
           )}
         </AnimatePresence>
       </header>
 
-      <main className="flex-1">{children}</main>
+      <OfflineBanner />
+      <main id="main-content" className="flex-1">{children}</main>
 
       {/* ── FOOTER ── */}
       <footer className="border-t border-[rgba(197,160,89,0.3)] bg-[#FCFAF5]">

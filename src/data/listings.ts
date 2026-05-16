@@ -8,6 +8,12 @@ export interface UpgradeOption {
   image: string
 }
 
+export interface SeasonalPricing {
+  label: string
+  multiplier: number
+  months: number[] // 1-12
+}
+
 export interface Listing {
   id: string
   title: string
@@ -23,6 +29,9 @@ export interface Listing {
   reviews: number
   upgrades: UpgradeOption[]
   coords: { lat: number; lng: number }
+  seasonalPricing?: SeasonalPricing[]
+  minNights?: number
+  maxNights?: number
 }
 
 const sharedUpgrades: UpgradeOption[] = [
@@ -72,6 +81,12 @@ export const listings: Listing[] = [
     reviews: 47,
     upgrades: sharedUpgrades,
     coords: { lat: 44.3, lng: 9.21 },
+    seasonalPricing: [
+      { label: 'Alta stagione', multiplier: 1.4, months: [6, 7, 8] },
+      { label: 'Mezza stagione', multiplier: 1.15, months: [5, 9] },
+    ],
+    minNights: 3,
+    maxNights: 14,
   },
   {
     id: 'tc-002',
@@ -88,6 +103,12 @@ export const listings: Listing[] = [
     reviews: 23,
     upgrades: sharedUpgrades,
     coords: { lat: 45.99, lng: 9.27 },
+    seasonalPricing: [
+      { label: 'Alta stagione', multiplier: 1.4, months: [6, 7, 8] },
+      { label: 'Mezza stagione', multiplier: 1.15, months: [5, 9] },
+    ],
+    minNights: 3,
+    maxNights: 14,
   },
   {
     id: 'tc-003',
@@ -104,6 +125,12 @@ export const listings: Listing[] = [
     reviews: 31,
     upgrades: sharedUpgrades,
     coords: { lat: 45.63, lng: 8.72 },
+    seasonalPricing: [
+      { label: 'Natale & Capodanno', multiplier: 1.3, months: [12, 1] },
+      { label: 'Estate', multiplier: 1.2, months: [7, 8] },
+    ],
+    minNights: 3,
+    maxNights: 14,
   },
   {
     id: 'tc-004',
@@ -119,6 +146,10 @@ export const listings: Listing[] = [
     reviews: 58,
     upgrades: sharedUpgrades,
     coords: { lat: 41.79, lng: 12.59 },
+    seasonalPricing: [
+      { label: 'Natale & Capodanno', multiplier: 1.3, months: [12, 1] },
+      { label: 'Estate', multiplier: 1.2, months: [7, 8] },
+    ],
   },
   {
     id: 'tc-005',
@@ -211,6 +242,12 @@ export const listings: Listing[] = [
     reviews: 28,
     upgrades: sharedUpgrades,
     coords: { lat: 41.09, lng: 9.51 },
+    seasonalPricing: [
+      { label: 'Alta stagione', multiplier: 1.4, months: [6, 7, 8] },
+      { label: 'Mezza stagione', multiplier: 1.15, months: [5, 9] },
+    ],
+    minNights: 3,
+    maxNights: 14,
   },
   {
     id: 'tc-011',

@@ -1,17 +1,24 @@
 import { useState, useEffect, useCallback } from 'react'
+import { getCurrentUserId } from '@/context/AuthContext'
+import { safeRead, safeWrite } from '@/lib/errorHandler'
+
+function favKey() {
+  return `theclass_favorites_${getCurrentUserId()}`
+}
 
 export function useFavorites() {
   const [favorites, setFavorites] = useState<string[]>(() => {
-    try {
-      const stored = localStorage.getItem('theclass_favorites')
-      return stored ? JSON.parse(stored) : []
-    } catch {
-      return []
+    // Migrate legacy key on first load
+    const legacy = localStorage.getItem('theclass_favorites')
+    const key = favKey()
+    if (legacy && !localStorage.getItem(key)) {
+      localStorage.setItem(key, legacy)
     }
+    return safeRead<string[]>(key, [])
   })
 
   useEffect(() => {
-    localStorage.setItem('theclass_favorites', JSON.stringify(favorites))
+    safeWrite(favKey(), favorites)
   }, [favorites])
 
   const toggle = useCallback((id: string) => {

@@ -1,10 +1,11 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import * as Dialog from '@radix-ui/react-dialog'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Mail, Phone, MessageCircle, Check } from 'lucide-react'
+import { X, Mail, Phone, MessageCircle, Check, FileText } from 'lucide-react'
 import { toast } from 'sonner'
 import { generateId, formatPrice, cn } from '@/lib/utils'
 import type { Listing, UpgradeOption } from '@/data/listings'
+import { notifyRequestReceived, notifyAdmin } from '@/lib/notifications'
 
 interface RequestModalProps {
   open: boolean
@@ -23,6 +24,7 @@ export function RequestModal({
   })
   const [upgrades, setUpgrades] = useState<string[]>(preselectedUpgrades)
   const [status, setStatus] = useState<'idle' | 'loading' | 'success'>('idle')
+  const lastId = useRef<string>('')
 
   const upgradeTotal = listing.upgrades
     .filter(u => upgrades.includes(u.id))
