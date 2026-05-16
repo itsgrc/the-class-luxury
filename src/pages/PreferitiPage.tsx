@@ -11,6 +11,7 @@ import { formatPrice } from '@/lib/utils'
 export function PreferitiPage() {
   const { favorites, clear } = useFavorites()
   const [bulkModal, setBulkModal] = useState(false)
+  const [confirmClear, setConfirmClear] = useState(false)
   const favListings = listings.filter(l => favorites.includes(l.id))
   const totalValue = favListings.reduce((s, l) => s + l.price, 0)
 
@@ -73,13 +74,31 @@ export function PreferitiPage() {
                   <Package size={13} />
                   Richiedi preventivo per tutti
                 </button>
-                <button
-                  onClick={clear}
-                  className="flex items-center gap-2 border border-[rgba(197,160,89,0.28)] text-[#5A4F44] px-5 py-2.5 rounded-full text-sm font-light hover:border-[#C5A059] hover:text-[#C5A059] transition-colors"
-                >
-                  <Trash2 size={13} />
-                  Svuota tutto
-                </button>
+                {!confirmClear ? (
+                  <button
+                    onClick={() => setConfirmClear(true)}
+                    className="flex items-center gap-2 border border-[rgba(197,160,89,0.28)] text-[#5A4F44] px-5 py-2.5 rounded-full text-sm font-light hover:border-red-300 hover:text-red-500 transition-colors"
+                  >
+                    <Trash2 size={13} />
+                    Svuota tutto
+                  </button>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-[#5A4F44]">Sicuro?</span>
+                    <button
+                      onClick={() => { clear(); setConfirmClear(false) }}
+                      className="text-xs bg-red-500 text-white px-3 py-1.5 rounded-full hover:bg-red-600 transition-colors"
+                    >
+                      Svuota
+                    </button>
+                    <button
+                      onClick={() => setConfirmClear(false)}
+                      className="text-xs border border-[rgba(197,160,89,0.3)] text-[#5A4F44] px-3 py-1.5 rounded-full"
+                    >
+                      Annulla
+                    </button>
+                  </div>
+                )}
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

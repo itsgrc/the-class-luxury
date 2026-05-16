@@ -36,6 +36,7 @@ function CountUp({ target, suffix }: { target: number; suffix: string }) {
   const ref = useRef<HTMLSpanElement>(null)
   const inView = useInView(ref, { once: true, margin: '-80px' })
   const [current, setCurrent] = useState(0)
+  const [flash, setFlash] = useState(false)
 
   useEffect(() => {
     if (!inView) return
@@ -46,14 +47,19 @@ function CountUp({ target, suffix }: { target: number; suffix: string }) {
       const progress = frame / total
       const eased = 1 - Math.pow(1 - progress, 3)
       setCurrent(Math.round(eased * target))
-      if (frame >= total) clearInterval(timer)
+      if (frame >= total) {
+        clearInterval(timer)
+        setFlash(true)
+        setTimeout(() => setFlash(false), 400)
+      }
     }, 16)
     return () => clearInterval(timer)
   }, [inView, target])
 
   return (
     <span ref={ref} className="font-[family-name:var(--font-family-mono)] text-5xl md:text-6xl font-light text-[#C5A059]">
-      {current.toLocaleString('it-IT')}{suffix}
+      {current.toLocaleString('it-IT')}
+      <span className={cn('transition-all duration-200', flash && 'text-white scale-125 inline-block')}>{suffix}</span>
     </span>
   )
 }
@@ -142,9 +148,9 @@ export function HomePage() {
   }, [prompt, navigate])
 
   return (
-    <div>
+    <div className="snap-container">
       {/* ══ HERO ══ */}
-      <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
+      <section className="snap-section relative min-h-screen flex items-center justify-center overflow-hidden">
         {/* Video background with parallax */}
         <motion.div style={{ y: heroY }} className="absolute inset-0 w-full h-full">
           <video
@@ -219,7 +225,7 @@ export function HomePage() {
       </section>
 
       {/* ══ SERVICES ══ */}
-      <section className="py-24 px-6">
+      <section className="snap-section py-24 px-6">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16 reveal">
             <p className="font-[family-name:var(--font-family-serif)] text-[#C5A059] italic tracking-widest text-sm uppercase mb-3">
@@ -256,7 +262,7 @@ export function HomePage() {
       </section>
 
       {/* ══ CONCIERGE WIDGET ══ */}
-      <section className="py-20 px-6 bg-[#FCFAF5]">
+      <section className="snap-section py-20 px-6 bg-[#FCFAF5]">
         <div className="max-w-2xl mx-auto text-center">
           <div className="reveal mb-8">
             <p className="font-[family-name:var(--font-family-serif)] text-[#C5A059] italic tracking-widest text-sm uppercase mb-3">
@@ -302,7 +308,7 @@ export function HomePage() {
       </section>
 
       {/* ══ WHY US ══ */}
-      <section className="py-24 px-6">
+      <section className="snap-section py-24 px-6">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-16 reveal">
             <p className="font-[family-name:var(--font-family-serif)] text-[#C5A059] italic tracking-widest text-sm uppercase mb-3">
@@ -333,7 +339,7 @@ export function HomePage() {
       </section>
 
       {/* ══ STATS ══ */}
-      <section className="py-20 px-6 bg-[#1C1C1C]">
+      <section className="snap-section py-20 px-6 bg-[#1C1C1C]">
         <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-12 text-center">
           {STATS.map(stat => (
             <div key={stat.label}>

@@ -21,6 +21,13 @@ const lenis = new Lenis({
 function raf(time: number) { lenis.raf(time); requestAnimationFrame(raf) }
 requestAnimationFrame(raf)
 
+// Register service worker in production
+if ('serviceWorker' in navigator && import.meta.env.PROD) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {})
+  })
+}
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <HelmetProvider>

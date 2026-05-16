@@ -9,10 +9,13 @@ import { safeWrite, safeRead } from '@/lib/errorHandler'
 
 interface ContactMsg { id: string; name: string; email: string; subject: string; message: string; timestamp: number }
 
+const isValidEmail = (e: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)
+
 export function ContattiPage() {
   const [form, setForm] = useState({ name: '', email: '', subject: '', message: '' })
   const [sent, setSent] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [touched, setTouched] = useState<Record<string, boolean>>({})
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -102,9 +105,16 @@ export function ContattiPage() {
                         type={f.type}
                         value={form[f.key as 'name' | 'email']}
                         onChange={e => setForm(p => ({ ...p, [f.key]: e.target.value }))}
+                        onBlur={() => setTouched(p => ({ ...p, [f.key]: true }))}
                         placeholder={f.placeholder}
                         className="w-full bg-[#FDF9F2] border border-[rgba(197,160,89,0.22)] rounded-xl px-3.5 py-2.5 text-sm text-[#1C1C1C] placeholder:text-[#5A4F44]/35 focus:outline-none focus:border-[#C5A059] transition-colors"
                       />
+                      {f.key === 'email' && touched.email && form.email && !isValidEmail(form.email) && (
+                        <p className="text-xs text-red-500 mt-1">Email non valida</p>
+                      )}
+                      {f.key === 'email' && touched.email && form.email && isValidEmail(form.email) && (
+                        <p className="text-xs text-emerald-600 mt-1 flex items-center gap-1">✓ Email valida</p>
+                      )}
                     </div>
                   ))}
                 </div>

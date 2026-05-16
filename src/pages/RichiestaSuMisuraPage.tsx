@@ -22,6 +22,7 @@ export function RichiestaSuMisuraPage() {
   const [images, setImages] = useState<Array<{ preview: string; name: string }>>([])
   const [status, setStatus] = useState<'idle' | 'loading' | 'success'>('idle')
   const fileRef = useRef<HTMLInputElement>(null)
+  const [dragging, setDragging] = useState(false)
 
   const handleFiles = (files: FileList | null) => {
     if (!files) return
@@ -169,11 +170,20 @@ export function RichiestaSuMisuraPage() {
                 </label>
                 <div
                   onClick={() => fileRef.current?.click()}
-                  className="border-2 border-dashed border-[rgba(197,160,89,0.28)] rounded-xl p-7 text-center cursor-pointer hover:border-[#C5A059] transition-colors"
+                  onDragOver={e => { e.preventDefault(); setDragging(true) }}
+                  onDragLeave={() => setDragging(false)}
+                  onDrop={e => { e.preventDefault(); setDragging(false); handleFiles(e.dataTransfer.files) }}
+                  className={cn(
+                    'w-full border-2 border-dashed rounded-xl px-4 py-6 text-center transition-all cursor-pointer',
+                    dragging
+                      ? 'border-[#C5A059] bg-[rgba(197,160,89,0.08)]'
+                      : 'border-[rgba(197,160,89,0.3)] hover:border-[#C5A059] hover:bg-[rgba(197,160,89,0.04)]',
+                  )}
                 >
                   <Upload size={22} className="text-[rgba(197,160,89,0.45)] mx-auto mb-2" />
                   <p className="text-sm text-[#5A4F44] font-light">Clicca o trascina le immagini</p>
                   <p className="text-[11px] text-[#5A4F44]/50 mt-1">PNG, JPG — max 10MB</p>
+                  <p className="text-[10px] text-[#5A4F44]/50 mt-1">o trascina qui i file</p>
                 </div>
                 <input
                   ref={fileRef} type="file" multiple accept="image/*" className="hidden"

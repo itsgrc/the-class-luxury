@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /profilo
+
+Sitemap: https://the-class-luxury.pages.dev/sitemap.xml

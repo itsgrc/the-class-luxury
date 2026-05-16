@@ -109,7 +109,7 @@ export function ChiSiamoPage() {
               transition={{ delay: i * 0.1 }}
               className="text-center"
             >
-              <img src={p.avatar} alt={p.name} className="w-20 h-20 rounded-full mx-auto mb-4 object-cover border-2 border-[rgba(197,160,89,0.3)]" />
+              <img src={p.avatar} alt={p.name} className="w-20 h-20 rounded-full mx-auto mb-4 object-cover border-2 border-[rgba(197,160,89,0.3)]" loading="lazy" decoding="async" />
               <h3 className="font-medium text-[#1C1C1C] text-sm mb-0.5">{p.name}</h3>
               <p className="text-[11px] text-[#C5A059] mb-2">{p.role}</p>
               <p className="text-xs text-[#5A4F44] font-light leading-relaxed">{p.bio}</p>

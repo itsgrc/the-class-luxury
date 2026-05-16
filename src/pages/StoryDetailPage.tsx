@@ -33,7 +33,7 @@ export function StoryDetailPage() {
 
       {/* Hero */}
       <div className="relative h-[55vh] overflow-hidden">
-        <img src={story.cover} alt={story.title} className="w-full h-full object-cover" />
+        <img src={story.cover} alt={story.title} className="w-full h-full object-cover" loading="lazy" decoding="async" />
         <div className="absolute inset-0 bg-gradient-to-t from-[#FDF9F2] via-[#1C1C1C]/20 to-[#1C1C1C]/50" />
         <Link to="/stories" className="absolute top-6 left-6 glass-dark flex items-center gap-2 px-4 py-2 rounded-full text-white text-xs hover:bg-white/20 transition-colors">
           <ArrowLeft size={13} /> Stories
@@ -51,7 +51,7 @@ export function StoryDetailPage() {
           </h1>
           <div className="flex items-center gap-4 flex-wrap">
             <div className="flex items-center gap-2">
-              <img src={story.author.avatar} alt={story.author.name} className="w-8 h-8 rounded-full object-cover border border-[rgba(197,160,89,0.3)]" />
+              <img src={story.author.avatar} alt={story.author.name} className="w-8 h-8 rounded-full object-cover border border-[rgba(197,160,89,0.3)]" loading="lazy" decoding="async" />
               <span className="text-sm text-[#5A4F44]">{story.author.name}</span>
             </div>
             <div className="flex items-center gap-1.5 text-[#5A4F44]">
@@ -100,7 +100,7 @@ export function StoryDetailPage() {
               {related.map(s => (
                 <Link key={s.id} to="/stories/$slug" params={{ slug: s.slug }} className="group">
                   <div className="rounded-xl overflow-hidden border border-[rgba(197,160,89,0.12)] bg-white">
-                    <img src={s.cover} alt={s.title} className="w-full h-32 object-cover group-hover:scale-105 transition-transform duration-300" />
+                    <img src={s.cover} alt={s.title} className="w-full h-32 object-cover group-hover:scale-105 transition-transform duration-300" loading="lazy" decoding="async" />
                     <div className="p-4">
                       <p className="text-sm font-medium text-[#1C1C1C] group-hover:text-[#C5A059] transition-colors line-clamp-2">{s.title}</p>
                     </div>

@@ -117,6 +117,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
             </Link>
 
             <button
+              aria-label={mobileOpen ? 'Chiudi menu' : 'Apri menu'}
               className={cn('md:hidden p-1 transition-colors', scrolled ? 'text-[#5A4F44]' : 'text-white')}
               onClick={() => setMobileOpen(v => !v)}
             >

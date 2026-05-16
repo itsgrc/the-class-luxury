@@ -97,7 +97,7 @@ export function DettaglioPage() {
       </Helmet>
       {/* Hero */}
       <div className="relative h-[52vh] overflow-hidden">
-        <img src={listing.image} alt={listing.title} className="w-full h-full object-cover" />
+        <img src={listing.image} alt={listing.title} className="w-full h-full object-cover" loading="lazy" decoding="async" />
         <div className="absolute inset-0 bg-gradient-to-t from-[#FDF9F2] via-[#1C1C1C]/25 to-[#1C1C1C]/55" />
 
         <Link to="/servizi"
@@ -232,7 +232,7 @@ export function DettaglioPage() {
                       )}
                     >
                       <div className="flex gap-4 p-4">
-                        <img src={up.image} alt={up.name} className="w-16 h-16 rounded-xl object-cover shrink-0" />
+                        <img src={up.image} alt={up.name} className="w-16 h-16 rounded-xl object-cover shrink-0" loading="lazy" decoding="async" />
                         <div className="flex-1 min-w-0">
                           <div className="flex items-start justify-between gap-2">
                             <h4 className="text-sm font-medium text-[#1C1C1C] leading-tight">{up.name}</h4>

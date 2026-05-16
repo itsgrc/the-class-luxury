@@ -288,6 +288,7 @@ export function ServiziPage() {
                 </motion.div>
               ) : (
                 <motion.div key="results" initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                  aria-live="polite" aria-label="Risultati filtrati"
                   className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                   {filtered.length === 0 ? (
                     <div className="col-span-full py-20 text-center">

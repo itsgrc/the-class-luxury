@@ -63,7 +63,7 @@ body {
 
 /* ── GLASSMORPHISM ── */
 .glass {
-  background: rgba(253, 249, 242, 0.78);
+  background: rgba(253, 249, 242, 0.88);
   backdrop-filter: blur(16px);                     /* MODIFICATO: 12→16px */
   -webkit-backdrop-filter: blur(16px);
   border: 0.5px solid rgba(197, 160, 89, 0.32);
@@ -236,6 +236,29 @@ body {
 .shadow-warm-lg { box-shadow: 0 16px 48px rgba(26,24,22,0.1); }
 .shadow-gold    { box-shadow: 0 8px 30px rgba(197,160,89,0.18); }
 .shadow-gold-lg { box-shadow: 0 16px 48px rgba(197,160,89,0.22); }
+
+/* ── SKELETON SHIMMER ── */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.skeleton {
+  background: linear-gradient(90deg, rgba(197,160,89,0.06) 25%, rgba(197,160,89,0.12) 50%, rgba(197,160,89,0.06) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 8px;
+}
+
+/* ── SCROLL SNAP — homepage sections, desktop only ── */
+@media (min-width: 1024px) and (prefers-reduced-motion: no-preference) {
+  .snap-container {
+    scroll-snap-type: y proximity;
+  }
+  .snap-section {
+    scroll-snap-align: start;
+  }
+}
 
 /* ── CALENDAR OVERRIDES ── */
 .rdp-root {

@@ -29,6 +29,9 @@ export function RequestModal({
   const [couponCode, setCouponCode] = useState('')
   const [couponDiscount, setCouponDiscount] = useState(0)
   const [couponApplied, setCouponApplied] = useState<string | null>(null)
+  const isValidEmail = (e: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)
+  const [emailTouched, setEmailTouched] = useState(false)
+  const [pdfLoading, setPdfLoading] = useState(false)
 
   const upgradeTotal = listing.upgrades
     .filter(u => upgrades.includes(u.id))
@@ -132,9 +135,15 @@ export function RequestModal({
                       type={f.type}
                       value={form[f.key as 'name' | 'email']}
                       onChange={e => setForm(p => ({ ...p, [f.key]: e.target.value }))}
+                      onBlur={f.key === 'email' ? () => setEmailTouched(true) : undefined}
                       placeholder={f.placeholder}
                       className="w-full bg-white border border-[rgba(197,160,89,0.22)] rounded-xl px-3.5 py-2.5 text-sm text-[#1C1C1C] placeholder:text-[#5A4F44]/35 focus:outline-none focus:border-[#C5A059] transition-colors"
                     />
+                    {f.key === 'email' && emailTouched && form.email && (
+                      <p className={`text-[10px] mt-1 ${isValidEmail(form.email) ? 'text-emerald-600' : 'text-red-400'}`}>
+                        {isValidEmail(form.email) ? '✓ Email valida' : 'Formato email non valido'}
+                      </p>
+                    )}
                   </div>
                 ))}
               </div>
@@ -328,25 +337,35 @@ export function RequestModal({
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   type="button"
+                  disabled={pdfLoading}
                   onClick={async () => {
-                    const { generateQuotePDF } = await import('@/lib/pdfExport')
-                    await generateQuotePDF({
-                      requestId: lastId.current ?? '—',
-                      clientName: form.name,
-                      listingTitle: listing.title,
-                      location: listing.location,
-                      basePrice: listing.price,
-                      upgradeItems: listing.upgrades
-                        .filter(u => upgrades.includes(u.id))
-                        .map(u => ({ name: u.name, price: u.price })),
-                      discount: 0,
-                      discountLabel: '',
-                      total: listing.price + upgradeTotal,
-                    })
+                    setPdfLoading(true)
+                    try {
+                      const { generateQuotePDF } = await import('@/lib/pdfExport')
+                      await generateQuotePDF({
+                        requestId: lastId.current ?? '—',
+                        clientName: form.name,
+                        listingTitle: listing.title,
+                        location: listing.location,
+                        basePrice: listing.price,
+                        upgradeItems: listing.upgrades
+                          .filter(u => upgrades.includes(u.id))
+                          .map(u => ({ name: u.name, price: u.price })),
+                        discount: 0,
+                        discountLabel: '',
+                        total: listing.price + upgradeTotal,
+                      })
+                    } finally {
+                      setPdfLoading(false)
+                    }
                   }}
-                  className="w-full border border-[rgba(197,160,89,0.4)] text-[#C5A059] py-3 rounded-xl text-sm hover:border-[#C5A059] transition-colors flex items-center justify-center gap-2"
+                  className="w-full border border-[rgba(197,160,89,0.4)] text-[#C5A059] py-3 rounded-xl text-sm hover:border-[#C5A059] transition-colors flex items-center justify-center gap-2 disabled:opacity-60"
                 >
-                  <FileText size={14} /> Scarica Preventivo PDF
+                  {pdfLoading ? (
+                    <><span className="w-3.5 h-3.5 border-2 border-[#C5A059]/30 border-t-[#C5A059] rounded-full animate-spin" /> Generazione PDF...</>
+                  ) : (
+                    <><FileText size={14} /> Scarica Preventivo PDF</>
+                  )}
                 </motion.button>
               )}
             </form>

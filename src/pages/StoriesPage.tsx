@@ -30,7 +30,7 @@ export function StoriesPage() {
             animate={{ opacity: 1, y: 0 }}
             className="relative h-[55vh] rounded-2xl overflow-hidden card-shine"
           >
-            <img src={featured.cover} alt={featured.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+            <img src={featured.cover} alt={featured.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" loading="lazy" decoding="async" />
             <div className="absolute inset-0 bg-gradient-to-t from-[#1C1C1C]/80 via-transparent to-transparent" />
             <div className="absolute bottom-0 left-0 right-0 p-8">
               <span className="text-[10px] bg-[#C5A059] text-white px-2.5 py-1 rounded-full uppercase tracking-widest">
@@ -41,7 +41,7 @@ export function StoriesPage() {
               </h2>
               <p className="text-white/70 text-sm font-light max-w-2xl">{featured.excerpt}</p>
               <div className="flex items-center gap-3 mt-4">
-                <img src={featured.author.avatar} alt={featured.author.name} className="w-7 h-7 rounded-full object-cover" />
+                <img src={featured.author.avatar} alt={featured.author.name} className="w-7 h-7 rounded-full object-cover" loading="lazy" decoding="async" />
                 <span className="text-white/60 text-xs">{featured.author.name}</span>
                 <span className="text-white/30">·</span>
                 <Clock size={11} className="text-white/40" />
@@ -63,7 +63,7 @@ export function StoriesPage() {
                 className="group bg-white rounded-2xl border border-[rgba(197,160,89,0.12)] overflow-hidden card-shine"
               >
                 <div className="relative h-48 overflow-hidden">
-                  <img src={story.cover} alt={story.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                  <img src={story.cover} alt={story.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" decoding="async" />
                   <span className="absolute top-3 left-3 text-[10px] bg-[#C5A059] text-white px-2 py-0.5 rounded-full uppercase tracking-wider">
                     {story.category}
                   </span>
@@ -75,7 +75,7 @@ export function StoriesPage() {
                   <p className="text-xs text-[#5A4F44] font-light leading-relaxed mb-4 line-clamp-2">{story.excerpt}</p>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <img src={story.author.avatar} alt={story.author.name} className="w-5 h-5 rounded-full object-cover" />
+                      <img src={story.author.avatar} alt={story.author.name} className="w-5 h-5 rounded-full object-cover" loading="lazy" decoding="async" />
                       <span className="text-[10px] text-[#5A4F44]">{story.author.name}</span>
                     </div>
                     <div className="flex items-center gap-1 text-[#C5A059]">

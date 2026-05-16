@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, memo } from 'react'
 import { Link } from '@tanstack/react-router'
 import { motion } from 'framer-motion'
 import { Heart, Star, MapPin } from 'lucide-react'
@@ -32,7 +32,7 @@ function spawnParticles(btn: HTMLElement) {
   void rect // avoid unused warning
 }
 
-export function ServiceCard({ listing, delay = 0 }: ServiceCardProps) {
+function ServiceCardInner({ listing, delay = 0 }: ServiceCardProps) {
   const { toggle, isFavorite } = useFavorites()
   const [heartAnim, setHeartAnim] = useState(false)
   const cardRef = useRef<HTMLDivElement>(null)
@@ -81,7 +81,7 @@ export function ServiceCard({ listing, delay = 0 }: ServiceCardProps) {
           <div className="relative h-56 overflow-hidden">
             <img
               src={listing.image}
-              alt={listing.title}
+              alt={`${listing.title} — ${listing.location}`}
               className="w-full h-full object-cover transition-all duration-700 group-hover:scale-[1.04] group-hover:brightness-110"
               loading="lazy"
             />
@@ -148,3 +148,5 @@ export function ServiceCard({ listing, delay = 0 }: ServiceCardProps) {
     </motion.div>
   )
 }
+
+export const ServiceCard = memo(ServiceCardInner)
