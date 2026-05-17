@@ -10,7 +10,6 @@ import { AuthProvider } from './context/AuthContext'
 import { LangProvider } from './context/LangContext'
 import { ThemeProvider } from './context/ThemeContext'
 import { CurrencyProvider } from './context/CurrencyContext'
-import { DreamProvider } from './context/DreamContext'
 
 // Lenis smooth scroll
 const lenis = new Lenis({
@@ -35,7 +34,6 @@ createRoot(document.getElementById('root')!).render(
     <HelmetProvider>
       <AuthProvider>
         <ThemeProvider>
-          <DreamProvider>
             <CurrencyProvider>
               <LangProvider>
                 <RouterProvider router={router} />
@@ -54,7 +52,6 @@ createRoot(document.getElementById('root')!).render(
               />
               </LangProvider>
             </CurrencyProvider>
-          </DreamProvider>
         </ThemeProvider>
       </AuthProvider>
     </HelmetProvider>

@@ -1,11 +1,14 @@
 import { useState, useRef, useCallback, memo, useMemo, useEffect } from 'react'
 import { Link } from '@tanstack/react-router'
 import { motion } from 'framer-motion'
-import { Heart, Star, MapPin } from 'lucide-react'
+import { Heart, Star, MapPin, Lightbulb } from 'lucide-react'
 import type { Listing } from '@/data/listings'
 import { getCategoryLabel } from '@/data/listings'
 import { useFavorites } from '@/hooks/useFavorites'
+import { useIdeas } from '@/hooks/useIdeas'
 import { formatPrice, cn, getABVariant } from '@/lib/utils'
+import { safeRead, safeWrite } from '@/lib/errorHandler'
+import { toast } from 'sonner'
 
 interface ServiceCardProps {
   listing: Listing
@@ -59,10 +62,14 @@ function spawnParticles(btn: HTMLElement) {
 
 function ServiceCardInner({ listing, delay = 0, compareSelected, onCompareToggle }: ServiceCardProps) {
   const { toggle, isFavorite } = useFavorites()
+  const { toggle: toggleIdea, isIdea } = useIdeas()
   const [heartAnim, setHeartAnim] = useState(false)
+  const [preview, setPreview] = useState(false)
+  const hoverTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const cardRef = useRef<HTMLDivElement>(null)
   const heartRef = useRef<HTMLButtonElement>(null)
   const fav = isFavorite(listing.id)
+  const isIdeaSaved = isIdea(listing.id)
   const variant = getABVariant()
   const viewerCount = useViewerCount(listing.id)
   const countdown = useCountdown(listing.lastMinute ?? false)
@@ -79,16 +86,38 @@ function ServiceCardInner({ listing, delay = 0, compareSelected, onCompareToggle
 
   const handleMouseLeave = useCallback(() => {
     if (cardRef.current) cardRef.current.style.transform = ''
+    if (hoverTimer.current) clearTimeout(hoverTimer.current)
+    setPreview(false)
+  }, [])
+
+  const handleMouseEnterCard = useCallback(() => {
+    hoverTimer.current = setTimeout(() => setPreview(true), 200)
   }, [])
 
   const handleHeart = useCallback((e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
+    const wasFav = fav
     toggle(listing.id)
     setHeartAnim(true)
     if (heartRef.current) spawnParticles(heartRef.current)
     setTimeout(() => setHeartAnim(false), 500)
-  }, [toggle, listing.id])
+    // Check for discount unlock after adding (not removing)
+    if (!wasFav) {
+      setTimeout(() => {
+        const allFavs = safeRead<string[]>('theclass_favorites_guest', [])
+        if (allFavs.length >= 3 && !safeRead<boolean>('theclass_discount3_shown', false)) {
+          safeWrite('theclass_discount3_shown', true)
+          setTimeout(() => {
+            toast('🎁 Hai sbloccato WELCOME10!', {
+              description: 'Sconto del 10% sulla prima prenotazione.',
+              duration: 6000,
+            })
+          }, 600)
+        }
+      }, 100)
+    }
+  }, [toggle, listing.id, fav])
 
   return (
     <motion.div
@@ -102,9 +131,22 @@ function ServiceCardInner({ listing, delay = 0, compareSelected, onCompareToggle
           ref={cardRef}
           onMouseMove={handleMouseMove}
           onMouseLeave={handleMouseLeave}
+          onMouseEnter={handleMouseEnterCard}
           style={{ transition: 'transform 0.3s cubic-bezier(0.2,0.9,0.4,1.1), box-shadow 0.5s cubic-bezier(0.25,0.46,0.45,0.94)' }}
           className="group relative bg-[#FCFAF5] rounded-2xl overflow-hidden border border-[rgba(197,160,89,0.15)] shadow-[0_2px_8px_rgba(26,24,22,0.06)] hover:border-[rgba(197,160,89,0.55)] hover:shadow-[0_12px_32px_rgba(197,160,89,0.14)] card-shine cursor-pointer"
         >
+          {/* Hover preview tooltip */}
+          {preview && (
+            <div className="absolute -top-2 left-full ml-3 z-20 w-48 bg-white border border-[rgba(197,160,89,0.2)] rounded-xl p-3 shadow-[0_8px_24px_rgba(26,24,22,0.12)] hidden lg:block">
+              <p className="text-[10px] text-[#5A4F44] mb-1">Qualità</p>
+              <div className="w-full h-1 bg-[rgba(197,160,89,0.15)] rounded-full mb-2">
+                <div className="h-full bg-[#C5A059] rounded-full" style={{ width: `${listing.qualityScore ?? 90}%` }} />
+              </div>
+              <p className="text-[10px] text-[#5A4F44]">📍 {listing.location.split(',')[0]}</p>
+              <p className="text-[10px] text-[#5A4F44]">⭐ {listing.rating} ({listing.reviews} rec.)</p>
+              {listing.classApproved && <p className="text-[9px] text-[#C5A059] mt-1">✦ The Class Approved</p>}
+            </div>
+          )}
           {/* Image */}
           <div className="relative h-56 overflow-hidden">
             <img
@@ -145,6 +187,15 @@ function ServiceCardInner({ listing, delay = 0, compareSelected, onCompareToggle
               <span className="text-[10px] text-[#1C1C1C] font-medium">{viewerCount} ora</span>
             </div>
 
+            {/* Idea button */}
+            <button
+              onClick={e => { e.preventDefault(); e.stopPropagation(); toggleIdea(listing.id) }}
+              className="absolute top-3 right-12 z-10 w-8 h-8 rounded-full glass flex items-center justify-center hover:scale-110 transition-transform duration-200"
+              aria-label="Salva come idea"
+            >
+              <Lightbulb size={13} className={isIdeaSaved ? 'fill-yellow-400 text-yellow-400' : 'text-white'} />
+            </button>
+
             {/* Heart – MODIFICATO: ref per particelle oro */}
             <button
               ref={heartRef}
@@ -160,6 +211,15 @@ function ServiceCardInner({ listing, delay = 0, compareSelected, onCompareToggle
                 )}
               />
             </button>
+
+            {/* High demand badge */}
+            {listing.reviews > 40 && !listing.lastMinute && (
+              <div className="absolute bottom-3 right-3 z-10">
+                <span className="bg-amber-500/90 text-white text-[8px] font-semibold px-2 py-0.5 rounded-full animate-pulse">
+                  🔥 Alta richiesta
+                </span>
+              </div>
+            )}
           </div>
 
           {/* Content */}

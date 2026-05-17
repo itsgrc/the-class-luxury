@@ -7,6 +7,15 @@ import { generateId, formatPrice, cn } from '@/lib/utils'
 import type { Listing, UpgradeOption } from '@/data/listings'
 import { notifyRequestReceived, notifyAdmin } from '@/lib/notifications'
 import { validateCoupon, redeemCoupon } from '@/lib/coupons'
+import { safeRead, safeWrite } from '@/lib/errorHandler'
+
+const TIPS: Record<string, string> = {
+  yacht: '💡 Hai considerato l\'assicurazione da annullamento? Protegge l\'intera spesa.',
+  jet: '💡 Per tratte > 4h, il catering premium è incluso senza costi aggiuntivi.',
+  auto: '💡 L\'autista multilingue è disponibile su richiesta per eventi aziendali.',
+  villa: '💡 La pulizia giornaliera e il servizio butler sono personalizzabili.',
+  esperienza: '💡 Questo tipo di esperienza può essere ampliata su richiesta del concierge.',
+}
 
 interface RequestModalProps {
   open: boolean
@@ -82,6 +91,18 @@ export function RequestModal({
     notifyRequestReceived(form.name, form.email, id, listing.title)
     notifyAdmin(id, 'standard', `${listing.title} — ${form.name}`)
 
+    // Unlock free upgrade after 3 requests
+    const allRequests = safeRead<unknown[]>('theclass_requests', [])
+    if (allRequests.length === 3 && !safeRead<boolean>('theclass_upgrade_gift_shown', false)) {
+      safeWrite('theclass_upgrade_gift_shown', true)
+      setTimeout(() => {
+        toast('🎁 Upgrade gratuito sbloccato!', {
+          description: 'Chef privato per 1 giorno incluso nella tua prossima prenotazione.',
+          duration: 8000,
+        })
+      }, 1000)
+    }
+
     setStatus('success')
     toast.success('Richiesta inviata!', { description: `ID: ${id} — risposta entro 2 ore.` })
     setTimeout(() => {
@@ -123,6 +144,13 @@ export function RequestModal({
             </div>
 
             <form onSubmit={handleSubmit} className="px-7 py-6 space-y-5">
+              {/* Contextual tip */}
+              {TIPS[listing.category] && (
+                <div className="p-3 bg-[rgba(197,160,89,0.06)] border border-[rgba(197,160,89,0.15)] rounded-xl text-xs text-[#5A4F44] font-light">
+                  {TIPS[listing.category]}
+                </div>
+              )}
+
               {/* Name + Email */}
               <div className="grid grid-cols-2 gap-3">
                 {[

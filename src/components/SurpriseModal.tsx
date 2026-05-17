@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, RefreshCw, Heart, Share2 } from 'lucide-react'
 import { toast } from 'sonner'
@@ -51,8 +51,17 @@ export function SurpriseModal({ onClose }: Props) {
   const [mood, setMood] = useState<string | null>(null)
   const [idx, setIdx] = useState(0)
   const [saved, setSaved] = useState(false)
+  const [autoMode, setAutoMode] = useState(false)
 
   const itinerary = ITINERARIES[idx % ITINERARIES.length]
+
+  useEffect(() => {
+    if (!autoMode) return
+    const t = setInterval(() => {
+      setIdx(i => (i + 1) % ITINERARIES.length)
+    }, 8000)
+    return () => clearInterval(t)
+  }, [autoMode])
 
   const regenerate = useCallback(() => {
     setIdx(i => (i + 1) % ITINERARIES.length)
@@ -135,6 +144,15 @@ export function SurpriseModal({ onClose }: Props) {
             </p>
           </div>
           <div className="flex gap-2">
+            <button
+              onClick={() => setAutoMode(v => !v)}
+              className={cn(
+                'px-3 py-2 rounded-xl text-xs border transition-colors',
+                autoMode ? 'bg-[rgba(197,160,89,0.15)] border-[#C5A059] text-[#C5A059]' : 'border-[rgba(197,160,89,0.25)] text-[#5A4F44]'
+              )}
+            >
+              {autoMode ? '⏸ Auto' : '▶ Auto'}
+            </button>
             <button onClick={regenerate} className="p-2.5 rounded-xl border border-[rgba(197,160,89,0.25)] text-[#5A4F44] hover:text-[#C5A059] transition-colors">
               <RefreshCw size={15} />
             </button>

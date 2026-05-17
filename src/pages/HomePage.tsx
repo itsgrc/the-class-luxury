@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { Link, useNavigate } from '@tanstack/react-router'
-import { motion, useInView, useScroll, useTransform } from 'framer-motion'
+import { motion, useInView, useScroll, useTransform, AnimatePresence } from 'framer-motion'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { toast } from 'sonner'
@@ -10,9 +10,65 @@ import { listings } from '@/data/listings'
 import { safeRead } from '@/lib/errorHandler'
 import { ForYouSection } from '@/components/ForYouSection'
 import { SurpriseModal } from '@/components/SurpriseModal'
-import { AnimatePresence } from 'framer-motion'
+import { ScrollMilestones } from '@/components/ScrollMilestones'
 
 gsap.registerPlugin(ScrollTrigger)
+
+const TESTIMONIALS = [
+  { name: 'Alessandro M.', role: 'CEO, Tech Ventures', text: 'The Class ha trasformato il modo in cui organizzo i miei viaggi business. Efficienza e lusso senza compromessi.', avatar: 'AM' },
+  { name: 'Sofia L.', role: 'Entrepreneur', text: 'Il concierge ha organizzato il nostro anniversario in 48 ore. Yacht, cena stellata e suite a Capri. Perfetto.', avatar: 'SL' },
+  { name: 'Famiglia Rossi', role: 'Clienti Premium', text: "La villa in Sardegna era esattamente come la sognavamo. I bambini hanno vissuto un'estate magica.", avatar: 'FR' },
+  { name: 'Marco B.', role: 'Luxury Collector', text: 'Nessun altro servizio offre questa combinazione di qualità, riservatezza e risposta in tempo reale.', avatar: 'MB' },
+]
+
+function TestimonialsCarousel() {
+  const [idx, setIdx] = useState(0)
+
+  useEffect(() => {
+    const t = setInterval(() => setIdx(i => (i + 1) % TESTIMONIALS.length), 8000)
+    return () => clearInterval(t)
+  }, [])
+
+  const t = TESTIMONIALS[idx]
+
+  return (
+    <section className="py-16 bg-[#FDF9F2]">
+      <div className="max-w-4xl mx-auto px-6 text-center">
+        <p className="text-[11px] tracking-[0.22em] text-[#C5A059] font-[family-name:var(--font-family-mono)] uppercase mb-8">
+          Clienti
+        </p>
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={idx}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.4 }}
+          >
+            <p className="font-[family-name:var(--font-family-serif)] text-xl md:text-2xl text-[#1C1C1C] italic leading-relaxed mb-6">
+              "{t.text}"
+            </p>
+            <div className="flex items-center justify-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-[rgba(197,160,89,0.15)] border border-[rgba(197,160,89,0.3)] flex items-center justify-center">
+                <span className="text-[11px] font-medium text-[#C5A059]">{t.avatar}</span>
+              </div>
+              <div className="text-left">
+                <p className="text-sm font-medium text-[#1C1C1C]">{t.name}</p>
+                <p className="text-xs text-[#5A4F44]">{t.role}</p>
+              </div>
+            </div>
+          </motion.div>
+        </AnimatePresence>
+        <div className="flex gap-1.5 justify-center mt-6">
+          {TESTIMONIALS.map((_, i) => (
+            <button key={i} onClick={() => setIdx(i)}
+              className={`w-1.5 h-1.5 rounded-full transition-all ${i === idx ? 'bg-[#C5A059] w-4' : 'bg-[rgba(197,160,89,0.3)]'}`} />
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
 
 const HERO_VIDEO = 'https://player.vimeo.com/external/371433846.sd.mp4'
 
@@ -164,6 +220,14 @@ export function HomePage() {
 
   return (
     <div className="snap-container">
+      <ScrollMilestones milestones={[
+        { label: 'Hero', progress: 0 },
+        { label: 'Servizi', progress: 0.2 },
+        { label: 'Sorprendimi', progress: 0.4 },
+        { label: 'Per Te', progress: 0.6 },
+        { label: 'Testimonianze', progress: 0.8 },
+        { label: 'Stampa', progress: 0.95 },
+      ]} />
       {/* ══ HERO ══ */}
       <section className="snap-section relative min-h-screen flex items-center justify-center overflow-hidden">
         {/* Video background with parallax */}
@@ -414,6 +478,9 @@ export function HomePage() {
           ))}
         </div>
       </section>
+
+      {/* ══ TESTIMONIALS ══ */}
+      <TestimonialsCarousel />
 
       {/* ══ PRESS ══ */}
       <section className="py-16 bg-[#FCFAF5] border-t border-[rgba(197,160,89,0.15)]">

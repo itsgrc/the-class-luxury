@@ -275,86 +275,87 @@ body {
   color: white !important;
 }
 
-/* ── DARK MODE ── */
+/* ── DARK THEME ── */
 [data-theme="dark"] {
-  --bg-primary: #0A0A0A;
-  --bg-card: #141414;
-  --text-primary: #F5F0E8;
-  --text-secondary: #8A8070;
-  --border-gold: rgba(197,160,89,0.2);
+  color-scheme: dark;
 }
 
 [data-theme="dark"] body {
   background-color: #0A0A0A;
-  color: #F5F0E8;
+  color: #F5F5F5;
 }
 
 [data-theme="dark"] .glass {
-  background: rgba(20, 18, 14, 0.88);
+  background: rgba(26, 26, 26, 0.85);
+  backdrop-filter: blur(16px);
   border-color: rgba(197, 160, 89, 0.2);
 }
 
-[data-theme="dark"] .glass-dark {
-  background: rgba(10, 8, 6, 0.85);
+/* Cards and surfaces */
+[data-theme="dark"] .bg-\[\#FDF9F2\],
+[data-theme="dark"] .bg-\[\#FCFAF5\] {
+  background-color: #0A0A0A !important;
 }
 
-/* ── DREAM MODE ── */
-[data-dream="true"] {
-  --color-ivory: #0a080f;
-  --color-ivory-card: #110d1a;
-  --color-velvet: #f0e8ff;
-  --color-taupe: #b8a8cc;
+[data-theme="dark"] .bg-white {
+  background-color: #1A1A1A !important;
 }
 
-[data-dream="true"] body {
-  background: radial-gradient(ellipse at 20% 50%, #1a0a2e 0%, #0a080f 60%);
-  color: #f0e8ff;
+[data-theme="dark"] .text-\[\#1C1C1C\] {
+  color: #F5F5F5 !important;
 }
 
-[data-dream="true"] .glass {
-  background: rgba(20, 10, 40, 0.85);
-  backdrop-filter: blur(20px);
+[data-theme="dark"] .text-\[\#5A4F44\] {
+  color: #B0B0B0 !important;
 }
 
-/* Dream floating particles */
-@keyframes dreamFloat {
-  0%, 100% { transform: translateY(0) scale(1); opacity: 0.3; }
-  50% { transform: translateY(-30px) scale(1.2); opacity: 0.7; }
+[data-theme="dark"] .border-\[rgba\(197\,160\,89\,0\.15\)\],
+[data-theme="dark"] .border-\[rgba\(197\,160\,89\,0\.18\)\] {
+  border-color: rgba(197, 160, 89, 0.25) !important;
 }
 
-.dream-particle {
-  position: fixed;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(197,160,89,0.8), transparent);
-  pointer-events: none;
-  animation: dreamFloat var(--duration, 6s) ease-in-out infinite;
-  animation-delay: var(--delay, 0s);
-  z-index: 0;
+[data-theme="dark"] header {
+  background: rgba(10, 10, 10, 0.92);
 }
 
-[data-dream="true"] .dream-overlay {
-  display: block;
+[data-theme="dark"] footer {
+  background-color: #0A0A0A !important;
+  border-color: rgba(197, 160, 89, 0.2);
 }
 
-.dream-overlay {
-  display: none;
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 1;
-  overflow: hidden;
+[data-theme="dark"] input,
+[data-theme="dark"] textarea,
+[data-theme="dark"] select {
+  background-color: #1A1A1A !important;
+  color: #F5F5F5 !important;
+  border-color: rgba(197, 160, 89, 0.25) !important;
 }
 
-/* ── FOCUS MODE ── */
-.focus-mode header,
-.focus-mode footer,
-.focus-mode .back-to-top,
-.focus-mode .scroll-progress-bar {
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.4s;
+[data-theme="dark"] .shadow-\[0_2px_8px_rgba\(26\,24\,22\,0\.06\)\] {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4) !important;
 }
 
-.focus-mode main {
-  padding-top: 0 !important;
+/* Smooth theme transition */
+body, header, footer, .glass,
+[class*="bg-[#"] {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+/* ── SILENCE MODE ── */
+[data-silence="true"] *,
+[data-silence="true"] *::before,
+[data-silence="true"] *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+}
+
+/* ── BREATHING IDLE EFFECT ── */
+@keyframes breathe {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.95; }
+}
+
+.idle-breathe {
+  animation: breathe 4s ease-in-out infinite;
 }

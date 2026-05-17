@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Link, useLocation, useNavigate } from '@tanstack/react-router'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Heart, Menu, X, User, Moon, Sun, Mic, MicOff, Maximize2, Minimize2 } from 'lucide-react'
+import { Heart, Menu, X, User, Moon, Sun, Mic, MicOff } from 'lucide-react'
 import { toast } from 'sonner'
 import { useFavorites } from '@/hooks/useFavorites'
 import { cn } from '@/lib/utils'
@@ -14,9 +14,10 @@ import { BrandLogo } from './BrandLogo'
 import { AIConcierge } from './AIConcierge'
 import { useTheme } from '@/context/ThemeContext'
 import { useCurrency, RATES, type Currency } from '@/context/CurrencyContext'
-import { useDream } from '@/context/DreamContext'
-import { DreamOverlay } from './DreamOverlay'
+import { useAuth } from '@/context/AuthContext'
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts'
+import { useInactivityTimer } from '@/hooks/useInactivityTimer'
+import { FirstVisitTour } from './FirstVisitTour'
 
 const SURPRISES = [
   'Yacht Azimut a metà prezzo domani — solo per te 🎁',
@@ -34,6 +35,13 @@ const NAV = [
   { to: '/stories', label: 'Stories' },
 ]
 
+const getGreeting = () => {
+  const h = new Date().getHours()
+  if (h < 12) return 'Buongiorno'
+  if (h < 18) return 'Buon pomeriggio'
+  return 'Buonasera'
+}
+
 export function Layout({ children }: { children: React.ReactNode }) {
   const [scrolled, setScrolled] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
@@ -42,10 +50,38 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const { lang, toggle } = useLang()
   const { isDark, toggle: toggleTheme } = useTheme()
   const { currency, setCurrency } = useCurrency()
-  const { isDream, toggle: toggleDream } = useDream()
-  const [focusMode, setFocusMode] = useState(false)
+  const { user } = useAuth()
   const [listening, setListening] = useState(false)
   const navigate = useNavigate()
+
+  const [silenceMode, setSilenceMode] = useState(() => localStorage.getItem('theclass_silence') === 'true')
+
+  const toggleSilence = () => setSilenceMode(prev => {
+    const next = !prev
+    localStorage.setItem('theclass_silence', String(next))
+    if (next) document.documentElement.setAttribute('data-silence', 'true')
+    else document.documentElement.removeAttribute('data-silence')
+    return next
+  })
+
+  useEffect(() => {
+    if (silenceMode) document.documentElement.setAttribute('data-silence', 'true')
+  }, [])
+
+  useInactivityTimer(5 * 60 * 1000)
+
+  useEffect(() => {
+    const handler = () => {
+      toast('Sei ancora lì?', {
+        description: 'Redirect alla home tra 2 minuti senza attività.',
+        action: { label: 'Resto qui', onClick: () => {} },
+        duration: 120000,
+      })
+      setTimeout(() => navigate({ to: '/' }), 120000)
+    }
+    window.addEventListener('theclass:inactive', handler)
+    return () => window.removeEventListener('theclass:inactive', handler)
+  }, [navigate])
 
   const startVoiceSearch = useCallback(() => {
     const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
@@ -67,8 +103,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
   useKeyboardShortcuts({
     'G': () => navigate({ to: '/stories' }),
     'S': () => window.dispatchEvent(new CustomEvent('theclass:surprise')),
-    'D': () => toggleDream(),
-    'F': () => setFocusMode(v => !v),
   })
 
   useEffect(() => {
@@ -79,8 +113,24 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
   useEffect(() => { setMobileOpen(false) }, [location.pathname])
 
+  // Breathing idle effect
+  useEffect(() => {
+    let idleTimer: ReturnType<typeof setTimeout>
+    const setIdle = () => {
+      document.querySelectorAll('.card-shine').forEach(el => el.classList.add('idle-breathe'))
+    }
+    const clearIdle = () => {
+      document.querySelectorAll('.idle-breathe').forEach(el => el.classList.remove('idle-breathe'))
+      clearTimeout(idleTimer)
+      idleTimer = setTimeout(setIdle, 10000)
+    }
+    window.addEventListener('mousemove', clearIdle, { passive: true })
+    idleTimer = setTimeout(setIdle, 10000)
+    return () => { window.removeEventListener('mousemove', clearIdle); clearTimeout(idleTimer) }
+  }, [])
+
   return (
-    <div className={cn("min-h-screen flex flex-col transition-all duration-500", focusMode && "focus-mode")}>
+    <div className={cn("min-h-screen flex flex-col transition-all duration-500")}>
       <SkipToMain />
       <ScrollProgressBar />
       {/* ── HEADER ── */}
@@ -122,6 +172,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
               </Link>
             ))}
           </nav>
+
+          {/* Greeting */}
+          <div className="hidden lg:flex items-center">
+            <span className={cn('text-[11px] font-light italic tracking-wide transition-colors', scrolled ? 'text-[#5A4F44]' : 'text-white/60')}>
+              {getGreeting()}{user?.name ? `, ${user.name.split(' ')[0]}` : ''}
+            </span>
+          </div>
 
           {/* Right */}
           <div className="flex items-center gap-4">
@@ -165,24 +222,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
               {listening ? <MicOff size={15} /> : <Mic size={15} />}
             </button>
 
-            {/* Dream mode */}
+            {/* Silence mode */}
             <button
-              onClick={toggleDream}
-              aria-label={isDream ? 'Esci da Dream Mode' : 'Attiva Dream Mode'}
-              className={cn('hidden md:flex items-center text-sm transition-colors',
-                isDream ? 'text-[#C5A059]' : scrolled ? 'text-[#5A4F44]' : 'text-white/70'
-              )}
+              onClick={toggleSilence}
+              aria-label={silenceMode ? 'Riattiva animazioni' : 'Silenzio (disattiva animazioni)'}
+              className={cn('hidden md:flex items-center text-xs transition-colors', silenceMode ? 'text-[#C5A059]' : scrolled ? 'text-[#5A4F44]' : 'text-white/70')}
             >
-              🌙
-            </button>
-
-            {/* Focus Mode */}
-            <button
-              onClick={() => setFocusMode(v => !v)}
-              aria-label={focusMode ? 'Esci da Focus Mode' : 'Attiva Focus Mode'}
-              className={cn('hidden md:flex items-center transition-colors', scrolled ? 'text-[#5A4F44]' : 'text-white/70')}
-            >
-              {focusMode ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
+              {silenceMode ? '🔇' : '🔔'}
             </button>
 
             <Link to="/profilo" aria-label="Profilo utente" className="flex items-center">
@@ -341,7 +387,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       </footer>
       <BackToTop />
       <AIConcierge />
-      <DreamOverlay />
+      <FirstVisitTour />
     </div>
   )
 }

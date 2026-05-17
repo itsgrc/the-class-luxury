@@ -262,7 +262,7 @@ export function CrowdConciergePage() {
                 )}
 
                 {/* Actions */}
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 flex-wrap">
                   <button onClick={() => voteRequest(req.id)}
                     className="flex items-center gap-1.5 text-xs text-[#5A4F44] hover:text-[#C5A059] transition-colors">
                     <ThumbsUp size={12} /> {req.votes}
@@ -270,6 +270,18 @@ export function CrowdConciergePage() {
                   <button onClick={() => setReplyingTo(replyingTo === req.id ? null : req.id)}
                     className="flex items-center gap-1.5 text-xs text-[#5A4F44] hover:text-[#C5A059] transition-colors">
                     <MessageCircle size={12} /> {req.answers.length} risposte
+                  </button>
+                  <button
+                    onClick={() => window.open(`https://wa.me/?text=${encodeURIComponent(`Guarda questa richiesta su the Class: "${req.title}" — https://the-class-luxury.pages.dev/crowd-concierge`)}`, '_blank')}
+                    className="flex items-center gap-1 text-xs text-[#5A4F44] hover:text-green-600 transition-colors"
+                  >
+                    <span className="text-xs">💬</span> WhatsApp
+                  </button>
+                  <button
+                    onClick={() => window.open(`https://t.me/share/url?url=${encodeURIComponent('https://the-class-luxury.pages.dev/crowd-concierge')}&text=${encodeURIComponent(req.title)}`, '_blank')}
+                    className="flex items-center gap-1 text-xs text-[#5A4F44] hover:text-blue-500 transition-colors"
+                  >
+                    <span className="text-xs">✈️</span> Telegram
                   </button>
                 </div>
 

@@ -39,6 +39,8 @@ function Stars({ rating, interactive, onRate }: { rating: number; interactive?: 
   )
 }
 
+const EMOJIS = ['❤️', '🚀', '🍾', '🌟']
+
 export function ReviewSection({ listingId, listingTitle }: Props) {
   const { reviews: localReviews, addReview, avgRating: _localAvg } = useReviews(listingId)
   // Merge: localStorage reviews override seed reviews for same userId
@@ -55,6 +57,17 @@ export function ReviewSection({ listingId, listingTitle }: Props) {
   const { user } = useAuth()
   const [form, setForm] = useState({ rating: 0, text: '' })
   const [showForm, setShowForm] = useState(false)
+  const [reactions, setReactions] = useState<Record<string, Record<string, number>>>({})
+
+  const react = (reviewId: string, emoji: string) => {
+    setReactions(prev => ({
+      ...prev,
+      [reviewId]: {
+        ...(prev[reviewId] ?? {}),
+        [emoji]: ((prev[reviewId]?.[emoji]) ?? 0) + 1
+      }
+    }))
+  }
 
   const hasReviewed = user ? reviews.some(r => r.userId === user.id) : false
 
@@ -161,6 +174,17 @@ export function ReviewSection({ listingId, listingTitle }: Props) {
                 </span>
               </div>
               <p className="text-sm text-[#5A4F44] font-light leading-relaxed">{r.text}</p>
+              <div className="flex gap-2 mt-2">
+                {EMOJIS.map(e => (
+                  <button key={e} onClick={() => react(r.id ?? r.userId, e)}
+                    className="flex items-center gap-1 text-xs bg-[rgba(197,160,89,0.06)] hover:bg-[rgba(197,160,89,0.15)] border border-[rgba(197,160,89,0.15)] rounded-full px-2 py-0.5 transition-colors">
+                    {e}
+                    <span className="text-[10px] text-[#5A4F44]">
+                      {reactions[r.id ?? r.userId]?.[e] ?? ''}
+                    </span>
+                  </button>
+                ))}
+              </div>
             </motion.div>
           ))}
         </div>
