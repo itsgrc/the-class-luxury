@@ -135,6 +135,7 @@ export function ItinerariPage() {
   return (
     <div className="min-h-screen bg-[#FDF9F2] pt-24 pb-24">
       <title>Pianifica il Tuo Itinerario — the Class</title>
+      <meta name="description" content="Costruisci il tuo itinerario luxury perfetto: scegli trasporti esclusivi, esperienze e plus, poi condividilo o richiedilo al concierge." />
       <div className="max-w-5xl mx-auto px-6">
         {/* Header */}
         <div className="mb-12 text-center">

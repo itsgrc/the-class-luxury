@@ -386,6 +386,24 @@ export function Layout({ children }: { children: React.ReactNode }) {
             </div>
           </div>
 
+          {/* Trust badges */}
+          <div className="flex flex-wrap justify-center gap-4 mb-6">
+            {[
+              { icon: '🔒', label: 'SSL Secured', sub: '256-bit encryption' },
+              { icon: '💳', label: 'Pagamenti Sicuri', sub: 'Stripe & Visa Verified' },
+              { icon: '⚓', label: 'Membro IYBA', sub: 'Int\'l Yacht Brokers Assoc.' },
+              { icon: '✈️', label: 'IATA Certified', sub: 'Charter Air Broker' },
+            ].map(b => (
+              <div key={b.label} className="flex items-center gap-2 px-3 py-2 rounded-xl border border-[rgba(197,160,89,0.15)] bg-[rgba(197,160,89,0.03)]">
+                <span className="text-sm">{b.icon}</span>
+                <div>
+                  <p className="text-[10px] font-medium text-[#1C1C1C] leading-none">{b.label}</p>
+                  <p className="text-[9px] text-[#5A4F44] leading-none mt-0.5">{b.sub}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+
           <div className="pt-6 border-t border-[rgba(197,160,89,0.2)] flex flex-col md:flex-row items-center justify-between gap-4">
             <span className="font-[family-name:var(--font-family-display)] text-lg">
               the <span className="gold-gradient-text">Class</span>

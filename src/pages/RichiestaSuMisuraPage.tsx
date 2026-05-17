@@ -57,6 +57,7 @@ export function RichiestaSuMisuraPage() {
   return (
     <div className="min-h-screen bg-[#FDF9F2] pt-24 pb-24">
       <title>Richiesta Su Misura — the Class</title>
+      <meta name="description" content="Descrivi il viaggio dei tuoi sogni: il nostro team costruirà un pacchetto esclusivo su misura per te entro 24 ore." />
       <div className="max-w-xl mx-auto px-6">
         <div className="mb-12 text-center">
           <p className="font-[family-name:var(--font-family-serif)] text-[#C5A059] italic tracking-widest text-sm uppercase mb-3">

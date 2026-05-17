@@ -124,7 +124,9 @@ export function QuizPage() {
     <div className="min-h-screen bg-[#FDF9F2] pt-24 pb-20 flex items-center">
       <Helmet>
         <title>Lifestyle Quiz — the Class</title>
+        <meta name="description" content="Scopri il tuo profilo luxury con il quiz personalità di the Class. 5 domande per trovare lo stile di viaggio perfetto per te." />
       </Helmet>
+      <h1 className="sr-only">Lifestyle Quiz — the Class</h1>
       <div className="max-w-xl mx-auto px-6 w-full">
         <AnimatePresence mode="wait">
           {!result ? (

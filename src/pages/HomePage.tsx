@@ -253,6 +253,7 @@ export function HomePage() {
   return (
     <div className="snap-container">
       <title>the Class – L'arte del viaggio senza confini</title>
+      <meta name="description" content="Noleggio yacht, jet privati, auto di lusso ed esperienze esclusive in tutto il mondo. Concierge 24/7, selezione curata, privacy assoluta." />
       <ScrollMilestones milestones={[
         { label: 'Hero', progress: 0 },
         { label: 'Servizi', progress: 0.2 },

@@ -169,6 +169,10 @@ export function DettaglioPage() {
                   Trending
                 </span>
               )}
+              <span className="flex items-center gap-1 text-[9px] font-semibold px-2.5 py-1 rounded-full uppercase tracking-widest border border-[rgba(197,160,89,0.4)] text-[#C5A059]">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                Verificato da The Class
+              </span>
             </div>
 
             {/* Description */}
