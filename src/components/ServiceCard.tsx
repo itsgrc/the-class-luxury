@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback, memo, useMemo, useEffect } from 'react'
 import { Link } from '@tanstack/react-router'
 import { motion } from 'framer-motion'
-import { Heart, Star, MapPin, Lightbulb } from 'lucide-react'
+import { Heart, Star, MapPin, Lightbulb, Bell, Camera } from 'lucide-react'
 import type { Listing } from '@/data/listings'
 import { getCategoryLabel } from '@/data/listings'
 import { useFavorites } from '@/hooks/useFavorites'
@@ -9,6 +9,7 @@ import { useIdeas } from '@/hooks/useIdeas'
 import { formatPrice, cn, getABVariant } from '@/lib/utils'
 import { safeRead, safeWrite } from '@/lib/errorHandler'
 import { toast } from 'sonner'
+import { toPng } from 'html-to-image'
 
 interface ServiceCardProps {
   listing: Listing
@@ -60,6 +61,28 @@ function spawnParticles(btn: HTMLElement) {
   void rect // avoid unused warning
 }
 
+function usePriceAlert(listingId: string) {
+  const STORAGE_KEY = 'theclass_price_alerts'
+  const [subscribed, setSubscribed] = useState(() => {
+    const alerts = safeRead<string[]>(STORAGE_KEY, [])
+    return alerts.includes(listingId)
+  })
+
+  const toggle = useCallback(() => {
+    const alerts = safeRead<string[]>(STORAGE_KEY, [])
+    if (alerts.includes(listingId)) {
+      safeWrite(STORAGE_KEY, alerts.filter(id => id !== listingId))
+      setSubscribed(false)
+    } else {
+      safeWrite(STORAGE_KEY, [...alerts, listingId])
+      setSubscribed(true)
+      toast('🔔 Ti avviseremo se il prezzo scende!', { duration: 3000 })
+    }
+  }, [listingId])
+
+  return { subscribed, toggle }
+}
+
 function ServiceCardInner({ listing, delay = 0, compareSelected, onCompareToggle }: ServiceCardProps) {
   const { toggle, isFavorite } = useFavorites()
   const { toggle: toggleIdea, isIdea } = useIdeas()
@@ -73,6 +96,29 @@ function ServiceCardInner({ listing, delay = 0, compareSelected, onCompareToggle
   const variant = getABVariant()
   const viewerCount = useViewerCount(listing.id)
   const countdown = useCountdown(listing.lastMinute ?? false)
+  const { subscribed: priceAlertSubscribed, toggle: togglePriceAlert } = usePriceAlert(listing.id)
+  const isLowAvailability = listing.reviews < 5
+
+  const handleScreenshot = useCallback(async (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (!cardRef.current) return
+    try {
+      const dataUrl = await toPng(cardRef.current)
+      const res = await fetch(dataUrl)
+      const blob = await res.blob()
+      await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })])
+      toast('📸 Immagine copiata negli appunti!')
+    } catch {
+      toast.error('Screenshot non supportato')
+    }
+  }, [])
+
+  const handleBell = useCallback((e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    togglePriceAlert()
+  }, [togglePriceAlert])
 
   // Magnetic mousemove: max 4px translate
   const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
@@ -187,6 +233,15 @@ function ServiceCardInner({ listing, delay = 0, compareSelected, onCompareToggle
               <span className="text-[10px] text-[#1C1C1C] font-medium">{viewerCount} ora</span>
             </div>
 
+            {/* Screenshot button */}
+            <button
+              onClick={handleScreenshot}
+              className="absolute top-3 right-[5.5rem] z-10 w-8 h-8 rounded-full glass flex items-center justify-center hover:scale-110 transition-transform duration-200"
+              aria-label="Screenshot"
+            >
+              <Camera size={13} className="text-white" />
+            </button>
+
             {/* Idea button */}
             <button
               onClick={e => { e.preventDefault(); e.stopPropagation(); toggleIdea(listing.id) }}
@@ -240,14 +295,39 @@ function ServiceCardInner({ listing, delay = 0, compareSelected, onCompareToggle
                 </span>
                 <span className="text-[11px] text-[#5A4F44] font-light">/ {listing.priceUnit}</span>
               </div>
-              <div className="flex items-center gap-1">
-                <Star size={11} className="fill-[#C5A059] text-[#C5A059]" />
-                <span className="font-[family-name:var(--font-family-mono)] text-xs text-[#1C1C1C]">
-                  {listing.rating}
-                </span>
-                <span className="text-[11px] text-[#5A4F44]">({listing.reviews})</span>
+              <div className="flex items-center gap-2">
+                {/* Bell button */}
+                <button
+                  onClick={handleBell}
+                  className="p-1 rounded-full hover:bg-[rgba(197,160,89,0.1)] transition-colors"
+                  aria-label={priceAlertSubscribed ? 'Rimuovi avviso prezzo' : 'Aggiungi avviso prezzo'}
+                >
+                  <Bell
+                    size={13}
+                    className={priceAlertSubscribed ? 'fill-[#C5A059] text-[#C5A059]' : 'text-[#5A4F44]'}
+                  />
+                </button>
+                <div className="flex items-center gap-1">
+                  <Star size={11} className="fill-[#C5A059] text-[#C5A059]" />
+                  <span className="font-[family-name:var(--font-family-mono)] text-xs text-[#1C1C1C]">
+                    {listing.rating}
+                  </span>
+                  <span className="text-[11px] text-[#5A4F44]">({listing.reviews})</span>
+                </div>
               </div>
             </div>
+
+            {/* Last spot badge */}
+            {isLowAvailability && (
+              <motion.p
+                animate={{ opacity: [1, 0.6, 1] }}
+                transition={{ repeat: Infinity, duration: 2 }}
+                className="mt-1.5 text-[10px] italic font-medium"
+                style={{ background: 'linear-gradient(90deg, #ef4444, #C5A059)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}
+              >
+                ⚡ Solo 2 posti — prenotato 8 min fa
+              </motion.p>
+            )}
 
             {listing.lastMinute && (
               <div className="mt-2 flex items-center justify-between px-2 py-1.5 bg-red-50 border border-red-200 rounded-lg">

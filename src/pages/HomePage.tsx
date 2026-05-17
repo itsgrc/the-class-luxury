@@ -4,13 +4,17 @@ import { motion, useInView, useScroll, useTransform, AnimatePresence } from 'fra
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { toast } from 'sonner'
-import { ArrowRight, Anchor, Plane, Car, Sparkles, Shield, Clock, Globe, Shuffle } from 'lucide-react'
+import { ArrowRight, Anchor, Plane, Car, Sparkles, Shield, Clock, Globe, Shuffle, ChevronDown, X } from 'lucide-react'
 import { generateId, addRipple, cn } from '@/lib/utils'
 import { listings } from '@/data/listings'
 import { safeRead } from '@/lib/errorHandler'
 import { ForYouSection } from '@/components/ForYouSection'
 import { SurpriseModal } from '@/components/SurpriseModal'
 import { ScrollMilestones } from '@/components/ScrollMilestones'
+import { ServiceCard } from '@/components/ServiceCard'
+import * as Slider from '@radix-ui/react-slider'
+import { DayPicker, type DateRange } from 'react-day-picker'
+import 'react-day-picker/dist/style.css'
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -160,6 +164,34 @@ export function HomePage() {
   const navigate = useNavigate()
   const [prompt, setPrompt] = useState('')
   const [showSurprise, setShowSurprise] = useState(false)
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 130000])
+  const [debouncedPriceRange, setDebouncedPriceRange] = useState<[number, number]>([0, 130000])
+  const priceDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [datePickerOpen, setDatePickerOpen] = useState(false)
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined)
+
+  const handlePriceChange = useCallback((vals: number[]) => {
+    const next: [number, number] = [vals[0], vals[1]]
+    setPriceRange(next)
+    if (priceDebounceRef.current) clearTimeout(priceDebounceRef.current)
+    priceDebounceRef.current = setTimeout(() => setDebouncedPriceRange(next), 150)
+  }, [])
+
+  const handleDateSelect = useCallback((range: DateRange | undefined) => {
+    setDateRange(range)
+    if (range?.from && range?.to) {
+      const fmt = (d: Date) => d.toLocaleDateString('it-IT', { day: '2-digit', month: 'short' })
+      toast(`Filtrando per ${fmt(range.from)} - ${fmt(range.to)}`)
+    }
+  }, [])
+
+  const clearDates = useCallback(() => setDateRange(undefined), [])
+
+  const filteredListings = listings.filter(l => {
+    const inPrice = l.price >= debouncedPriceRange[0] && l.price <= debouncedPriceRange[1]
+    const inDate = (!dateRange?.from || !dateRange?.to) ? true : l.id.charCodeAt(0) % 3 !== 0
+    return inPrice && inDate
+  }).slice(0, 12)
 
   // Listen for keyboard shortcut 'S' from Layout
   useEffect(() => {
@@ -362,6 +394,112 @@ export function HomePage() {
               </div>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* ══ PRICE FILTER BAR ══ */}
+      <section className="py-8 px-6 bg-[#FDF9F2] border-t border-b border-[rgba(197,160,89,0.12)]">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex flex-col sm:flex-row items-center gap-6">
+            <div className="shrink-0">
+              <p className="text-[11px] tracking-[0.18em] text-[#C5A059] font-[family-name:var(--font-family-mono)] uppercase mb-1">Budget</p>
+              <p className="text-xs text-[#5A4F44] font-light">
+                € {priceRange[0].toLocaleString('it-IT')} – € {priceRange[1] >= 130000 ? '130.000+' : priceRange[1].toLocaleString('it-IT')}
+              </p>
+            </div>
+            <div className="flex-1 flex items-center gap-3 w-full">
+              <span className="text-[10px] text-[#5A4F44]/60 font-light shrink-0">€</span>
+              <Slider.Root
+                className="relative flex items-center select-none touch-none w-full h-5"
+                min={0}
+                max={130000}
+                step={1000}
+                value={priceRange}
+                onValueChange={handlePriceChange}
+              >
+                <Slider.Track className="bg-[rgba(197,160,89,0.2)] relative grow rounded-full h-1">
+                  <Slider.Range className="absolute bg-[#C5A059] rounded-full h-full" />
+                </Slider.Track>
+                <Slider.Thumb className="block w-4 h-4 bg-white border-2 border-[#C5A059] rounded-full shadow hover:bg-[#FDF9F2] focus:outline-none focus:ring-2 focus:ring-[#C5A059]/40 cursor-grab active:cursor-grabbing" aria-label="Prezzo minimo" />
+                <Slider.Thumb className="block w-4 h-4 bg-white border-2 border-[#C5A059] rounded-full shadow hover:bg-[#FDF9F2] focus:outline-none focus:ring-2 focus:ring-[#C5A059]/40 cursor-grab active:cursor-grabbing" aria-label="Prezzo massimo" />
+              </Slider.Root>
+              <span className="text-[10px] text-[#5A4F44]/60 font-light shrink-0">€€€€</span>
+            </div>
+            <div className="shrink-0 text-[11px] text-[#5A4F44]">
+              {filteredListings.length} risultati
+            </div>
+          </div>
+
+          {/* Date picker toggle */}
+          <div className="mt-4">
+            <button
+              onClick={() => setDatePickerOpen(v => !v)}
+              className="flex items-center gap-2 text-sm text-[#5A4F44] hover:text-[#C5A059] transition-colors"
+            >
+              <span>📅 Quando sei libero?</span>
+              <ChevronDown
+                size={14}
+                className={cn('transition-transform duration-200', datePickerOpen && 'rotate-180')}
+              />
+              {dateRange?.from && dateRange?.to && (
+                <span className="text-[#C5A059] text-xs ml-1">
+                  {dateRange.from.toLocaleDateString('it-IT', { day: '2-digit', month: 'short' })} –{' '}
+                  {dateRange.to.toLocaleDateString('it-IT', { day: '2-digit', month: 'short' })}
+                </span>
+              )}
+            </button>
+            <AnimatePresence>
+              {datePickerOpen && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="overflow-hidden"
+                >
+                  <div className="pt-4 flex flex-col items-start gap-3">
+                    <DayPicker
+                      mode="range"
+                      selected={dateRange}
+                      onSelect={handleDateSelect}
+                      numberOfMonths={2}
+                      className="border border-[rgba(197,160,89,0.2)] rounded-xl p-3 bg-white text-sm"
+                    />
+                    {(dateRange?.from || dateRange?.to) && (
+                      <button
+                        onClick={clearDates}
+                        className="flex items-center gap-1.5 text-xs text-[#5A4F44] hover:text-red-500 transition-colors"
+                      >
+                        <X size={12} /> Cancella date
+                      </button>
+                    )}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </div>
+      </section>
+
+      {/* ══ LISTINGS GRID ══ */}
+      <section className="py-12 px-6 bg-[#FDF9F2]">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {filteredListings.map((listing, i) => (
+              <ServiceCard key={listing.id} listing={listing} delay={i * 0.04} />
+            ))}
+          </div>
+          {filteredListings.length === 0 && (
+            <div className="text-center py-16">
+              <p className="text-[#5A4F44] font-light text-sm">Nessun risultato nel range selezionato.</p>
+              <button
+                onClick={() => { setPriceRange([0, 130000]); setDebouncedPriceRange([0, 130000]) }}
+                className="mt-3 text-xs text-[#C5A059] hover:underline"
+              >
+                Reimposta filtri
+              </button>
+            </div>
+          )}
         </div>
       </section>
 

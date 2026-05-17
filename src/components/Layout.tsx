@@ -5,6 +5,7 @@ import { Heart, Menu, X, User, Moon, Sun, Mic, MicOff } from 'lucide-react'
 import { toast } from 'sonner'
 import { useFavorites } from '@/hooks/useFavorites'
 import { cn } from '@/lib/utils'
+import { listings } from '@/data/listings'
 import { SkipToMain } from './SkipToMain'
 import { OfflineBanner } from './OfflineBanner'
 import { useLang } from '@/context/LangContext'
@@ -69,6 +70,26 @@ export function Layout({ children }: { children: React.ReactNode }) {
   }, [])
 
   useInactivityTimer(5 * 60 * 1000)
+
+  // Price drop alerts check on mount
+  useEffect(() => {
+    const alerts = (() => { try { return JSON.parse(localStorage.getItem('theclass_price_alerts') ?? '[]') as string[] } catch { return [] } })()
+    alerts.forEach(id => {
+      const sentKey = `theclass_alert_sent_${id}`
+      if (!localStorage.getItem(sentKey) && Math.random() > 0.7) {
+        localStorage.setItem(sentKey, 'true')
+        const listing = listings.find(l => l.id === id)
+        if (listing) {
+          const discounted = Math.round(listing.price * 0.88)
+          setTimeout(() => {
+            toast(`💸 Il prezzo di ${listing.title} è sceso del 12%! Da €${listing.price.toLocaleString('it-IT')} a €${discounted.toLocaleString('it-IT')}`, {
+              duration: 8000,
+            })
+          }, 2000 + Math.random() * 3000)
+        }
+      }
+    })
+  }, [])
 
   useEffect(() => {
     const handler = () => {
@@ -316,6 +337,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
               ]},
               { title: 'Magazine', items: [
                 { label: 'Stories', href: '/stories' },
+                { label: 'Mind Map', href: '/mindmap' },
                 { label: 'Chi Siamo', href: '/chi-siamo' },
                 { label: 'FAQ', href: '/faq' },
                 { label: 'Contatti', href: '/contatti' },

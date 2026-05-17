@@ -128,6 +128,12 @@ const quizRoute = createRoute({
   component: lazy(() => import('./pages/QuizPage').then(m => ({ default: m.QuizPage }))),
 })
 
+const mindmapRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/mindmap',
+  component: lazy(() => import('./pages/MindMapPage').then(m => ({ default: m.MindMapPage }))),
+})
+
 const routeTree = rootRoute.addChildren([
   indexRoute,
   serviziRoute,
@@ -148,6 +154,7 @@ const routeTree = rootRoute.addChildren([
   pacchettiRoute,
   crowdConciergeRoute,
   quizRoute,
+  mindmapRoute,
 ])
 
 export const router = createRouter({
