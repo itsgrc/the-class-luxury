@@ -9,6 +9,8 @@ import * as Slider from '@radix-ui/react-slider'
 import { useComparison } from '@/hooks/useComparison'
 import { CompareBar } from '@/components/CompareBar'
 import { CompareModal } from '@/components/CompareModal'
+import { List } from 'react-window'
+import type { CSSProperties } from 'react'
 
 // ── Map Modal ──
 function MapModal({ open, onClose, count }: { open: boolean; onClose: () => void; count: number }) {
@@ -95,6 +97,83 @@ function SkeletonCard() {
   )
 }
 
+// ── Virtual Grid for large datasets ──
+const CARD_HEIGHT = 380
+const COLS = 3
+
+type ListingItem = (typeof listings)[number]
+
+interface RowCellProps {
+  items: ListingItem[]
+  compareSelected: (id: string) => boolean
+  onCompareToggle: (id: string) => void
+}
+
+function VirtualListRow({
+  index,
+  style,
+  items,
+  compareSelected,
+  onCompareToggle,
+}: {
+  index: number
+  style: CSSProperties
+  items: ListingItem[]
+  compareSelected: (id: string) => boolean
+  onCompareToggle: (id: string) => void
+}) {
+  const startIdx = index * COLS
+  const rowItems = items.slice(startIdx, startIdx + COLS)
+  return (
+    <div style={style} className="flex gap-6 pb-6">
+      {rowItems.map(l => (
+        <div key={l.id} className="flex-1 min-w-0">
+          <ServiceCard
+            listing={l}
+            delay={0}
+            compareSelected={compareSelected(l.id)}
+            onCompareToggle={() => onCompareToggle(l.id)}
+          />
+        </div>
+      ))}
+      {/* Fill empty cells in last row */}
+      {rowItems.length < COLS && Array.from({ length: COLS - rowItems.length }).map((_, i) => (
+        <div key={`empty-${i}`} className="flex-1 min-w-0" />
+      ))}
+    </div>
+  )
+}
+
+function VirtualGrid({ items, compareSelected, onCompareToggle }: RowCellProps) {
+  const rowCount = Math.ceil(items.length / COLS)
+  const visibleHeight = Math.min(rowCount * (CARD_HEIGHT + 24), window.innerHeight * 1.8)
+
+  return (
+    <List
+      rowCount={rowCount}
+      rowHeight={CARD_HEIGHT + 24}
+      rowComponent={({
+        index,
+        style,
+      }: {
+        index: number
+        style: CSSProperties
+        ariaAttributes: { 'aria-posinset': number; 'aria-setsize': number; role: 'listitem' }
+      }) => (
+        <VirtualListRow
+          index={index}
+          style={style}
+          items={items}
+          compareSelected={compareSelected}
+          onCompareToggle={onCompareToggle}
+        />
+      )}
+      rowProps={{}}
+      style={{ height: visibleHeight, overflowX: 'hidden' }}
+    />
+  )
+}
+
 export function ServiziPage() {
   const [selectedCats, setSelectedCats] = useState<Category[]>([])
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 130000])
@@ -103,6 +182,7 @@ export function ServiziPage() {
   const [showMap, setShowMap] = useState(false)
   const [loading, setLoading] = useState(true)
   const [showCompare, setShowCompare] = useState(false)
+  const [generatedLoaded, setGeneratedLoaded] = useState(false)
   const { comparing, toggle: toggleCompare, clear: clearCompare, isSelected } = useComparison()
 
   useEffect(() => {
@@ -321,10 +401,9 @@ export function ServiziPage() {
                 </motion.div>
               ) : (
                 <motion.div key="results" initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                  aria-live="polite" aria-label="Risultati filtrati"
-                  className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                  aria-live="polite" aria-label="Risultati filtrati">
                   {filtered.length === 0 ? (
-                    <div className="col-span-full py-20 text-center">
+                    <div className="py-20 text-center">
                       <p className="font-[family-name:var(--font-family-serif)] text-[#5A4F44] italic text-xl mb-3">
                         Nessun risultato
                       </p>
@@ -332,16 +411,35 @@ export function ServiziPage() {
                         Azzera filtri
                       </button>
                     </div>
+                  ) : filtered.length > 30 ? (
+                    <VirtualGrid
+                      items={filtered}
+                      compareSelected={isSelected}
+                      onCompareToggle={toggleCompare}
+                    />
                   ) : (
-                    filtered.map((l, i) => (
-                      <ServiceCard
-                        key={l.id}
-                        listing={l}
-                        delay={i * 0.04}
-                        compareSelected={isSelected(l.id)}
-                        onCompareToggle={() => toggleCompare(l.id)}
-                      />
-                    ))
+                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                      {filtered.map((l, i) => (
+                        <ServiceCard
+                          key={l.id}
+                          listing={l}
+                          delay={i * 0.04}
+                          compareSelected={isSelected(l.id)}
+                          onCompareToggle={() => toggleCompare(l.id)}
+                        />
+                      ))}
+                    </div>
+                  )}
+                  {/* Load more from generated content */}
+                  {!generatedLoaded && (
+                    <div className="text-center pt-8">
+                      <button
+                        onClick={() => setGeneratedLoaded(true)}
+                        className="px-8 py-3 rounded-xl border border-[rgba(197,160,89,0.3)] text-[#5A4F44] text-sm hover:border-[#C5A059] hover:text-[#C5A059] transition-colors"
+                      >
+                        Carica altri 200 servizi
+                      </button>
+                    </div>
                   )}
                 </motion.div>
               )}

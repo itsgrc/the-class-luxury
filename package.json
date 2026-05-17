@@ -7,9 +7,11 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "generate-content": "node src/scripts/generateContent.mjs"
   },
   "dependencies": {
+    "@faker-js/faker": "^10.4.0",
     "@gsap/react": "^2.1.2",
     "@radix-ui/react-checkbox": "^1.3.3",
     "@radix-ui/react-dialog": "^1.1.15",
@@ -20,6 +22,7 @@
     "@tailwindcss/vite": "^4.3.0",
     "@tanstack/react-router": "^1.169.2",
     "@tanstack/router-devtools": "^1.166.13",
+    "@types/react-window": "^1.8.8",
     "autoprefixer": "^10.5.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -35,6 +38,7 @@
     "react-dom": "^19.2.6",
     "react-helmet-async": "^3.0.0",
     "react-markdown": "^10.1.0",
+    "react-window": "^2.2.7",
     "recharts": "^3.8.1",
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.6.0",

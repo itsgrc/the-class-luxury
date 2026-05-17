@@ -1,0 +1,102 @@
+[
+  {
+    "id": "guide-01",
+    "title": "Come scegliere lo yacht perfetto",
+    "slug": "come-scegliere-lo-yacht-perfetto",
+    "excerpt": "Universe adversus pax paens abundans conicio volo itaque victoria. Ad aetas suppono itaque antiquus porro tollo tardus.",
+    "pages": 12,
+    "downloadUrl": "#",
+    "cover": "https://images.unsplash.com/photo-1500000000?w=600&q=80&fit=crop",
+    "publishedAt": "2026-01-15"
+  },
+  {
+    "id": "guide-02",
+    "title": "I 50 ristoranti stellati del Mediterraneo",
+    "slug": "i-50-ristoranti-stellati-del-mediterraneo",
+    "excerpt": "Volaticus valens comis tredecim arx. Attonbitus alias ultra nihil.",
+    "pages": 12,
+    "downloadUrl": "#",
+    "cover": "https://images.unsplash.com/photo-1503456789?w=600&q=80&fit=crop",
+    "publishedAt": "2026-01-15"
+  },
+  {
+    "id": "guide-03",
+    "title": "Guida ai jet privati: light vs heavy",
+    "slug": "guida-ai-jet-privati-light-vs-heavy",
+    "excerpt": "Thorax amaritudo sequi suppono sumptus supra assentator comburo tutamen. Cibo acerbitas unde cotidie comprehendo conor cupressus crapula maxime aeternus.",
+    "pages": 24,
+    "downloadUrl": "#",
+    "cover": "https://images.unsplash.com/photo-1506913578?w=600&q=80&fit=crop",
+    "publishedAt": "2026-01-15"
+  },
+  {
+    "id": "guide-04",
+    "title": "Itinerari segreti in barca a vela",
+    "slug": "itinerari-segreti-in-barca-a-vela",
+    "excerpt": "Victus utroque solutio bos admiratio alveus commodo desparatus vulgo debeo. Sub attollo vicissitudo eveniet cetera videlicet quibusdam.",
+    "pages": 16,
+    "downloadUrl": "#",
+    "cover": "https://images.unsplash.com/photo-1510370367?w=600&q=80&fit=crop",
+    "publishedAt": "2026-01-15"
+  },
+  {
+    "id": "guide-05",
+    "title": "Ferrari vs Lamborghini: guida alla scelta",
+    "slug": "ferrari-vs-lamborghini-guida-alla-scelta",
+    "excerpt": "Tamisium arma urbs vitiosus minima statim unde. Vulgivagus sponte curriculum spiculum enim.",
+    "pages": 9,
+    "downloadUrl": "#",
+    "cover": "https://images.unsplash.com/photo-1513827156?w=600&q=80&fit=crop",
+    "publishedAt": "2026-01-15"
+  },
+  {
+    "id": "guide-06",
+    "title": "Le ville più esclusive d'Italia",
+    "slug": "le-ville-piu-esclusive-ditalia",
+    "excerpt": "Magni theca arma fugiat tener voveo vado urbs carmen. Assentator avaritia amor umquam amitto apto cariosus nam utrum.",
+    "pages": 15,
+    "downloadUrl": "#",
+    "cover": "https://images.unsplash.com/photo-1517283945?w=600&q=80&fit=crop",
+    "publishedAt": "2026-01-15"
+  },
+  {
+    "id": "guide-07",
+    "title": "Investire in fractional ownership",
+    "slug": "investire-in-fractional-ownership",
+    "excerpt": "Aspernatur cena appello cunae officia ciminatio tyrannus. Animi accommodo testimonium aufero conservo cruentus veritatis soluta adhaero accedo.",
+    "pages": 11,
+    "downloadUrl": "#",
+    "cover": "https://images.unsplash.com/photo-1520740734?w=600&q=80&fit=crop",
+    "publishedAt": "2026-01-15"
+  },
+  {
+    "id": "guide-08",
+    "title": "Il galateo del lusso",
+    "slug": "il-galateo-del-lusso",
+    "excerpt": "Deorsum tum comburo cotidie comprehendo. Vis aptus civis.",
+    "pages": 10,
+    "downloadUrl": "#",
+    "cover": "https://images.unsplash.com/photo-1524197523?w=600&q=80&fit=crop",
+    "publishedAt": "2026-01-15"
+  },
+  {
+    "id": "guide-09",
+    "title": "Come pianificare un honeymoon di lusso",
+    "slug": "come-pianificare-un-honeymoon-di-lusso",
+    "excerpt": "Vicissitudo amaritudo decet acerbitas tepidus saepe. Demens venustas cunae doloribus sub eligendi auditor comes.",
+    "pages": 9,
+    "downloadUrl": "#",
+    "cover": "https://images.unsplash.com/photo-1527654312?w=600&q=80&fit=crop",
+    "publishedAt": "2026-01-15"
+  },
+  {
+    "id": "guide-10",
+    "title": "Guide al Lago di Como",
+    "slug": "guide-al-lago-di-como",
+    "excerpt": "Peior angustus quod vapulus confero brevis. Stultus amiculum cumque sperno natus quae minima theologus commemoro suggero.",
+    "pages": 24,
+    "downloadUrl": "#",
+    "cover": "https://images.unsplash.com/photo-1531111101?w=600&q=80&fit=crop",
+    "publishedAt": "2026-01-15"
+  }
+]

@@ -3,7 +3,7 @@ import { motion } from 'framer-motion'
 import { Helmet } from 'react-helmet-async'
 import { User, Heart, FileText, LogOut, Edit3, Check } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
-import { safeRead } from '@/lib/errorHandler'
+import { safeRead, safeWrite } from '@/lib/errorHandler'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
 import { LoyaltyBadge } from '@/components/LoyaltyBadge'
@@ -188,6 +188,61 @@ export function ProfiloPage() {
               <QRCodeSVG value={`theclass:user:${user.id}`} size={96} fgColor="#1C1C1C" bgColor="#FFFFFF" level="M" />
             </div>
             <p className="text-[10px] text-[#5A4F44] mt-2 font-light">Mostra al concierge per essere riconosciuto</p>
+          </div>
+        )}
+
+        {/* Daily Missions */}
+        {user && (() => {
+          const today = new Date().toDateString()
+          const completed = safeRead<Record<string, boolean>>('theclass_missions_' + today, {})
+          const missions = [
+            { id: 'view3', label: 'Esplora 3 servizi', points: 30, done: completed.view3 },
+            { id: 'save1', label: 'Salva un preferito', points: 50, done: completed.save1 },
+            { id: 'read1', label: 'Leggi un articolo', points: 20, done: completed.read1 },
+          ]
+          return (
+            <div className="mt-6 mb-6 p-5 bg-[#FCFAF5] rounded-2xl border border-[rgba(197,160,89,0.15)]">
+              <p className="text-xs text-[#5A4F44] uppercase tracking-wider mb-3">Missioni di Oggi</p>
+              <div className="space-y-2">
+                {missions.map(m => (
+                  <div key={m.id} className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${m.done ? 'bg-[#C5A059] border-[#C5A059]' : 'border-[rgba(197,160,89,0.3)]'}`}>
+                        {m.done && <span className="text-white text-[8px]">✓</span>}
+                      </div>
+                      <span className={`text-xs ${m.done ? 'text-[#5A4F44] line-through' : 'text-[#1C1C1C]'}`}>{m.label}</span>
+                    </div>
+                    <span className="text-[10px] text-[#C5A059] font-[family-name:var(--font-family-mono)]">+{m.points}pt</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )
+        })()}
+
+        {/* Ambassador Program */}
+        {user && (
+          <div className="mb-10 p-5 bg-[#FCFAF5] rounded-2xl border border-[rgba(197,160,89,0.15)]">
+            <p className="text-xs text-[#5A4F44] uppercase tracking-wider mb-2">Programma Ambassador</p>
+            <p className="text-xs text-[#5A4F44] font-light mb-3">
+              Invita un amico e guadagna €100 di crediti per ogni prenotazione completata.
+            </p>
+            <div className="flex gap-2">
+              <input
+                readOnly
+                value={`https://the-class-luxury.pages.dev?ref=${btoa(user.id).slice(0, 8)}`}
+                className="flex-1 bg-white border border-[rgba(197,160,89,0.2)] rounded-lg px-3 py-2 text-[10px] text-[#5A4F44] font-[family-name:var(--font-family-mono)] truncate"
+              />
+              <button
+                onClick={() => {
+                  void navigator.clipboard.writeText(`https://the-class-luxury.pages.dev?ref=${btoa(user.id).slice(0, 8)}`)
+                  toast.success('Link copiato!')
+                }}
+                className="px-3 py-2 rounded-lg bg-[#C5A059] text-white text-[10px] font-medium hover:bg-[#b8924a] transition-colors shrink-0"
+              >
+                Copia
+              </button>
+            </div>
           </div>
         )}
 

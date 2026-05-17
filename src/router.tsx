@@ -116,6 +116,18 @@ const pacchettiRoute = createRoute({
   component: lazy(() => import('./pages/PacchettiPage').then(m => ({ default: m.PacchettiPage }))),
 })
 
+const crowdConciergeRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/crowd-concierge',
+  component: lazy(() => import('./pages/CrowdConciergePage').then(m => ({ default: m.CrowdConciergePage }))),
+})
+
+const quizRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/quiz',
+  component: lazy(() => import('./pages/QuizPage').then(m => ({ default: m.QuizPage }))),
+})
+
 const routeTree = rootRoute.addChildren([
   indexRoute,
   serviziRoute,
@@ -134,6 +146,8 @@ const routeTree = rootRoute.addChildren([
   storyDetailRoute,
   eventiRoute,
   pacchettiRoute,
+  crowdConciergeRoute,
+  quizRoute,
 ])
 
 export const router = createRouter({
