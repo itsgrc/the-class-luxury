@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react'
 import { Helmet } from 'react-helmet-async'
 import { useParams, Link } from '@tanstack/react-router'
 import { motion } from 'framer-motion'
-import { ArrowLeft, Star, MapPin, Check, Heart, Sparkles, Calendar, Share2, Gift } from 'lucide-react'
+import { ArrowLeft, Star, MapPin, Check, Heart, Sparkles, Calendar, Share2, Gift, Scan } from 'lucide-react'
 import { DayPicker, type DateRange } from 'react-day-picker'
 import { it } from 'date-fns/locale'
 import { toast } from 'sonner'
@@ -16,6 +16,7 @@ import { formatPrice, cn } from '@/lib/utils'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
 import { WeatherWidget } from '@/components/WeatherWidget'
 import { GiftModal } from '@/components/GiftModal'
+import { ARPreviewModal } from '@/components/ARPreviewModal'
 
 function getDisabledDates(seed: string): Date[] {
   const hash = seed.split('').reduce((a, c) => a + c.charCodeAt(0), 0)
@@ -38,6 +39,7 @@ export function DettaglioPage() {
   const [selectedUpgrades, setSelectedUpgrades] = useState<string[]>([])
   const [modalOpen, setModalOpen] = useState(false)
   const [giftOpen, setGiftOpen] = useState(false)
+  const [arOpen, setArOpen] = useState(false)
   const { toggle, isFavorite } = useFavorites()
   const [heartAnim, setHeartAnim] = useState(false)
   const disabled = useMemo(() => (listing ? getDisabledDates(listing.id) : []), [id])
@@ -126,6 +128,14 @@ export function DettaglioPage() {
             <Share2 size={14} className="text-white" />
           </button>
         )}
+
+        <button
+          onClick={() => setArOpen(true)}
+          className="absolute bottom-4 right-4 z-10 flex items-center gap-2 glass px-3 py-2 rounded-xl text-xs text-[#1C1C1C] font-medium hover:bg-white/80 transition-colors"
+        >
+          <Scan size={12} className="text-[#C5A059]" />
+          AR Preview
+        </button>
 
         <div className="absolute bottom-0 left-0 right-0 px-8 lg:px-14 pb-8">
           <span className="glass text-[11px] font-medium px-2.5 py-1 rounded-full text-[#1C1C1C] inline-block mb-3">
@@ -483,6 +493,7 @@ export function DettaglioPage() {
       />
 
       {giftOpen && <GiftModal listing={listing} onClose={() => setGiftOpen(false)} />}
+      {arOpen && <ARPreviewModal image={listing.image} title={listing.title} onClose={() => setArOpen(false)} />}
     </div>
   )
 }

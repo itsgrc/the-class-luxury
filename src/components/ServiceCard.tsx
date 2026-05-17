@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, memo } from 'react'
+import { useState, useRef, useCallback, memo, useMemo, useEffect } from 'react'
 import { Link } from '@tanstack/react-router'
 import { motion } from 'framer-motion'
 import { Heart, Star, MapPin } from 'lucide-react'
@@ -12,6 +12,29 @@ interface ServiceCardProps {
   delay?: number
   compareSelected?: boolean
   onCompareToggle?: () => void
+}
+
+function useViewerCount(id: string): number {
+  return useMemo(() => {
+    // Stable random per listing ID (changes every 5 minutes)
+    const seed = Math.floor(Date.now() / 300000) + id.charCodeAt(3)
+    return 3 + (seed % 14)
+  }, [id])
+}
+
+function useCountdown(active: boolean): string {
+  const [seconds, setSeconds] = useState(() =>
+    active ? Math.floor(Math.random() * 7200) + 1800 : 0
+  )
+  useEffect(() => {
+    if (!active) return
+    const t = setInterval(() => setSeconds(s => Math.max(0, s - 1)), 1000)
+    return () => clearInterval(t)
+  }, [active])
+  const h = Math.floor(seconds / 3600)
+  const m = Math.floor((seconds % 3600) / 60)
+  const s = seconds % 60
+  return `${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`
 }
 
 // MODIFICATO: particelle oro al click del cuore
@@ -41,6 +64,8 @@ function ServiceCardInner({ listing, delay = 0, compareSelected, onCompareToggle
   const heartRef = useRef<HTMLButtonElement>(null)
   const fav = isFavorite(listing.id)
   const variant = getABVariant()
+  const viewerCount = useViewerCount(listing.id)
+  const countdown = useCountdown(listing.lastMinute ?? false)
 
   // Magnetic mousemove: max 4px translate
   const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
@@ -114,6 +139,12 @@ function ServiceCardInner({ listing, delay = 0, compareSelected, onCompareToggle
               )}
             </div>
 
+            {/* Social proof */}
+            <div className="absolute bottom-3 left-3 z-10 flex items-center gap-1 glass px-2 py-1 rounded-full">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="text-[10px] text-[#1C1C1C] font-medium">{viewerCount} ora</span>
+            </div>
+
             {/* Heart – MODIFICATO: ref per particelle oro */}
             <button
               ref={heartRef}
@@ -157,6 +188,13 @@ function ServiceCardInner({ listing, delay = 0, compareSelected, onCompareToggle
                 <span className="text-[11px] text-[#5A4F44]">({listing.reviews})</span>
               </div>
             </div>
+
+            {listing.lastMinute && (
+              <div className="mt-2 flex items-center justify-between px-2 py-1.5 bg-red-50 border border-red-200 rounded-lg">
+                <span className="text-[10px] text-red-700 font-medium">⚡ Offerta lampo –20%</span>
+                <span className="font-[family-name:var(--font-family-mono)] text-[10px] text-red-600">{countdown}</span>
+              </div>
+            )}
 
             {listing.qualityScore !== undefined && (
               <div className="mt-2 flex items-center gap-1.5">

@@ -4,11 +4,13 @@ import { motion, useInView, useScroll, useTransform } from 'framer-motion'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { toast } from 'sonner'
-import { ArrowRight, Anchor, Plane, Car, Sparkles, Shield, Clock, Globe } from 'lucide-react'
+import { ArrowRight, Anchor, Plane, Car, Sparkles, Shield, Clock, Globe, Shuffle } from 'lucide-react'
 import { generateId, addRipple, cn } from '@/lib/utils'
 import { listings } from '@/data/listings'
 import { safeRead } from '@/lib/errorHandler'
 import { ForYouSection } from '@/components/ForYouSection'
+import { SurpriseModal } from '@/components/SurpriseModal'
+import { AnimatePresence } from 'framer-motion'
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -101,6 +103,14 @@ function MagneticButton({ children, className, onClick }: {
 export function HomePage() {
   const navigate = useNavigate()
   const [prompt, setPrompt] = useState('')
+  const [showSurprise, setShowSurprise] = useState(false)
+
+  // Listen for keyboard shortcut 'S' from Layout
+  useEffect(() => {
+    const handler = () => setShowSurprise(true)
+    window.addEventListener('theclass:surprise', handler)
+    return () => window.removeEventListener('theclass:surprise', handler)
+  }, [])
   const { scrollY } = useScroll()
   const heroY = useTransform(scrollY, [0, 600], [0, 180])
 
@@ -367,6 +377,28 @@ export function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* ══ SORPRENDIMI ══ */}
+      <section className="py-12 text-center">
+        <p className="text-[11px] tracking-[0.22em] text-[#C5A059] font-[family-name:var(--font-family-mono)] uppercase mb-4">
+          Lasciati ispirare
+        </p>
+        <button
+          onClick={() => setShowSurprise(true)}
+          className="group relative inline-flex items-center gap-3 px-10 py-5 rounded-2xl bg-[#1C1C1C] text-white text-base font-light tracking-wide hover:bg-[#2a2a2a] transition-all duration-300 shadow-[0_8px_32px_rgba(26,24,22,0.25)] hover:shadow-[0_12px_40px_rgba(197,160,89,0.2)] hover:scale-[1.02]"
+        >
+          <span className="text-[#C5A059] text-xl">✦</span>
+          Sorprendimi
+          <Shuffle size={16} className="text-[#C5A059] group-hover:rotate-180 transition-transform duration-500" />
+          <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-[#C5A059] animate-ping" />
+          <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-[#C5A059]" />
+        </button>
+        <p className="text-xs text-[#5A4F44] mt-3 font-light">Genera un itinerario esclusivo in base ai tuoi desideri</p>
+      </section>
+
+      <AnimatePresence>
+        {showSurprise && <SurpriseModal onClose={() => setShowSurprise(false)} />}
+      </AnimatePresence>
 
       {/* ══ FOR YOU ══ */}
       <ForYouSection />

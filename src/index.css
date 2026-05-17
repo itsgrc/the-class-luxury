@@ -297,3 +297,64 @@ body {
 [data-theme="dark"] .glass-dark {
   background: rgba(10, 8, 6, 0.85);
 }
+
+/* ── DREAM MODE ── */
+[data-dream="true"] {
+  --color-ivory: #0a080f;
+  --color-ivory-card: #110d1a;
+  --color-velvet: #f0e8ff;
+  --color-taupe: #b8a8cc;
+}
+
+[data-dream="true"] body {
+  background: radial-gradient(ellipse at 20% 50%, #1a0a2e 0%, #0a080f 60%);
+  color: #f0e8ff;
+}
+
+[data-dream="true"] .glass {
+  background: rgba(20, 10, 40, 0.85);
+  backdrop-filter: blur(20px);
+}
+
+/* Dream floating particles */
+@keyframes dreamFloat {
+  0%, 100% { transform: translateY(0) scale(1); opacity: 0.3; }
+  50% { transform: translateY(-30px) scale(1.2); opacity: 0.7; }
+}
+
+.dream-particle {
+  position: fixed;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(197,160,89,0.8), transparent);
+  pointer-events: none;
+  animation: dreamFloat var(--duration, 6s) ease-in-out infinite;
+  animation-delay: var(--delay, 0s);
+  z-index: 0;
+}
+
+[data-dream="true"] .dream-overlay {
+  display: block;
+}
+
+.dream-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  overflow: hidden;
+}
+
+/* ── FOCUS MODE ── */
+.focus-mode header,
+.focus-mode footer,
+.focus-mode .back-to-top,
+.focus-mode .scroll-progress-bar {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.4s;
+}
+
+.focus-mode main {
+  padding-top: 0 !important;
+}

@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react'
-import { Link, useLocation } from '@tanstack/react-router'
+import { useState, useEffect, useCallback } from 'react'
+import { Link, useLocation, useNavigate } from '@tanstack/react-router'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Heart, Menu, X, User, Moon, Sun } from 'lucide-react'
+import { Heart, Menu, X, User, Moon, Sun, Mic, MicOff, Maximize2, Minimize2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { useFavorites } from '@/hooks/useFavorites'
 import { cn } from '@/lib/utils'
@@ -14,6 +14,9 @@ import { BrandLogo } from './BrandLogo'
 import { AIConcierge } from './AIConcierge'
 import { useTheme } from '@/context/ThemeContext'
 import { useCurrency, RATES, type Currency } from '@/context/CurrencyContext'
+import { useDream } from '@/context/DreamContext'
+import { DreamOverlay } from './DreamOverlay'
+import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts'
 
 const SURPRISES = [
   'Yacht Azimut a metà prezzo domani — solo per te 🎁',
@@ -39,6 +42,34 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const { lang, toggle } = useLang()
   const { isDark, toggle: toggleTheme } = useTheme()
   const { currency, setCurrency } = useCurrency()
+  const { isDream, toggle: toggleDream } = useDream()
+  const [focusMode, setFocusMode] = useState(false)
+  const [listening, setListening] = useState(false)
+  const navigate = useNavigate()
+
+  const startVoiceSearch = useCallback(() => {
+    const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
+    if (!SR) { toast.error('Ricerca vocale non supportata'); return }
+    const r = new SR()
+    r.lang = 'it-IT'
+    r.interimResults = false
+    r.onresult = (e: any) => {
+      const q = e.results[0][0].transcript
+      setListening(false)
+      window.location.href = `/servizi?loc=${encodeURIComponent(q)}`
+    }
+    r.onerror = () => setListening(false)
+    r.onend = () => setListening(false)
+    r.start()
+    setListening(true)
+  }, [])
+
+  useKeyboardShortcuts({
+    'G': () => navigate({ to: '/stories' }),
+    'S': () => window.dispatchEvent(new CustomEvent('theclass:surprise')),
+    'D': () => toggleDream(),
+    'F': () => setFocusMode(v => !v),
+  })
 
   useEffect(() => {
     const fn = () => setScrolled(window.scrollY > 48)
@@ -49,7 +80,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   useEffect(() => { setMobileOpen(false) }, [location.pathname])
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className={cn("min-h-screen flex flex-col transition-all duration-500", focusMode && "focus-mode")}>
       <SkipToMain />
       <ScrollProgressBar />
       {/* ── HEADER ── */}
@@ -123,6 +154,37 @@ export function Layout({ children }: { children: React.ReactNode }) {
             >
               ✦
             </button>
+            {/* Voice search */}
+            <button
+              onClick={startVoiceSearch}
+              aria-label="Ricerca vocale"
+              className={cn('hidden md:flex items-center transition-all duration-300',
+                listening ? 'text-[#C5A059] scale-125 animate-pulse' : scrolled ? 'text-[#5A4F44]' : 'text-white/70'
+              )}
+            >
+              {listening ? <MicOff size={15} /> : <Mic size={15} />}
+            </button>
+
+            {/* Dream mode */}
+            <button
+              onClick={toggleDream}
+              aria-label={isDream ? 'Esci da Dream Mode' : 'Attiva Dream Mode'}
+              className={cn('hidden md:flex items-center text-sm transition-colors',
+                isDream ? 'text-[#C5A059]' : scrolled ? 'text-[#5A4F44]' : 'text-white/70'
+              )}
+            >
+              🌙
+            </button>
+
+            {/* Focus Mode */}
+            <button
+              onClick={() => setFocusMode(v => !v)}
+              aria-label={focusMode ? 'Esci da Focus Mode' : 'Attiva Focus Mode'}
+              className={cn('hidden md:flex items-center transition-colors', scrolled ? 'text-[#5A4F44]' : 'text-white/70')}
+            >
+              {focusMode ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
+            </button>
+
             <Link to="/profilo" aria-label="Profilo utente" className="flex items-center">
               <User size={16} className={scrolled ? 'text-[#5A4F44]' : 'text-white/80'} />
             </Link>
@@ -279,6 +341,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       </footer>
       <BackToTop />
       <AIConcierge />
+      <DreamOverlay />
     </div>
   )
 }

@@ -29,6 +29,7 @@ export function RequestModal({
   const [couponCode, setCouponCode] = useState('')
   const [couponDiscount, setCouponDiscount] = useState(0)
   const [couponApplied, setCouponApplied] = useState<string | null>(null)
+  const [installments, setInstallments] = useState<3 | 6 | 12 | null>(null)
   const isValidEmail = (e: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)
   const [emailTouched, setEmailTouched] = useState(false)
   const [pdfLoading, setPdfLoading] = useState(false)
@@ -295,6 +296,33 @@ export function RequestModal({
                   placeholder="Richieste particolari, anniversari, allergie, allestimenti speciali..."
                   className="w-full bg-white border border-[rgba(197,160,89,0.22)] rounded-xl px-3.5 py-2.5 text-sm text-[#1C1C1C] placeholder:text-[#5A4F44]/35 focus:outline-none focus:border-[#C5A059] transition-colors resize-none"
                 />
+              </div>
+
+              {/* Rateizzazione */}
+              <div className="space-y-2">
+                <p className="text-xs text-[#5A4F44] uppercase tracking-wider">Rateizzazione (interesse zero)</p>
+                <div className="grid grid-cols-4 gap-2">
+                  {([null, 3, 6, 12] as const).map(n => (
+                    <button
+                      key={String(n)}
+                      type="button"
+                      onClick={() => setInstallments(n)}
+                      className={cn(
+                        'py-2 rounded-xl border text-xs font-medium transition-colors',
+                        installments === n
+                          ? 'bg-[#C5A059] border-[#C5A059] text-white'
+                          : 'border-[rgba(197,160,89,0.25)] text-[#5A4F44] hover:border-[#C5A059]'
+                      )}
+                    >
+                      {n === null ? 'Intero' : `${n} rate`}
+                    </button>
+                  ))}
+                </div>
+                {installments && (
+                  <p className="text-[10px] text-[#5A4F44]/70 text-center">
+                    €{Math.round(listing.price / installments).toLocaleString('it-IT')} /mese × {installments} — interesse 0%
+                  </p>
+                )}
               </div>
 
               {/* Cauzione */}

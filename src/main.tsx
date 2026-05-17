@@ -10,15 +10,15 @@ import { AuthProvider } from './context/AuthContext'
 import { LangProvider } from './context/LangContext'
 import { ThemeProvider } from './context/ThemeContext'
 import { CurrencyProvider } from './context/CurrencyContext'
+import { DreamProvider } from './context/DreamContext'
 
 // Lenis smooth scroll
 const lenis = new Lenis({
-  duration: 1.15,
-  easing: t => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+  lerp: 0.05,
   smoothWheel: true,
   syncTouch: true,
-  touchMultiplier: 1.5,
-  lerp: 0.08,
+  touchMultiplier: 2.5,
+  wheelMultiplier: 1,
 })
 function raf(time: number) { lenis.raf(time); requestAnimationFrame(raf) }
 requestAnimationFrame(raf)
@@ -35,10 +35,11 @@ createRoot(document.getElementById('root')!).render(
     <HelmetProvider>
       <AuthProvider>
         <ThemeProvider>
-          <CurrencyProvider>
-            <LangProvider>
-              <RouterProvider router={router} />
-              <Toaster
+          <DreamProvider>
+            <CurrencyProvider>
+              <LangProvider>
+                <RouterProvider router={router} />
+                <Toaster
                 position="bottom-right"
                 toastOptions={{
                   style: {
@@ -51,8 +52,9 @@ createRoot(document.getElementById('root')!).render(
                   },
                 }}
               />
-            </LangProvider>
-          </CurrencyProvider>
+              </LangProvider>
+            </CurrencyProvider>
+          </DreamProvider>
         </ThemeProvider>
       </AuthProvider>
     </HelmetProvider>
