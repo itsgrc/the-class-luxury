@@ -56,6 +56,7 @@ export function RichiestaSuMisuraPage() {
 
   return (
     <div className="min-h-screen bg-[#FDF9F2] pt-24 pb-24">
+      <title>Richiesta Su Misura — the Class</title>
       <div className="max-w-xl mx-auto px-6">
         <div className="mb-12 text-center">
           <p className="font-[family-name:var(--font-family-serif)] text-[#C5A059] italic tracking-widest text-sm uppercase mb-3">

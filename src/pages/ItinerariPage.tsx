@@ -134,6 +134,7 @@ export function ItinerariPage() {
 
   return (
     <div className="min-h-screen bg-[#FDF9F2] pt-24 pb-24">
+      <title>Pianifica il Tuo Itinerario — the Class</title>
       <div className="max-w-5xl mx-auto px-6">
         {/* Header */}
         <div className="mb-12 text-center">

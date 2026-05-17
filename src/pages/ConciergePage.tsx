@@ -41,6 +41,7 @@ export function ConciergePage() {
 
   return (
     <div className="min-h-screen bg-[#FDF9F2] pt-24 pb-24">
+      <title>Concierge Personale — the Class</title>
       <div className="max-w-5xl mx-auto px-6">
         <div className="mb-12">
           <p className="font-[family-name:var(--font-family-serif)] text-[#C5A059] italic text-sm tracking-widest uppercase mb-2">

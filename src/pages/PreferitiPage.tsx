@@ -46,6 +46,7 @@ export function PreferitiPage() {
 
   return (
     <div className="min-h-screen bg-[#FDF9F2] pt-24 pb-24">
+      <title>I Miei Preferiti — the Class</title>
       <div className="max-w-7xl mx-auto px-6">
         {/* Header */}
         <div className="mb-12">

@@ -22,7 +22,7 @@ export const stories: Story[] = [
     category: 'Yacht',
     readTime: 6,
     date: '2025-04-12',
-    author: { name: 'Giulia Ferrara', avatar: 'https://i.pravatar.cc/150?img=5' },
+    author: { name: 'Giulia Ferrara', avatar: 'https://ui-avatars.com/api/?name=Giulia+Ferrara&background=c5a059&color=fff&bold=true&size=150' },
     content: `Da Napoli, il golfo si apre come un teatro naturale. Il Sunseeker salpa all'alba, quando le acque sono ancora piatte e l'aria profuma di agrumi e salsedine.
 
 Il primo ancoraggio è Positano. Arrivare via mare cambia tutto: la città si svela verticalmente, case color pastello agganciate alla roccia, scalinate infinite e la campana della chiesa che suona le nove. Si scende in tender, si cammina tra i vicoli prima che i turisti arrivino.
@@ -44,7 +44,7 @@ Sette giorni che cambiano la percezione dello spazio e del tempo.`,
     category: 'Jet Privati',
     readTime: 5,
     date: '2025-03-28',
-    author: { name: 'Alessandro Moretti', avatar: 'https://i.pravatar.cc/150?img=11' },
+    author: { name: 'Alessandro Moretti', avatar: 'https://ui-avatars.com/api/?name=Alessandro+Moretti&background=c5a059&color=fff&bold=true&size=150' },
     content: `Il Gulfstream G700 decolla da Linate alle 22:00. La coppia sale dalla scaletta privata, senza check-in, senza code, senza l'umiliante rito dell'aeroporto di massa. Il pilota saluta personalmente. I sedili in pelle color avorio reclinano completamente.
 
 A bordo, lo chef ha preparato il menù concordato settimane prima: ostriche di Bretagna, risotto al Champagne Krug, dolce milanese della pasticceria Marchesi. Il sommelier ha selezionato una verticale di Sassicaia 2018 e 2019. La moglie si addormenta sopra il Mediterraneo orientale.
@@ -64,7 +64,7 @@ Il ritorno è altrettanto perfetto: trasferimento dall'atollo a Malé, volo nott
     category: 'Auto',
     readTime: 4,
     date: '2025-03-10',
-    author: { name: 'Lorenzo Bianchi', avatar: 'https://i.pravatar.cc/150?img=15' },
+    author: { name: 'Lorenzo Bianchi', avatar: 'https://ui-avatars.com/api/?name=Lorenzo+Bianchi&background=c5a059&color=fff&bold=true&size=150' },
     content: `La SF90 Stradale è un'equazione impossibile risolta dall'ingegneria. 1000 CV da un motore V8 biturbo affiancato da tre motori elettrici. Ibrido plug-in che fa zero emissioni in città e zero a cento in 2,5 secondi in pista.
 
 Il ritiro è alle 9:00 alla portineria dello stabilimento di Maranello. La guida entra nell'headquarter, firma e in cinque minuti ha in mano le chiavi di una macchina che costa quanto una villa a Como.
@@ -86,7 +86,7 @@ Una giornata che ridefinisce il concetto di prestazione.`,
     category: 'Esperienze',
     readTime: 5,
     date: '2025-02-15',
-    author: { name: 'Camille Dupont', avatar: 'https://i.pravatar.cc/150?img=45' },
+    author: { name: 'Camille Dupont', avatar: 'https://ui-avatars.com/api/?name=Camille+Dupont&background=c5a059&color=fff&bold=true&size=150' },
     content: `La sveglia suona alle 5:30. Fuori è ancora buio e la nebbia delle Langhe ammanta le vigne di Barolo. Gianni aspetta al cancello: 68 anni, tre campionati nazionali di cerca al tartufo, uno sguardo che ha visto tutto ma si illumina ancora quando Dante trova qualcosa.
 
 Dante è il lagotto romagnolo: pelo riccio, naso infallibile, un'energia contenuta ma pronta a esplodere. Si parte verso il bosco di quercia e nocciolo dove Gianni va da quando aveva dieci anni. Il percorso non è su Google Maps.
@@ -108,7 +108,7 @@ Si torna con un vasetto di tartufo in olio di oliva DOP, un Barolo firmato e il 
     category: 'Esperienze',
     readTime: 7,
     date: '2025-01-30',
-    author: { name: 'Giulia Ferrara', avatar: 'https://i.pravatar.cc/150?img=5' },
+    author: { name: 'Giulia Ferrara', avatar: 'https://ui-avatars.com/api/?name=Giulia+Ferrara&background=c5a059&color=fff&bold=true&size=150' },
     content: `Il Grand Prix di Monaco non è solo una gara: è un rituale collettivo di 78 anni, il più difficile da vivere bene e il più facile da vivere male.
 
 Vivere male significa: hotel a 5km di distanza, taxi impossibili, tribune lontane, coda al buffet. Vivere bene significa scegliere dove stare prima di scegliere cosa vedere.
@@ -130,7 +130,7 @@ Poi la gara. Tre ore di suoni, odori di gomme bruciate, strategia. Un'esperienza
     category: 'Auto',
     readTime: 6,
     date: '2025-01-08',
-    author: { name: 'Alessandro Moretti', avatar: 'https://i.pravatar.cc/150?img=11' },
+    author: { name: 'Alessandro Moretti', avatar: 'https://ui-avatars.com/api/?name=Alessandro+Moretti&background=c5a059&color=fff&bold=true&size=150' },
     content: `La Toscana non si attraversa: si assapora. E nessun mezzo è più adatto a questa filosofia del Rolls-Royce Cullinan: sospensioni che assorbono ogni pietra dei sterrati senesi, silenzio assoluto che permette di sentire la campagna, interni che trasformano ogni tratto di strada in un salotto mobile.
 
 Si parte da Firenze. L'autista Lorenzo conosce ogni curva, ogni trattoria con prenotazione impossibile, ogni fattoria che vende olio extravergine DOP direttamente dal produttore.

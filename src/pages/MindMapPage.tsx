@@ -48,6 +48,7 @@ export function MindMapPage() {
 
   return (
     <div className="min-h-screen bg-[#0D0B08] [data-theme='dark']:bg-[#0A0A0A] flex flex-col">
+      <title>Mappa del Mio Viaggio — the Class</title>
       {/* Top bar */}
       <div className="flex items-center justify-between px-6 py-5 border-b border-[rgba(197,160,89,0.15)]">
         <div className="flex items-center gap-3">

@@ -1,4 +1,3 @@
-// src/components/WeatherWidget.tsx
 import { useEffect, useState } from 'react'
 import { Cloud, Sun, CloudRain, Wind } from 'lucide-react'
 
@@ -10,40 +9,68 @@ interface WeatherDay {
   icon: 'sun' | 'cloud' | 'rain' | 'wind'
 }
 
-interface WttrHourly {
-  weatherDesc: Array<{ value: string }>
-  windspeedKmph: string
-}
-
-interface WttrDay {
-  date: string
-  maxtempC: string
-  mintempC: string
-  hourly: WttrHourly[]
-}
-
 interface Props {
   location: string
 }
 
-// Parse wttr.in JSON response
+// WMO weather code → icon
+function wmoIcon(code: number): WeatherDay['icon'] {
+  if (code === 0 || code === 1) return 'sun'
+  if (code >= 61 && code <= 67) return 'rain'
+  if (code >= 80 && code <= 82) return 'rain'
+  if (code >= 95) return 'rain'
+  if (code >= 51 && code <= 57) return 'rain'
+  if (code === 3 || (code >= 45 && code <= 48)) return 'cloud'
+  if (code === 2) return 'cloud'
+  return 'sun'
+}
+
+// WMO code → Italian description
+function wmoDesc(code: number): string {
+  if (code === 0) return 'Soleggiato'
+  if (code === 1) return 'Prevalentemente sereno'
+  if (code === 2) return 'Parzialmente nuvoloso'
+  if (code === 3) return 'Nuvoloso'
+  if (code >= 51 && code <= 57) return 'Pioggerella'
+  if (code >= 61 && code <= 67) return 'Pioggia'
+  if (code >= 71 && code <= 77) return 'Neve'
+  if (code >= 80 && code <= 82) return 'Acquazzoni'
+  if (code >= 95) return 'Temporale'
+  return 'Variabile'
+}
+
 async function fetchWeather(location: string): Promise<WeatherDay[]> {
-  const loc = encodeURIComponent(location.split(',')[0].trim())
-  const res = await fetch(`https://wttr.in/${loc}?format=j1`)
-  if (!res.ok) throw new Error('weather fetch failed')
-  const data = await res.json() as { weather: WttrDay[] }
-  return data.weather.slice(0, 3).map((d: WttrDay) => {
-    const desc = d.hourly[4]?.weatherDesc?.[0]?.value ?? ''
-    const icon: WeatherDay['icon'] =
-      /rain|drizzle|shower/i.test(desc) ? 'rain' :
-      /cloud|overcast/i.test(desc) ? 'cloud' :
-      /wind/i.test(desc) ? 'wind' : 'sun'
+  const name = encodeURIComponent(location.split(',')[0].trim())
+  const geoRes = await fetch(
+    `https://geocoding-api.open-meteo.com/v1/search?name=${name}&count=1&language=it&format=json`
+  )
+  if (!geoRes.ok) throw new Error('geocoding failed')
+  const geoData = await geoRes.json() as { results?: Array<{ latitude: number; longitude: number }> }
+  const coords = geoData.results?.[0]
+  if (!coords) throw new Error('location not found')
+
+  const wxRes = await fetch(
+    `https://api.open-meteo.com/v1/forecast?latitude=${coords.latitude}&longitude=${coords.longitude}` +
+    `&daily=temperature_2m_max,temperature_2m_min,weathercode&forecast_days=3&timezone=auto`
+  )
+  if (!wxRes.ok) throw new Error('weather fetch failed')
+  const wxData = await wxRes.json() as {
+    daily: {
+      time: string[]
+      temperature_2m_max: number[]
+      temperature_2m_min: number[]
+      weathercode: number[]
+    }
+  }
+
+  return wxData.daily.time.map((date, i) => {
+    const code = wxData.daily.weathercode[i]
     return {
-      date: d.date,
-      maxC: parseInt(d.maxtempC),
-      minC: parseInt(d.mintempC),
-      desc,
-      icon,
+      date,
+      maxC: Math.round(wxData.daily.temperature_2m_max[i]),
+      minC: Math.round(wxData.daily.temperature_2m_min[i]),
+      desc: wmoDesc(code),
+      icon: wmoIcon(code),
     }
   })
 }

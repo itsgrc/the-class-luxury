@@ -252,6 +252,7 @@ export function HomePage() {
 
   return (
     <div className="snap-container">
+      <title>the Class – L'arte del viaggio senza confini</title>
       <ScrollMilestones milestones={[
         { label: 'Hero', progress: 0 },
         { label: 'Servizi', progress: 0.2 },
@@ -268,6 +269,8 @@ export function HomePage() {
             className="absolute inset-0 w-full h-full object-cover"
             src={HERO_VIDEO}
             autoPlay muted loop playsInline
+            onError={e => { (e.currentTarget as HTMLVideoElement).style.display = 'none' }}
+            poster="https://images.unsplash.com/photo-1567899378494-47b22a2ae96a?w=1920&q=80"
           />
           <div className="absolute inset-0 bg-gradient-to-b from-[#1C1C1C]/70 via-[#1C1C1C]/40 to-[#FDF9F2]" />
         </motion.div>
