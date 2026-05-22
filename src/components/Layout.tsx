@@ -338,6 +338,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
               { title: 'Magazine', items: [
                 { label: 'Stories', href: '/stories' },
                 { label: 'Mind Map', href: '/mindmap' },
+                { label: 'Factotum Personale', href: '/concierge' },
                 { label: 'Chi Siamo', href: '/chi-siamo' },
                 { label: 'FAQ', href: '/faq' },
                 { label: 'Contatti', href: '/contatti' },

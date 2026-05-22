@@ -621,6 +621,60 @@ export function HomePage() {
         </div>
       </section>
 
+      {/* ══ FACTOTUM TEASER ══ */}
+      <section className="py-20 px-6 bg-[#FCFAF5] border-t border-[rgba(197,160,89,0.12)]">
+        <div className="max-w-5xl mx-auto reveal">
+          <div className="rounded-3xl border border-[rgba(197,160,89,0.22)] bg-gradient-to-br from-[#FDF9F2] to-[#FCFAF5] p-10 md:p-14 flex flex-col md:flex-row items-center gap-10 shadow-[0_4px_32px_rgba(197,160,89,0.06)]">
+            <div className="flex-1">
+              <p className="font-[family-name:var(--font-family-serif)] text-[#C5A059] italic text-sm tracking-widest uppercase mb-3">
+                Novità
+              </p>
+              <h2 className="font-[family-name:var(--font-family-display)] text-3xl md:text-4xl font-medium text-[#1C1C1C] tracking-tight mb-4">
+                Il tuo Factotum Personale
+              </h2>
+              <p className="text-[#5A4F44] font-light text-sm leading-relaxed mb-6 max-w-md">
+                Molto più di un concierge. Gestisci promemoria intelligenti, tieni traccia delle scadenze fiscali italiane e organizza ogni aspetto della tua vita luxury — tutto in un unico pannello privato.
+              </p>
+              <ul className="space-y-2.5 mb-8">
+                {[
+                  { icon: '📅', text: 'Calendario scadenze IVA, IRPEF, IMU auto-aggiornato' },
+                  { icon: '🔔', text: 'Promemoria con priorità per rinnovi e appuntamenti' },
+                  { icon: '📁', text: 'Export immediato su Google Calendar o iCal' },
+                ].map(item => (
+                  <li key={item.text} className="flex items-center gap-3 text-sm text-[#5A4F44] font-light">
+                    <span className="text-base shrink-0">{item.icon}</span>
+                    {item.text}
+                  </li>
+                ))}
+              </ul>
+              <Link
+                to="/concierge"
+                className="inline-flex items-center gap-2 px-7 py-3.5 rounded-xl bg-[#1C1C1C] text-white text-sm tracking-wide hover:bg-[#C5A059] transition-colors"
+              >
+                Apri il tuo Factotum
+                <ArrowRight size={14} />
+              </Link>
+            </div>
+            <div className="shrink-0 hidden md:grid grid-cols-2 gap-3 w-64">
+              {[
+                { label: 'IVA mensile', sub: 'Scade tra 12 giorni', color: 'amber' },
+                { label: 'IMU prima rata', sub: '16 giugno', color: 'gold' },
+                { label: 'Passaporto', sub: 'Rinnovo entro febbraio', color: 'emerald' },
+                { label: 'Bollo auto', sub: 'Scade tra 30 giorni', color: 'gold' },
+              ].map(card => (
+                <div
+                  key={card.label}
+                  className="p-3.5 rounded-xl bg-white border border-[rgba(197,160,89,0.2)] shadow-[0_2px_12px_rgba(197,160,89,0.06)]"
+                >
+                  <p className="text-[11px] font-medium text-[#1C1C1C] mb-0.5">{card.label}</p>
+                  <p className="text-[10px] text-[#5A4F44]">{card.sub}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* ══ TESTIMONIALS ══ */}
       <TestimonialsCarousel />
 
