@@ -19,18 +19,23 @@
   --ease-soft:   cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
-/* ── LOVABLE CSS VARIABLES (mapped to our palette) ── */
+/* ── CSS VARIABLES ── */
 :root {
-  --foreground:    #1C1C1C;
-  --glass-bg:      rgba(253, 249, 242, 0.82);
-  --gold-hex:      #C5A059;
-  --gold-light:    rgba(197, 160, 89, 0.35);
-  --gold-wash:     rgba(197, 160, 89, 0.08);
-  --gold-border:   rgba(197, 160, 89, 0.35);
-  --text-soft:     #5A4F44;
-  --border-soft:   rgba(210, 200, 188, 0.4);
-  --muted:         #FCFAF5;
+  --foreground:    #2C2824;
+  --glass-bg:      rgba(253, 248, 242, 0.85);
+  --gold-hex:      #C8A87C;
+  --gold-light:    rgba(200, 168, 124, 0.35);
+  --gold-wash:     rgba(200, 168, 124, 0.08);
+  --gold-border:   rgba(200, 168, 124, 0.3);
+  --text-soft:     #6B5E52;
+  --border-soft:   rgba(200, 168, 124, 0.25);
+  --muted:         #FBF5EC;
   --radius:        6px;
+  --cream-rose:    #FDF8F2;
+  --gold-soft:     #C8A87C;
+  --taupe-warm:    #6B5E52;
+  --charcoal-light: #2C2824;
+  --shadow-warm:   rgba(107, 94, 82, 0.08);
 }
 [data-theme="dark"] {
   --foreground:    #F5F0E8;
@@ -575,6 +580,24 @@ body, header, footer, .glass,
   border-color: #C5A059;
   box-shadow: 0 0 0 3px rgba(197, 160, 89, 0.2);
 }
+
+/* ── REVEAL ON SCROLL (IntersectionObserver) ── */
+.reveal-on-scroll {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+.reveal-on-scroll.revealed {
+  opacity: 1;
+  transform: translateY(0);
+}
+@media (prefers-reduced-motion: reduce) {
+  .reveal-on-scroll { opacity: 1; transform: none; }
+}
+
+/* ── PALETTE ALIAS ── */
+.text-taupe-warm { color: var(--taupe-warm); }
+.bg-cream-rose { background-color: var(--cream-rose); }
 
 /* ── GLASS SATIN (vetro satinato per card ispirazioni) ── */
 .glass-satin {

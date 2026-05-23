@@ -6,6 +6,7 @@ import { toast } from 'sonner'
 import { generateId } from '@/lib/utils'
 import { PartnerLogos } from '@/components/PartnerLogos'
 import { inspirations } from '@/data/inspirations'
+import { observeReveal } from '@/lib/scroll'
 
 const TESTIMONIALS = [
   { name: 'Alessandro M.', role: 'CEO, Tech Ventures', text: 'The Class ha trasformato il modo in cui organizzo i miei viaggi business. Efficienza e lusso senza compromessi.', avatar: 'AM' },
@@ -55,6 +56,11 @@ export function HomePage() {
   const heroRef = useRef<HTMLDivElement>(null)
   const { scrollY } = useScroll()
   const heroY = useTransform(scrollY, [0, 600], [0, 160])
+
+  useEffect(() => {
+    const cleanup = observeReveal()
+    return cleanup
+  }, [])
 
   useEffect(() => {
     if (!statsInView || !statsRef.current) return
@@ -307,6 +313,25 @@ export function HomePage() {
               <h3 className="font-playfair text-xl text-[#1C1C1C] mb-3">{title}</h3>
               <p className="text-[#5A4F44] text-sm leading-relaxed">{desc}</p>
             </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ══ LUXURY COMPASS ══ */}
+      <section className="max-w-7xl mx-auto px-6 py-14 reveal-on-scroll">
+        <div className="text-center mb-8">
+          <p className="text-[10px] tracking-[0.25em] text-[#C5A059] font-[family-name:var(--font-family-mono)] uppercase mb-2">Personalizza</p>
+          <h2 className="font-playfair text-3xl text-[#1C1C1C]">Luxury Compass</h2>
+          <div className="divider-gold-short" />
+          <p className="text-[#5A4F44] text-sm mt-2">Seleziona un umore — ti suggeriamo l'esperienza perfetta</p>
+        </div>
+        <div className="flex flex-wrap justify-center gap-3">
+          {['Avventura', 'Relax', 'Romanticismo', 'Business', 'Famiglia'].map(mood => (
+            <button key={mood}
+              onClick={() => toast(`Cerco esperienze "${mood}" per te...`, { description: 'Il concierge ti contatterà entro 2 ore' })}
+              className="px-6 py-3 rounded-full border border-[rgba(197,160,89,0.4)] bg-white/20 hover:bg-[rgba(197,160,89,0.1)] hover:border-[#C5A059] transition font-[family-name:var(--font-family-mono)] text-sm text-[#5A4F44] hover:text-[#C5A059]">
+              {mood}
+            </button>
           ))}
         </div>
       </section>
