@@ -641,3 +641,17 @@ body, header, footer, .glass,
 .idle-breathe {
   animation: breathe 4s ease-in-out infinite;
 }
+
+/* ── GOLD SHIMMER TITLE ── */
+.gold-title {
+  background: linear-gradient(135deg, #C5A059 0%, #E8D5A3 50%, #C5A059 100%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: gold-shimmer 3s linear infinite;
+}
+@keyframes gold-shimmer {
+  0%   { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
+}

@@ -6,6 +6,7 @@ import { toast } from 'sonner'
 import { generateId } from '@/lib/utils'
 import { PartnerLogos } from '@/components/PartnerLogos'
 import { inspirations } from '@/data/inspirations'
+import { listings } from '@/data/listings'
 import { observeReveal } from '@/lib/scroll'
 import { useSmartFactotum } from '@/hooks/useSmartFactotum'
 
@@ -364,37 +365,37 @@ export function HomePage() {
       <section className="max-w-7xl mx-auto px-6 py-14 reveal-on-scroll">
         <div className="text-center mb-10">
           <p className="text-[10px] tracking-[0.25em] text-[#C5A059] font-[family-name:var(--font-family-mono)] uppercase mb-2">Fleet selection</p>
-          <h2 className="font-playfair text-3xl text-[#1C1C1C]">Yacht più desiderati</h2>
+          <h2 className="font-playfair text-3xl gold-title">Yacht più desiderati</h2>
           <div className="divider-gold-short" />
         </div>
         <div className="grid md:grid-cols-3 gap-6">
-          {[
-            { name: 'Azimut Grande 32M', length: '32 m', guests: '10 ospiti', price: '€18.500/giorno', location: 'Portofino', img: 'https://images.unsplash.com/photo-1567899378494-47b22a2ae96a?w=800&q=80', tag: 'Superyacht' },
-            { name: 'Sanlorenzo SL96', length: '29 m', guests: '8 ospiti', price: '€14.200/giorno', location: 'Costa Smeralda', img: 'https://images.unsplash.com/photo-1548438294-1ad5d5f4f063?w=800&q=80', tag: 'Motor Yacht' },
-            { name: 'Riva 88 Folgore', length: '26 m', guests: '6 ospiti', price: '€9.800/giorno', location: 'Capri', img: 'https://images.unsplash.com/photo-1540946485063-a40da27545f8?w=800&q=80', tag: 'Day Cruiser' },
-          ].map(y => (
-            <motion.div key={y.name} whileHover={{ y: -5 }} transition={{ duration: 0.3 }}
+          {listings.filter(l => l.category === 'yacht').slice(0, 3).map(y => (
+            <motion.div key={y.id} whileHover={{ y: -5 }} transition={{ duration: 0.3 }}
               className="rounded-2xl overflow-hidden border border-[rgba(197,160,89,0.18)] shadow-sm bg-[#FDF9F2]">
               <div className="relative h-52 overflow-hidden">
-                <img src={y.img} className="w-full h-full object-cover transition-transform duration-700 hover:scale-105" alt={y.name} loading="lazy" />
+                <img src={y.image} className="w-full h-full object-cover transition-transform duration-700 hover:scale-105" alt={y.title} loading="lazy" />
                 <div className="absolute inset-0 bg-gradient-to-t from-[#1C1C1C]/75 via-transparent to-transparent" />
-                <span className="absolute top-3 right-3 text-[9px] font-[family-name:var(--font-family-mono)] text-[#C5A059] border border-[rgba(197,160,89,0.5)] rounded-full px-2.5 py-0.5 bg-[rgba(28,28,28,0.6)] uppercase tracking-widest">
-                  {y.tag}
-                </span>
+                {y.trending && (
+                  <span className="absolute top-3 right-3 text-[9px] font-[family-name:var(--font-family-mono)] text-[#C5A059] border border-[rgba(197,160,89,0.5)] rounded-full px-2.5 py-0.5 bg-[rgba(28,28,28,0.6)] uppercase tracking-widest">
+                    Trending
+                  </span>
+                )}
                 <div className="absolute bottom-3 left-4">
-                  <p className="font-playfair text-white text-lg leading-snug">{y.name}</p>
+                  <p className="font-playfair text-white text-lg leading-snug">{y.title}</p>
                   <p className="text-[10px] text-white/70 font-[family-name:var(--font-family-mono)]">{y.location}</p>
                 </div>
               </div>
               <div className="p-5 flex items-center justify-between">
-                <div className="flex gap-4 text-[11px] text-[#5A4F44] font-[family-name:var(--font-family-mono)]">
-                  <span>{y.length}</span>
+                <div className="flex gap-3 text-[11px] text-[#5A4F44] font-[family-name:var(--font-family-mono)]">
+                  <span>⭐ {y.rating}</span>
                   <span className="text-[rgba(197,160,89,0.4)]">|</span>
-                  <span>{y.guests}</span>
+                  <span>{y.reviews} rec.</span>
                 </div>
                 <div className="flex items-center gap-3">
-                  <span className="font-[family-name:var(--font-family-mono)] text-[#C5A059] text-sm">{y.price}</span>
-                  <button onClick={() => toast(`Richiesta per ${y.name} inviata`, { description: 'Il concierge ti risponderà entro 2 ore' })}
+                  <span className="font-[family-name:var(--font-family-mono)] text-[#C5A059] text-sm">
+                    €{y.price.toLocaleString('it-IT')}/{y.priceUnit}
+                  </span>
+                  <button onClick={() => toast(`Richiesta per ${y.title} inviata`, { description: 'Il concierge ti risponderà entro 2 ore' })}
                     className="px-4 py-1.5 bg-[#1C1C1C] text-[#FDF9F2] rounded-full text-[10px] font-[family-name:var(--font-family-mono)] tracking-wider uppercase hover:bg-[#C5A059] hover:text-[#1C1C1C] transition-colors">
                     Prenota
                   </button>
@@ -414,7 +415,7 @@ export function HomePage() {
       <section className="py-16 bg-[#1C1C1C] reveal-on-scroll">
         <div className="max-w-5xl mx-auto px-6 text-center">
           <p className="text-[10px] tracking-[0.25em] text-[#C5A059] font-[family-name:var(--font-family-mono)] uppercase mb-4">AI-Powered</p>
-          <h2 className="font-playfair text-4xl text-white mb-3">Magic Trip</h2>
+          <h2 className="font-playfair text-4xl gold-title mb-3">Magic Trip</h2>
           <div className="w-14 h-px bg-gradient-to-r from-transparent via-[#C5A059] to-transparent mx-auto mb-4" />
           <p className="font-cormorant text-[#C5A059]/80 text-xl italic mb-10">
             Scegli tre ingredienti. Il Factotum costruisce il viaggio dei tuoi sogni.

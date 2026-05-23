@@ -1,14 +1,29 @@
-// Native CSS smooth scroll — no external library
+import Lenis from 'lenis'
+
+let _lenis: Lenis | null = null
+
 export function initSmoothScroll(): void {
-  document.documentElement.style.scrollBehavior = 'smooth'
+  _lenis = new Lenis({
+    lerp: 0.08,
+    smoothWheel: true,
+    syncTouch: true,
+    touchMultiplier: 2.2,
+    wheelMultiplier: 1.3,
+  })
+  function raf(time: number) {
+    _lenis!.raf(time)
+    requestAnimationFrame(raf)
+  }
+  requestAnimationFrame(raf)
 }
 
-export function getLenis() { return null }
+export function getLenis(): Lenis | null { return _lenis }
 
 export function scrollTo(target: string | number | HTMLElement, options?: { offset?: number }) {
-  if (typeof target === 'string') {
-    const el = document.querySelector(target)
-    el?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  if (_lenis) {
+    _lenis.scrollTo(target as string, { offset: options?.offset ?? 0 })
+  } else if (typeof target === 'string') {
+    document.querySelector(target)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   } else if (target instanceof HTMLElement) {
     const top = target.getBoundingClientRect().top + window.scrollY - (options?.offset ?? 0)
     window.scrollTo({ top, behavior: 'smooth' })
