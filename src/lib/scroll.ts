@@ -1,30 +1,27 @@
 import Lenis from 'lenis'
-import { gsap } from 'gsap'
-import { ScrollTrigger } from 'gsap/ScrollTrigger'
-
-gsap.registerPlugin(ScrollTrigger)
 
 let lenisInstance: Lenis | null = null
 
 export function initSmoothScroll(): Lenis {
+  if (lenisInstance) return lenisInstance
+
   lenisInstance = new Lenis({
-    lerp: 0.09,
+    lerp: 0.07,
     smoothWheel: true,
     syncTouch: true,
-    touchMultiplier: 2.0,
-    wheelMultiplier: 1.1,
+    touchMultiplier: 1.8,
+    wheelMultiplier: 1.2,
     infinite: false,
     orientation: 'vertical',
     gestureOrientation: 'vertical',
     easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
   })
 
-  // Use only GSAP ticker — do NOT also use requestAnimationFrame(raf) or lenis.raf() runs twice per frame
-  lenisInstance.on('scroll', ScrollTrigger.update)
-  gsap.ticker.add((time) => {
-    lenisInstance?.raf(time * 1000)
-  })
-  gsap.ticker.lagSmoothing(0)
+  function raf(time: number) {
+    lenisInstance?.raf(time)
+    requestAnimationFrame(raf)
+  }
+  requestAnimationFrame(raf)
 
   return lenisInstance
 }
