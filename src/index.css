@@ -19,6 +19,26 @@
   --ease-soft:   cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
+/* ── LOVABLE CSS VARIABLES (mapped to our palette) ── */
+:root {
+  --foreground:    #1C1C1C;
+  --glass-bg:      rgba(253, 249, 242, 0.82);
+  --gold-hex:      #C5A059;
+  --gold-light:    rgba(197, 160, 89, 0.35);
+  --gold-wash:     rgba(197, 160, 89, 0.08);
+  --gold-border:   rgba(197, 160, 89, 0.35);
+  --text-soft:     #5A4F44;
+  --border-soft:   rgba(210, 200, 188, 0.4);
+  --muted:         #FCFAF5;
+  --radius:        6px;
+}
+[data-theme="dark"] {
+  --foreground:    #F5F0E8;
+  --glass-bg:      rgba(28, 28, 28, 0.82);
+  --muted:         #1A1A1A;
+  --text-soft:     #A09080;
+}
+
 *, *::before, *::after { box-sizing: border-box; }
 html { scroll-behavior: smooth; }
 @media (prefers-reduced-motion: reduce) {
