@@ -99,7 +99,7 @@ export function ItinerariPage() {
     extras: [],
   })
 
-  // Restore from URL
+  // Restore from URL first, then localStorage as fallback
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     const encoded = params.get('it')
@@ -108,9 +108,27 @@ export function ItinerariPage() {
       if (decoded) {
         setState(decoded)
         toast.success('Itinerario ripristinato!', { description: 'Il tuo itinerario salvato è stato caricato.' })
+        return
       }
     }
+    try {
+      const saved = localStorage.getItem('theclass_itinerario_draft')
+      if (saved) {
+        const parsed: ItineraryState = JSON.parse(saved)
+        if (parsed.transport.length || parsed.experiences.length || parsed.extras.length) {
+          setState(parsed)
+          toast('Bozza ripristinata', { description: 'Hai una selezione non completata salvata.' })
+        }
+      }
+    } catch { /* ignore */ }
   }, [])
+
+  // Autosave draft on each state change
+  useEffect(() => {
+    try {
+      localStorage.setItem('theclass_itinerario_draft', JSON.stringify(state))
+    } catch { /* ignore */ }
+  }, [state])
 
   const toggle = (section: keyof ItineraryState, id: string) => {
     setState(prev => ({

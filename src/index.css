@@ -20,7 +20,10 @@
 }
 
 *, *::before, *::after { box-sizing: border-box; }
-html { scroll-behavior: auto; }
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+}
 
 body {
   margin: 0;
@@ -339,6 +342,164 @@ body {
 body, header, footer, .glass,
 [class*="bg-[#"] {
   transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+/* ── GLASS PREMIUM ── */
+.glass-premium {
+  background: rgba(253, 249, 242, 0.85);
+  backdrop-filter: blur(20px) saturate(1.4);
+  -webkit-backdrop-filter: blur(20px) saturate(1.4);
+  border: 1px solid rgba(197, 160, 89, 0.25);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.04), inset 0 0 0 0.5px rgba(255,255,255,0.6);
+}
+
+/* ── GOLD HOVER ── */
+.gold-hover {
+  transition: border-color 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1),
+              box-shadow 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1),
+              transform 0.25s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+}
+.gold-hover:hover {
+  border-color: rgba(197, 160, 89, 0.55) !important;
+  box-shadow: 0 12px 24px -12px rgba(197,160,89,0.22), 0 2px 8px rgba(197,160,89,0.06);
+  transform: translateY(-2px);
+}
+
+/* ── STAGGER ITEM (IntersectionObserver driven) ── */
+.stagger-item {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.55s cubic-bezier(0.2, 0.9, 0.4, 1.1),
+              transform 0.55s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+}
+.stagger-item.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ── SHIMMER GOLD (testo animato) ── */
+.shimmer-gold {
+  background: linear-gradient(90deg, #b8924a 0%, #f5e6b5 40%, #C5A059 60%, #f5e6b5 80%, #b8924a 100%);
+  background-size: 200% auto;
+  animation: shimmerGold 2.5s linear infinite;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+@keyframes shimmerGold {
+  0%   { background-position: -200% center; }
+  100% { background-position:  200% center; }
+}
+
+/* ── PARALLAX BACKGROUND ── */
+.parallax-bg {
+  background-attachment: fixed;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+@media (prefers-reduced-motion: reduce) {
+  .parallax-bg { background-attachment: scroll; }
+}
+
+/* ── STAGGER CHILDREN (animation delay per child index) ── */
+.stagger-children > *:nth-child(1) { animation-delay: 0ms; }
+.stagger-children > *:nth-child(2) { animation-delay: 80ms; }
+.stagger-children > *:nth-child(3) { animation-delay: 160ms; }
+.stagger-children > *:nth-child(4) { animation-delay: 240ms; }
+.stagger-children > *:nth-child(5) { animation-delay: 320ms; }
+.stagger-children > *:nth-child(6) { animation-delay: 400ms; }
+
+/* ── MAGNETIC CURSOR ── */
+.cursor-magnetic {
+  cursor: none;
+}
+.cursor-dot {
+  position: fixed;
+  width: 6px;
+  height: 6px;
+  background: #C5A059;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 99999;
+  transform: translate(-50%, -50%);
+  transition: width 0.2s, height 0.2s, background 0.2s;
+  mix-blend-mode: multiply;
+}
+.cursor-ring {
+  position: fixed;
+  width: 32px;
+  height: 32px;
+  border: 1px solid rgba(197,160,89,0.5);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 99998;
+  transform: translate(-50%, -50%);
+  transition: transform 0.12s cubic-bezier(0.2, 0.9, 0.4, 1.1), width 0.3s, height 0.3s;
+}
+
+/* ── REVEAL VARIANTS ── */
+.reveal-left {
+  opacity: 0;
+  transform: translateX(-24px);
+}
+.reveal-right {
+  opacity: 0;
+  transform: translateX(24px);
+}
+.reveal-scale {
+  opacity: 0;
+  transform: scale(0.94);
+}
+
+/* ── SECTION DIVIDER (gold line) ── */
+.divider-gold {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(197,160,89,0.4), transparent);
+  margin: 0 auto;
+  width: 80%;
+  max-width: 600px;
+}
+
+/* ── FLOATING BADGE ── */
+@keyframes floatBadge {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-6px); }
+}
+.float-badge {
+  animation: floatBadge 3s ease-in-out infinite;
+}
+
+/* ── LUXURY GRADIENT OVERLAY for hero sections ── */
+.hero-overlay {
+  background: linear-gradient(
+    160deg,
+    rgba(26,24,22,0.72) 0%,
+    rgba(26,24,22,0.38) 45%,
+    rgba(197,160,89,0.04) 100%
+  );
+}
+
+/* ── TEXT SHIMMER (animated gold text) ── */
+@keyframes textShimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+.text-shimmer {
+  background: linear-gradient(
+    90deg,
+    #b8924a 0%,
+    #e8c97a 30%,
+    #C5A059 50%,
+    #e8c97a 70%,
+    #b8924a 100%
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: textShimmer 4s linear infinite;
 }
 
 /* ── SILENCE MODE ── */

@@ -3,24 +3,16 @@ import { createRoot } from 'react-dom/client'
 import { RouterProvider } from '@tanstack/react-router'
 import { Toaster } from 'sonner'
 import { HelmetProvider } from 'react-helmet-async'
-import Lenis from 'lenis'
 import './index.css'
 import { router } from './router'
+import { initSmoothScroll } from './lib/scroll'
 import { AuthProvider } from './context/AuthContext'
 import { LangProvider } from './context/LangContext'
 import { ThemeProvider } from './context/ThemeContext'
 import { CurrencyProvider } from './context/CurrencyContext'
 
-// Lenis smooth scroll
-const lenis = new Lenis({
-  lerp: 0.05,
-  smoothWheel: true,
-  syncTouch: true,
-  touchMultiplier: 2.5,
-  wheelMultiplier: 1,
-})
-function raf(time: number) { lenis.raf(time); requestAnimationFrame(raf) }
-requestAnimationFrame(raf)
+// Lenis smooth scroll with GSAP ScrollTrigger sync (lerp 0.07)
+initSmoothScroll()
 
 // Register service worker in production
 if ('serviceWorker' in navigator && import.meta.env.PROD) {
