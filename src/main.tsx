@@ -11,7 +11,7 @@ import { LangProvider } from './context/LangContext'
 import { ThemeProvider } from './context/ThemeContext'
 import { CurrencyProvider } from './context/CurrencyContext'
 
-// Lenis smooth scroll with GSAP ScrollTrigger sync (lerp 0.07)
+// Lenis smooth scroll — pure RAF, no GSAP
 initSmoothScroll()
 
 // Register service worker in production
