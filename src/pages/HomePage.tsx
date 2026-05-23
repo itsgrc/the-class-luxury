@@ -9,6 +9,7 @@ import { generateId, addRipple, cn } from '@/lib/utils'
 import { listings } from '@/data/listings'
 import { safeRead } from '@/lib/errorHandler'
 import { ForYouSection } from '@/components/ForYouSection'
+import { PartnerLogos } from '@/components/PartnerLogos'
 import { SurpriseModal } from '@/components/SurpriseModal'
 import { ScrollMilestones } from '@/components/ScrollMilestones'
 import { ServiceCard } from '@/components/ServiceCard'
@@ -252,7 +253,7 @@ export function HomePage() {
 
   return (
     <div className="snap-container">
-      <title>the Class – L'arte del viaggio senza confini</title>
+      <title>the Class – Il lusso non si compra. Si orchestra.</title>
       <meta name="description" content="Noleggio yacht, jet privati, auto di lusso ed esperienze esclusive in tutto il mondo. Concierge 24/7, selezione curata, privacy assoluta." />
       <ScrollMilestones milestones={[
         { label: 'Hero', progress: 0 },
@@ -292,9 +293,9 @@ export function HomePage() {
             transition={{ delay: 0.6, duration: 1, ease: [0.25, 0.46, 0.45, 0.94] }}
             className="font-[family-name:var(--font-family-display)] text-5xl md:text-7xl font-medium text-white tracking-[-0.02em] leading-tight mb-5"
           >
-            L'arte del viaggio
+            Il lusso non si compra.
             <br />
-            <em className="not-italic gold-gradient-text">senza confini</em>
+            <em className="not-italic gold-gradient-text">Si orchestra.</em>
           </motion.h1>
 
           <motion.p
@@ -303,7 +304,7 @@ export function HomePage() {
             transition={{ delay: 0.9, duration: 0.7 }}
             className="text-white/65 font-light text-lg mb-10 max-w-xl mx-auto leading-relaxed"
           >
-            Yacht privati, jet intercontinentali, auto da sogno ed esperienze riservate a pochi.
+            Una membership privata che riunisce yacht, jet, dimore, auto da collezione ed esperienze irripetibili. Un solo interlocutore, 24 ore al giorno, in ogni continente.
           </motion.p>
 
           <motion.div
@@ -677,6 +678,93 @@ export function HomePage() {
 
       {/* ══ TESTIMONIALS ══ */}
       <TestimonialsCarousel />
+
+      {/* ══ CREDO ══ */}
+      <section className="py-20 bg-[#FDF9F2]">
+        <div className="max-w-4xl mx-auto px-6 text-center reveal">
+          <p className="font-[family-name:var(--font-family-serif)] text-[#1C1C1C] text-xl md:text-2xl italic leading-relaxed mb-8">
+            "Crediamo che la ricchezza autentica non si misuri in beni accumulati, ma nella qualità delle ore che ci appartengono."
+          </p>
+          <p className="text-[#5A4F44] font-light leading-relaxed mb-5 max-w-2xl mx-auto">
+            the Class non è un marketplace. È un atelier di rapporti umani, costruito attorno a poche famiglie, imprenditori e collezionisti che riconoscono il valore di un interlocutore unico: chi anticipa il desiderio prima che venga pronunciato.
+          </p>
+          <p className="text-[#5A4F44]/70 text-sm font-light">
+            Discrezione assoluta. NDA reciproci. Partner selezionati uno ad uno.
+          </p>
+        </div>
+      </section>
+
+      {/* ══ PARTNER LOGOS ══ */}
+      <PartnerLogos />
+
+      {/* ══ CATEGORIE ══ */}
+      <section className="py-16 bg-[#FCFAF5]">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="flex justify-between items-center mb-8">
+            <h2 className="font-[family-name:var(--font-family-display)] text-3xl font-medium text-[#1C1C1C]">
+              Categorie in evidenza
+            </h2>
+            <Link to="/servizi" className="gold-underline text-sm text-[#C5A059]">
+              Vedi tutto →
+            </Link>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            {[
+              { label: 'Yacht', href: '/servizi?cats=yacht' },
+              { label: 'Jet Privati', href: '/servizi?cats=jet' },
+              { label: 'Auto di Lusso', href: '/servizi?cats=auto' },
+              { label: 'Esperienze', href: '/servizi?cats=esperienza' },
+              { label: 'Concierge', href: '/concierge' },
+              { label: 'Su Misura', href: '/richiesta-su-misura' },
+            ].map(cat => (
+              <Link
+                key={cat.label}
+                to={cat.href as '/servizi'}
+                className="lift-hover bg-white border border-[rgba(197,160,89,0.18)] rounded-xl p-4 text-center"
+              >
+                <span className="font-[family-name:var(--font-family-mono)] text-xs text-[#5A4F44] tracking-widest uppercase">
+                  {cat.label}
+                </span>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ══ ESPERIENZE RICHIESTE ══ */}
+      <section className="py-20 bg-[#FDF9F2]">
+        <div className="max-w-7xl mx-auto px-6">
+          <h2 className="font-[family-name:var(--font-family-display)] text-3xl font-medium text-[#1C1C1C] text-center mb-12">
+            Le esperienze più richieste questa settimana
+          </h2>
+          <div className="grid md:grid-cols-3 gap-6">
+            {[
+              { cat: 'Yacht', title: 'Sanlorenzo SL86', desc: 'Yacht di rappresentanza, equipaggio incluso. Mediterraneo orientale.', price: '€ 8.500 / giorno', img: 'https://images.unsplash.com/photo-1567899378494-47b22a2ae96a?w=800&q=80&fm=webp', href: '/servizi?cats=yacht' },
+              { cat: 'Jet Privato', title: 'Gulfstream G650', desc: 'Jet intercontinentale 14 passeggeri. Raggio d\'azione illimitato.', price: 'Su richiesta', img: 'https://images.unsplash.com/photo-1540962351504-03099e0a754b?w=800&q=80&fm=webp', href: '/servizi?cats=jet' },
+              { cat: 'Esperienza', title: 'Asta Privata Sotheby\'s', desc: 'Accesso esclusivo a preview e lotti riservati. Solo membership.', price: 'Membership', img: 'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=800&q=80&fm=webp', href: '/servizi?cats=esperienza' },
+            ].map(item => (
+              <Link key={item.title} to={item.href as '/servizi'} className="group block">
+                <div className="lift-hover bg-[#FCFAF5] rounded-2xl overflow-hidden border border-[rgba(197,160,89,0.15)]">
+                  <div className="h-48 overflow-hidden">
+                    <img
+                      src={item.img}
+                      alt={item.title}
+                      loading="lazy"
+                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.06]"
+                    />
+                  </div>
+                  <div className="p-5">
+                    <p className="text-[10px] text-[#C5A059] uppercase tracking-widest font-[family-name:var(--font-family-mono)] mb-1">{item.cat}</p>
+                    <h3 className="font-[family-name:var(--font-family-display)] text-xl font-medium text-[#1C1C1C] mb-1">{item.title}</h3>
+                    <p className="text-[#5A4F44] text-sm font-light leading-relaxed mb-3">{item.desc}</p>
+                    <p className="font-[family-name:var(--font-family-mono)] text-sm text-[#C5A059]">{item.price}</p>
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
 
       {/* ══ PRESS ══ */}
       <section className="py-16 bg-[#FCFAF5] border-t border-[rgba(197,160,89,0.15)]">
