@@ -502,6 +502,18 @@ body, header, footer, .glass,
   animation: textShimmer 4s linear infinite;
 }
 
+/* ── LIFT HOVER (card elevation + gold border) ── */
+.lift-hover {
+  transition: transform 0.4s cubic-bezier(0.2, 0.9, 0.4, 1.1),
+              border-color 0.3s ease,
+              box-shadow 0.4s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+}
+.lift-hover:hover {
+  transform: translateY(-4px);
+  border-color: rgba(197, 160, 89, 0.55) !important;
+  box-shadow: 0 20px 35px -12px rgba(197, 160, 89, 0.2), 0 4px 12px rgba(26, 24, 22, 0.06);
+}
+
 /* ── SILENCE MODE ── */
 [data-silence="true"] *,
 [data-silence="true"] *::before,
