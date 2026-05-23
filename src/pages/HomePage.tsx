@@ -75,7 +75,6 @@ function TestimonialsCarousel() {
   )
 }
 
-const HERO_VIDEO = 'https://player.vimeo.com/external/371433846.sd.mp4'
 
 const SERVICES = [
   { icon: Anchor, title: 'Yacht', desc: 'Da 18 a 60 metri. Motoryacht, velieri d\'epoca, catamarani.', href: '/servizi?cats=yacht', img: 'https://images.unsplash.com/photo-1567899378494-47b22a2ae96a?w=700&q=80&fm=webp' },
@@ -265,16 +264,15 @@ export function HomePage() {
       ]} />
       {/* ══ HERO ══ */}
       <section className="snap-section relative min-h-screen flex items-center justify-center overflow-hidden">
-        {/* Video background with parallax */}
+        {/* Luxury image background with parallax */}
         <motion.div style={{ y: heroY }} className="absolute inset-0 w-full h-full">
-          <video
+          <img
             className="absolute inset-0 w-full h-full object-cover"
-            src={HERO_VIDEO}
-            autoPlay muted loop playsInline
-            onError={e => { (e.currentTarget as HTMLVideoElement).style.display = 'none' }}
-            poster="https://images.unsplash.com/photo-1567899378494-47b22a2ae96a?w=1920&q=80"
+            src="https://images.unsplash.com/photo-1605281317010-fe5ffe798e2c?w=1600&q=85"
+            alt=""
+            loading="eager"
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-[#1C1C1C]/70 via-[#1C1C1C]/40 to-[#FDF9F2]" />
+          <div className="absolute inset-0 bg-gradient-to-b from-[#1C1C1C]/55 via-[#1C1C1C]/25 to-[#FDF9F2]" />
         </motion.div>
 
         <div className="relative z-10 text-center px-6 max-w-4xl mx-auto pt-16">
