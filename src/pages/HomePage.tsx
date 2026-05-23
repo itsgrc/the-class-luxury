@@ -145,7 +145,7 @@ export function HomePage() {
       </section>
 
       {/* ══ CREDO ══ */}
-      <section className="max-w-4xl mx-auto px-6 py-24 text-center reveal">
+      <section className="max-w-4xl mx-auto px-6 py-16 text-center reveal">
         <p className="text-[10px] tracking-[0.25em] text-[#C5A059] font-[family-name:var(--font-family-mono)] uppercase mb-8">Il nostro manifesto</p>
         <p className="font-cormorant text-[#5A4F44] text-xl md:text-2xl italic leading-relaxed mb-8">
           Crediamo che la ricchezza autentica non si misuri in beni accumulati, ma nella qualità delle ore che ci appartengono.
@@ -181,7 +181,7 @@ export function HomePage() {
       <PartnerLogos />
 
       {/* ══ CATEGORIE ══ */}
-      <section className="max-w-7xl mx-auto px-6 py-20 reveal">
+      <section className="max-w-7xl mx-auto px-6 py-14 reveal">
         <div className="flex justify-between items-center mb-10">
           <h2 className="font-playfair text-3xl text-[#1C1C1C]">Categorie in evidenza</h2>
           <Link to="/servizi" className="gold-underline text-[#C5A059] text-sm">Vedi tutto →</Link>
@@ -207,7 +207,7 @@ export function HomePage() {
       </section>
 
       {/* ══ ESPERIENZE ══ */}
-      <section className="bg-card-bg py-20">
+      <section className="bg-card-bg py-14">
         <div className="max-w-7xl mx-auto px-6">
           <h2 className="font-playfair text-3xl text-center text-[#1C1C1C] mb-12 reveal">Le esperienze più richieste questa settimana</h2>
           <div className="grid md:grid-cols-3 gap-6">
@@ -264,7 +264,7 @@ export function HomePage() {
       </section>
 
       {/* ══ CONCIERGE WIDGET ══ */}
-      <section className="py-24 px-6" ref={conciergeRef}>
+      <section className="py-16 px-6" ref={conciergeRef}>
         <div className="max-w-3xl mx-auto text-center reveal">
           <p className="text-[10px] tracking-[0.25em] text-[#C5A059] font-[family-name:var(--font-family-mono)] uppercase mb-4">Il tuo concierge</p>
           <h2 className="font-playfair text-3xl md:text-4xl text-[#1C1C1C] mb-3">Parla con il tuo Concierge</h2>
