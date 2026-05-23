@@ -39,6 +39,18 @@
   --text-soft:     #A09080;
 }
 
+/* ── LOVABLE CLASS ALIASES (map Lovable names → our tokens) ── */
+.font-playfair    { font-family: var(--font-family-display); }
+.font-cormorant   { font-family: var(--font-family-serif); }
+.text-gold-matte  { color: var(--gold-hex); }
+.bg-gold-matte    { background-color: var(--gold-hex); }
+.border-gold-matte { border-color: var(--gold-hex); }
+.text-velvet-black { color: #1C1C1C; }
+.bg-velvet-black  { background-color: #1C1C1C; }
+.text-taupe       { color: #5A4F44; }
+.bg-ivory         { background-color: #FDF9F2; }
+.bg-card-bg       { background-color: #FCFAF5; }
+
 *, *::before, *::after { box-sizing: border-box; }
 html { scroll-behavior: smooth; }
 @media (prefers-reduced-motion: reduce) {
