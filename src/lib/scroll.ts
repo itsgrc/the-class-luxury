@@ -8,19 +8,18 @@ let lenisInstance: Lenis | null = null
 
 export function initSmoothScroll(): Lenis {
   lenisInstance = new Lenis({
-    lerp: 0.07,
+    lerp: 0.1,
     smoothWheel: true,
     syncTouch: true,
     touchMultiplier: 2,
-    wheelMultiplier: 1,
+    wheelMultiplier: 1.2,
     infinite: false,
     orientation: 'vertical',
     gestureOrientation: 'vertical',
   })
 
-  // Sync GSAP ScrollTrigger with Lenis
+  // Use only GSAP ticker — do NOT also use requestAnimationFrame(raf) or lenis.raf() runs twice per frame
   lenisInstance.on('scroll', ScrollTrigger.update)
-
   gsap.ticker.add((time) => {
     lenisInstance?.raf(time * 1000)
   })
