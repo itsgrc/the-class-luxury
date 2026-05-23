@@ -8,11 +8,11 @@ let lenisInstance: Lenis | null = null
 
 export function initSmoothScroll(): Lenis {
   lenisInstance = new Lenis({
-    lerp: 0.075,
+    lerp: 0.09,
     smoothWheel: true,
     syncTouch: true,
-    touchMultiplier: 1.8,
-    wheelMultiplier: 0.9,
+    touchMultiplier: 2.0,
+    wheelMultiplier: 1.1,
     infinite: false,
     orientation: 'vertical',
     gestureOrientation: 'vertical',
