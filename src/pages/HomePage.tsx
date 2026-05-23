@@ -5,6 +5,7 @@ import { Shield, Clock, Gem, Anchor, Plane, Car, Star } from 'lucide-react'
 import { toast } from 'sonner'
 import { generateId } from '@/lib/utils'
 import { PartnerLogos } from '@/components/PartnerLogos'
+import { inspirations } from '@/data/inspirations'
 
 const TESTIMONIALS = [
   { name: 'Alessandro M.', role: 'CEO, Tech Ventures', text: 'The Class ha trasformato il modo in cui organizzo i miei viaggi business. Efficienza e lusso senza compromessi.', avatar: 'AM' },
@@ -306,6 +307,27 @@ export function HomePage() {
               <h3 className="font-playfair text-xl text-[#1C1C1C] mb-3">{title}</h3>
               <p className="text-[#5A4F44] text-sm leading-relaxed">{desc}</p>
             </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ══ ISPIRAZIONI ══ */}
+      <section className="max-w-7xl mx-auto px-6 py-14">
+        <div className="text-center mb-10">
+          <p className="text-[10px] tracking-[0.25em] text-[#C5A059] font-[family-name:var(--font-family-mono)] uppercase mb-2">Curate per te</p>
+          <h2 className="font-playfair text-3xl text-[#1C1C1C]">Ispirazioni per te</h2>
+          <div className="divider-gold-short" />
+        </div>
+        <div className="grid md:grid-cols-4 gap-6">
+          {inspirations.map(item => (
+            <Link key={item.title} to="/servizi" className="glass-satin rounded-xl overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-lg block">
+              <img src={item.image} className="h-40 w-full object-cover" alt={item.title} loading="lazy" />
+              <div className="p-4">
+                <span className="text-[9px] font-[family-name:var(--font-family-mono)] tracking-widest text-[#C5A059] uppercase">{item.category}</span>
+                <h3 className="font-playfair text-base text-[#1C1C1C] mt-1 leading-snug">{item.title}</h3>
+                <p className="text-[#5A4F44] text-xs mt-1">{item.description}</p>
+              </div>
+            </Link>
           ))}
         </div>
       </section>

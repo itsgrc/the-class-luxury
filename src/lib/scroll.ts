@@ -6,11 +6,11 @@ export function initSmoothScroll(): Lenis {
   if (lenisInstance) return lenisInstance
 
   lenisInstance = new Lenis({
-    lerp: 0.07,
+    lerp: 0.05,
     smoothWheel: true,
     syncTouch: true,
-    touchMultiplier: 1.8,
-    wheelMultiplier: 1.2,
+    touchMultiplier: 2.5,
+    wheelMultiplier: 0.8,
     infinite: false,
     orientation: 'vertical',
     gestureOrientation: 'vertical',

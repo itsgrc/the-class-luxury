@@ -576,6 +576,15 @@ body, header, footer, .glass,
   box-shadow: 0 0 0 3px rgba(197, 160, 89, 0.2);
 }
 
+/* ── GLASS SATIN (vetro satinato per card ispirazioni) ── */
+.glass-satin {
+  background: rgba(253, 249, 242, 0.7);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(197, 160, 89, 0.15);
+  box-shadow: 0 15px 35px -15px rgba(26, 24, 22, 0.08);
+}
+
 /* ── DECORATIVE ── */
 .bg-gentle-gradient {
   background: linear-gradient(145deg, #FDF9F2 0%, #FCFAF5 100%);
