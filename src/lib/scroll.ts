@@ -1,37 +1,35 @@
 import Lenis from 'lenis'
 
-let lenisInstance: Lenis | null = null
+let _lenis: Lenis | null = null
 
-export function initSmoothScroll(): Lenis {
-  if (lenisInstance) return lenisInstance
-
-  lenisInstance = new Lenis({
-    lerp: 0.12,           // higher = snappier (0.02 would be sluggish)
+export function initSmoothScroll(): void {
+  _lenis = new Lenis({
+    lerp: 0.08,
     smoothWheel: true,
     syncTouch: true,
-    touchMultiplier: 3,
-    wheelMultiplier: 1.5,
-    infinite: false,
-    orientation: 'vertical',
-    gestureOrientation: 'vertical',
-    easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+    touchMultiplier: 2.2,
+    wheelMultiplier: 1.3,
   })
-
   function raf(time: number) {
-    lenisInstance?.raf(time)
+    _lenis!.raf(time)
     requestAnimationFrame(raf)
   }
   requestAnimationFrame(raf)
-
-  return lenisInstance
 }
 
-export function getLenis(): Lenis | null {
-  return lenisInstance
-}
+export function getLenis(): Lenis | null { return _lenis }
 
-export function scrollTo(target: string | number | HTMLElement, options?: { offset?: number; duration?: number }) {
-  lenisInstance?.scrollTo(target, { offset: options?.offset ?? 0, duration: options?.duration ?? 1.2 })
+export function scrollTo(target: string | number | HTMLElement, options?: { offset?: number }) {
+  if (_lenis) {
+    _lenis.scrollTo(target as string, { offset: options?.offset ?? 0 })
+  } else if (typeof target === 'string') {
+    document.querySelector(target)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  } else if (target instanceof HTMLElement) {
+    const top = target.getBoundingClientRect().top + window.scrollY - (options?.offset ?? 0)
+    window.scrollTo({ top, behavior: 'smooth' })
+  } else if (typeof target === 'number') {
+    window.scrollTo({ top: target, behavior: 'smooth' })
+  }
 }
 
 export function observeReveal(): () => void {
