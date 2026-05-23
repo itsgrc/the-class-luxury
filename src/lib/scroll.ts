@@ -6,11 +6,11 @@ export function initSmoothScroll(): Lenis {
   if (lenisInstance) return lenisInstance
 
   lenisInstance = new Lenis({
-    lerp: 0.06,
+    lerp: 0.12,           // higher = snappier (0.02 would be sluggish)
     smoothWheel: true,
     syncTouch: true,
-    touchMultiplier: 2.5,
-    wheelMultiplier: 0.85,
+    touchMultiplier: 3,
+    wheelMultiplier: 1.5,
     infinite: false,
     orientation: 'vertical',
     gestureOrientation: 'vertical',
@@ -34,7 +34,6 @@ export function scrollTo(target: string | number | HTMLElement, options?: { offs
   lenisInstance?.scrollTo(target, { offset: options?.offset ?? 0, duration: options?.duration ?? 1.2 })
 }
 
-// IntersectionObserver per reveal-on-scroll (chiama dopo mount React)
 export function observeReveal(): () => void {
   const elements = document.querySelectorAll<HTMLElement>('.reveal-on-scroll')
   const observer = new IntersectionObserver((entries) => {
