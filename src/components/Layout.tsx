@@ -171,7 +171,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       >
         <div className="max-w-7xl mx-auto px-6 lg:px-8 h-16 flex items-center justify-between">
           {/* Logo */}
-          <Link to="/" className="shrink-0 flex items-center gap-2">
+          <Link to="/" className="shrink-0 flex items-center gap-3 group">
             <BrandLogo size={32} light={!scrolled} animated={true} />
             <span
               className="font-[family-name:var(--font-family-display)] text-xl font-medium tracking-[-0.02em]"
@@ -179,6 +179,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
             >
               the{' '}
               <span className="gold-gradient-text">Class</span>
+            </span>
+            <span className="w-px h-3.5 opacity-60" style={{ background: 'var(--gold-light)' }} />
+            <span
+              className="hidden sm:inline"
+              style={{ fontSize: '9px', letterSpacing: '0.22em', textTransform: 'uppercase', color: 'var(--gold-hex)', fontWeight: 400 }}
+            >
+              Private
             </span>
           </Link>
 
@@ -340,7 +347,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <main id="main-content" className="flex-1">{children}</main>
 
       {/* ── FOOTER ── */}
-      <footer className="border-t border-[rgba(197,160,89,0.3)] bg-[#FCFAF5]">
+      <footer className="bg-[#FCFAF5]">
+        <div style={{ height: '1px', background: 'linear-gradient(90deg, transparent 0%, var(--gold-light) 30%, var(--gold-light) 70%, transparent 100%)', opacity: 0.5 }} />
         <div className="max-w-7xl mx-auto px-6 lg:px-8 pt-16 pb-10">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
             {[
