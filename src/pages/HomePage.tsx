@@ -238,6 +238,31 @@ export function HomePage() {
         </div>
       </section>
 
+      {/* ══ ULTIMI ARRIVI ══ */}
+      <section className="max-w-7xl mx-auto px-6 py-20">
+        <div className="text-center mb-12 reveal">
+          <p className="text-[10px] tracking-[0.25em] text-[#C5A059] font-[family-name:var(--font-family-mono)] uppercase mb-2">Freschi di flotta</p>
+          <h2 className="font-playfair text-3xl text-[#1C1C1C]">Ultimi arrivi</h2>
+          <div className="divider-gold-short" />
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
+          {[
+            { name: 'Sunseeker Predator 55', cat: 'Motoryacht', badge: 'Nuovo' },
+            { name: 'Riva 88′ Folgore', cat: 'Day Cruiser', badge: 'Esclusiva' },
+            { name: 'Lamborghini Revuelto', cat: 'Supercar', badge: 'Limitato' },
+            { name: 'Gulfstream G700', cat: 'Ultra Long Range', badge: 'Premium' },
+          ].map(item => (
+            <div key={item.name} className="luxury-card rounded-2xl p-6 text-center reveal">
+              <span className="inline-block text-[9px] font-[family-name:var(--font-family-mono)] tracking-widest text-[#C5A059] border border-[rgba(197,160,89,0.4)] rounded-full px-3 py-0.5 mb-4 uppercase">
+                {item.badge}
+              </span>
+              <p className="font-playfair text-[#1C1C1C] text-base leading-snug">{item.name}</p>
+              <p className="text-[#5A4F44] text-xs mt-1 font-[family-name:var(--font-family-mono)] tracking-wider">{item.cat}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
       {/* ══ CONCIERGE WIDGET ══ */}
       <section className="py-24 px-6" ref={conciergeRef}>
         <div className="max-w-3xl mx-auto text-center reveal">
