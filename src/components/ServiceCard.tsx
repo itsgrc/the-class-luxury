@@ -347,6 +347,13 @@ function ServiceCardInner({ listing, delay = 0, compareSelected, onCompareToggle
               </div>
             )}
 
+            <button
+              onClick={e => { e.preventDefault(); e.stopPropagation(); toast('Richiesta inviata al concierge!', { description: listing.title }) }}
+              className="mt-3 w-full py-2 bg-[#C5A059] text-[#1C1C1C] rounded-full text-[11px] font-[family-name:var(--font-family-mono)] tracking-wider uppercase hover:opacity-90 transition"
+            >
+              Prenota in 1 click
+            </button>
+
             {onCompareToggle && (
               <button
                 onClick={e => { e.preventDefault(); e.stopPropagation(); onCompareToggle() }}
