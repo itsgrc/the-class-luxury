@@ -20,7 +20,10 @@
 }
 
 *, *::before, *::after { box-sizing: border-box; }
-html { scroll-behavior: auto; }
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+}
 
 body {
   margin: 0;
@@ -339,6 +342,54 @@ body {
 body, header, footer, .glass,
 [class*="bg-[#"] {
   transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+/* ── GLASS PREMIUM ── */
+.glass-premium {
+  background: rgba(253, 249, 242, 0.85);
+  backdrop-filter: blur(20px) saturate(1.4);
+  -webkit-backdrop-filter: blur(20px) saturate(1.4);
+  border: 1px solid rgba(197, 160, 89, 0.25);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.04), inset 0 0 0 0.5px rgba(255,255,255,0.6);
+}
+
+/* ── GOLD HOVER ── */
+.gold-hover {
+  transition: border-color 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1),
+              box-shadow 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1),
+              transform 0.25s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+}
+.gold-hover:hover {
+  border-color: rgba(197, 160, 89, 0.55) !important;
+  box-shadow: 0 12px 24px -12px rgba(197,160,89,0.22), 0 2px 8px rgba(197,160,89,0.06);
+  transform: translateY(-2px);
+}
+
+/* ── STAGGER ITEM (IntersectionObserver driven) ── */
+.stagger-item {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.55s cubic-bezier(0.2, 0.9, 0.4, 1.1),
+              transform 0.55s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+}
+.stagger-item.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ── SHIMMER GOLD (testo animato) ── */
+.shimmer-gold {
+  background: linear-gradient(90deg, #b8924a 0%, #f5e6b5 40%, #C5A059 60%, #f5e6b5 80%, #b8924a 100%);
+  background-size: 200% auto;
+  animation: shimmerGold 2.5s linear infinite;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+@keyframes shimmerGold {
+  0%   { background-position: -200% center; }
+  100% { background-position:  200% center; }
 }
 
 /* ── PARALLAX BACKGROUND ── */

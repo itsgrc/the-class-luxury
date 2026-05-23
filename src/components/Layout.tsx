@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { Link, useLocation, useNavigate } from '@tanstack/react-router'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Heart, Menu, X, User, Moon, Sun, Mic, MicOff } from 'lucide-react'
@@ -56,6 +56,58 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate()
 
   const [silenceMode, setSilenceMode] = useState(() => localStorage.getItem('theclass_silence') === 'true')
+
+  // Magnetic cursor — desktop only, not on touch devices
+  const cursorDotRef = useRef<HTMLDivElement>(null)
+  const cursorRingRef = useRef<HTMLDivElement>(null)
+  const mousePos = useRef({ x: -100, y: -100 })
+  const ringPos = useRef({ x: -100, y: -100 })
+
+  useEffect(() => {
+    const isTouch = window.matchMedia('(hover: none)').matches
+    if (isTouch || silenceMode) return
+
+    const dot = cursorDotRef.current
+    const ring = cursorRingRef.current
+    if (!dot || !ring) return
+
+    const onMove = (e: MouseEvent) => {
+      mousePos.current = { x: e.clientX, y: e.clientY }
+    }
+    window.addEventListener('mousemove', onMove, { passive: true })
+
+    let rafId: number
+    const animate = () => {
+      const dx = mousePos.current.x - ringPos.current.x
+      const dy = mousePos.current.y - ringPos.current.y
+      ringPos.current.x += dx * 0.12
+      ringPos.current.y += dy * 0.12
+      dot.style.left = `${mousePos.current.x}px`
+      dot.style.top = `${mousePos.current.y}px`
+      ring.style.left = `${ringPos.current.x}px`
+      ring.style.top = `${ringPos.current.y}px`
+      rafId = requestAnimationFrame(animate)
+    }
+    rafId = requestAnimationFrame(animate)
+
+    const onEnterLink = () => {
+      if (dot) { dot.style.width = '12px'; dot.style.height = '12px' }
+      if (ring) { ring.style.width = '48px'; ring.style.height = '48px'; ring.style.borderColor = 'rgba(197,160,89,0.7)' }
+    }
+    const onLeaveLink = () => {
+      if (dot) { dot.style.width = '6px'; dot.style.height = '6px' }
+      if (ring) { ring.style.width = '32px'; ring.style.height = '32px'; ring.style.borderColor = 'rgba(197,160,89,0.5)' }
+    }
+    document.querySelectorAll('a, button').forEach(el => {
+      el.addEventListener('mouseenter', onEnterLink)
+      el.addEventListener('mouseleave', onLeaveLink)
+    })
+
+    return () => {
+      window.removeEventListener('mousemove', onMove)
+      cancelAnimationFrame(rafId)
+    }
+  }, [silenceMode])
 
   const toggleSilence = () => setSilenceMode(prev => {
     const next = !prev
@@ -429,6 +481,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <BackToTop />
       <AIConcierge />
       <FirstVisitTour />
+      {/* Magnetic cursor — hidden on touch devices via CSS */}
+      <div ref={cursorDotRef} className="cursor-dot pointer-events-none hidden md:block" aria-hidden="true" />
+      <div ref={cursorRingRef} className="cursor-ring pointer-events-none hidden md:block" aria-hidden="true" />
     </div>
   )
 }
