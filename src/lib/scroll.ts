@@ -1,37 +1,20 @@
-import Lenis from 'lenis'
+// Native CSS smooth scroll — no external library
+export function initSmoothScroll(): void {
+  document.documentElement.style.scrollBehavior = 'smooth'
+}
 
-let lenisInstance: Lenis | null = null
+export function getLenis() { return null }
 
-export function initSmoothScroll(): Lenis {
-  if (lenisInstance) return lenisInstance
-
-  lenisInstance = new Lenis({
-    lerp: 0.12,           // higher = snappier (0.02 would be sluggish)
-    smoothWheel: true,
-    syncTouch: true,
-    touchMultiplier: 3,
-    wheelMultiplier: 1.5,
-    infinite: false,
-    orientation: 'vertical',
-    gestureOrientation: 'vertical',
-    easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-  })
-
-  function raf(time: number) {
-    lenisInstance?.raf(time)
-    requestAnimationFrame(raf)
+export function scrollTo(target: string | number | HTMLElement, options?: { offset?: number }) {
+  if (typeof target === 'string') {
+    const el = document.querySelector(target)
+    el?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  } else if (target instanceof HTMLElement) {
+    const top = target.getBoundingClientRect().top + window.scrollY - (options?.offset ?? 0)
+    window.scrollTo({ top, behavior: 'smooth' })
+  } else if (typeof target === 'number') {
+    window.scrollTo({ top: target, behavior: 'smooth' })
   }
-  requestAnimationFrame(raf)
-
-  return lenisInstance
-}
-
-export function getLenis(): Lenis | null {
-  return lenisInstance
-}
-
-export function scrollTo(target: string | number | HTMLElement, options?: { offset?: number; duration?: number }) {
-  lenisInstance?.scrollTo(target, { offset: options?.offset ?? 0, duration: options?.duration ?? 1.2 })
 }
 
 export function observeReveal(): () => void {
