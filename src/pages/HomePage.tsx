@@ -354,7 +354,7 @@ export function HomePage() {
               <button
                 key={item.label}
                 onClick={() => openConcierge(item.msg)}
-                className="group p-6 bg-white border border-[rgba(197,160,89,0.15)] rounded-2xl hover:border-[#C5A059] hover:shadow-[0_8px_32px_rgba(197,160,89,0.12)] transition-all text-center"
+                className="group lift-hover p-6 bg-white border border-[rgba(197,160,89,0.15)] rounded-2xl text-center"
               >
                 <span className="text-3xl mb-3 block">{item.icon}</span>
                 <p className="text-sm font-medium text-[#1C1C1C] group-hover:text-[#C5A059] transition-colors">{item.label}</p>
@@ -569,7 +569,7 @@ export function HomePage() {
             {WHY.map((item, i) => (
               <div
                 key={item.title}
-                className="reveal text-center p-8 rounded-2xl border border-[rgba(197,160,89,0.15)] bg-[#FCFAF5] hover:border-[rgba(197,160,89,0.4)] hover:shadow-[0_8px_32px_rgba(197,160,89,0.08)] transition-all duration-300"
+                className="reveal lift-hover text-center p-8 rounded-2xl border border-[rgba(197,160,89,0.15)] bg-[#FCFAF5]"
               >
                 <div className="w-12 h-12 rounded-full border border-[rgba(197,160,89,0.35)] flex items-center justify-center mx-auto mb-5">
                   <item.icon size={18} className="text-[#C5A059]" />
@@ -664,7 +664,7 @@ export function HomePage() {
               ].map(card => (
                 <div
                   key={card.label}
-                  className="p-3.5 rounded-xl bg-white border border-[rgba(197,160,89,0.2)] shadow-[0_2px_12px_rgba(197,160,89,0.06)]"
+                  className="lift-hover p-3.5 rounded-xl bg-white border border-[rgba(197,160,89,0.2)]"
                 >
                   <p className="text-[11px] font-medium text-[#1C1C1C] mb-0.5">{card.label}</p>
                   <p className="text-[10px] text-[#5A4F44]">{card.sub}</p>
