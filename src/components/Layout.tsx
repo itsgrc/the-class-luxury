@@ -36,6 +36,14 @@ const NAV = [
   { to: '/stories', label: 'Stories' },
 ]
 
+const NAV_SECONDARY = [
+  { to: '/pacchetti', label: 'Pacchetti' },
+  { to: '/quiz', label: 'Quiz' },
+  { to: '/crowd-concierge', label: 'Crowd' },
+  { to: '/mindmap', label: 'Mind Map' },
+  { to: '/admin', label: 'Admin' },
+]
+
 const getGreeting = () => {
   const h = new Date().getHours()
   if (h < 12) return 'Buongiorno'
@@ -304,6 +312,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
                     {link.label}
                   </Link>
                 ))}
+                <div className="w-full h-px bg-[rgba(197,160,89,0.2)]" />
+                {NAV_SECONDARY.map(link => (
+                  <Link key={link.to} to={link.to} className="text-xs font-light text-[#5A4F44]/70 py-0.5">
+                    {link.label}
+                  </Link>
+                ))}
+                <div className="w-full h-px bg-[rgba(197,160,89,0.2)]" />
                 <Link to="/preferiti" className="text-sm font-light text-[#5A4F44] py-1 flex items-center gap-2">
                   <Heart size={13} />
                   Preferiti{count > 0 ? ` (${count})` : ''}
