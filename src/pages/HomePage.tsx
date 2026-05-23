@@ -64,8 +64,8 @@ export function HomePage() {
   useEffect(() => {
     gsap.utils.toArray<HTMLElement>('.reveal').forEach(el => {
       gsap.from(el, {
-        scrollTrigger: { trigger: el, start: 'top 85%', toggleActions: 'play none none reverse' },
-        y: 30, opacity: 0, duration: 0.7, ease: 'power2.out',
+        scrollTrigger: { trigger: el, start: 'top 88%', toggleActions: 'play none none none', once: true },
+        y: 24, opacity: 0, duration: 0.65, ease: 'power2.out',
       })
     })
     return () => ScrollTrigger.getAll().forEach(t => t.kill())
@@ -102,9 +102,10 @@ export function HomePage() {
         <motion.div style={{ y: heroY }} className="absolute inset-0 w-full h-full">
           <img
             className="absolute inset-0 w-full h-full object-cover"
-            src="https://images.unsplash.com/photo-1605281317010-fe5ffe798e2c?w=1600&q=85"
+            src="https://images.unsplash.com/photo-1567899378494-47b22a2ae96a?w=1920&q=90&auto=format&fit=crop"
             alt=""
             loading="eager"
+            fetchPriority="high"
           />
           <div className="absolute inset-0 bg-gradient-to-b from-[#1C1C1C]/55 via-[#1C1C1C]/25 to-[#FDF9F2]" />
         </motion.div>
