@@ -62,6 +62,18 @@ html { scroll-behavior: smooth; }
   html { scroll-behavior: auto; }
 }
 
+/* ── PERFORMANCE: GPU-promote parallax containers ── */
+.hero-parallax { will-change: transform; transform: translateZ(0); }
+
+/* ── PERFORMANCE: contain card grids to prevent reflow propagation ── */
+.card-grid { contain: layout style; }
+
+/* ── PERFORMANCE: off-screen sections deferred layout ── */
+.section-deferred {
+  content-visibility: auto;
+  contain-intrinsic-size: 0 500px;
+}
+
 body {
   margin: 0;
   background-color: #FDF9F2;
