@@ -1,15 +1,56 @@
-import { useState, useEffect, useMemo } from 'react'
-import { Link } from '@tanstack/react-router'
+import { useState, useEffect, useMemo, useRef } from 'react'
+import { Link, useNavigate } from '@tanstack/react-router'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Heart, Trash2, Package, Share2, Printer, ArrowUpDown, StickyNote, Bell, Columns2 } from 'lucide-react'
+import { Heart, Trash2, Package, Share2, Printer, ArrowUpDown, StickyNote, Bell, Columns2, Lock, TrendingUp, TrendingDown, Minus, Edit3, Check, X, Download, Map } from 'lucide-react'
 import { toast } from 'sonner'
 import { listings } from '@/data/listings'
 import type { Category } from '@/data/listings'
 import { useFavorites } from '@/hooks/useFavorites'
 import { ServiceCard } from '@/components/ServiceCard'
 import { RequestModal } from '@/components/RequestModal'
-import { formatPrice } from '@/lib/utils'
+import { formatPrice, cn } from '@/lib/utils'
 import { safeRead, safeWrite } from '@/lib/errorHandler'
+
+// ─── Price trend (deterministic per listing id) ───────────────────────────────
+function priceTrend(id: string): { dir: 'up' | 'down' | 'flat'; pct: number } {
+  const hash = id.split('').reduce((a, c) => a + c.charCodeAt(0), 0)
+  const mod = hash % 3
+  if (mod === 0) return { dir: 'up', pct: 5 + (hash % 15) }
+  if (mod === 1) return { dir: 'down', pct: 3 + (hash % 12) }
+  return { dir: 'flat', pct: 0 }
+}
+
+// ─── Category distribution donut (CSS bars) ──────────────────────────────────
+function CategoryBreakdown({ cats }: { cats: Partial<Record<Category, number>> }) {
+  const COLORS: Record<string, string> = {
+    yacht: '#3b82f6', jet: '#8b5cf6', auto: '#f59e0b',
+    villa: '#10b981', esperienza: '#ec4899', fractional: '#6366f1',
+    concierge: '#14b8a6', staff: '#f97316', asta: '#ef4444',
+  }
+  const entries = Object.entries(cats) as [Category, number][]
+  if (entries.length === 0) return null
+  const total = entries.reduce((s, [, v]) => s + v, 0)
+
+  return (
+    <div className="mb-8 p-5 bg-[#FCFAF5] rounded-2xl border border-[rgba(197,160,89,0.18)]">
+      <p className="text-[10px] uppercase tracking-wider text-[#5A4F44] mb-4">Distribuzione per categoria</p>
+      <div className="space-y-2">
+        {entries.map(([cat, count]) => (
+          <div key={cat} className="flex items-center gap-3">
+            <span className="text-[10px] text-[#5A4F44] w-20 capitalize">{cat}</span>
+            <div className="flex-1 h-2 bg-[rgba(197,160,89,0.1)] rounded-full overflow-hidden">
+              <div
+                className="h-full rounded-full transition-all"
+                style={{ width: `${(count / total) * 100}%`, background: COLORS[cat] ?? '#C5A059' }}
+              />
+            </div>
+            <span className="text-[10px] font-[family-name:var(--font-family-mono)] text-[#5A4F44] w-4 text-right">{count}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
 
 type SortKey = 'default' | 'price-asc' | 'price-desc' | 'recent'
 
@@ -29,6 +70,7 @@ const CATEGORY_ORDER: Category[] = ['yacht', 'jet', 'auto', 'villa', 'esperienza
 
 export function PreferitiPage() {
   const { favorites, clear } = useFavorites()
+  const navigate = useNavigate()
   const [bulkModal, setBulkModal] = useState(false)
   const [confirmClear, setConfirmClear] = useState(false)
   const [sharedIds, setSharedIds] = useState<string[]>([])
@@ -38,6 +80,26 @@ export function PreferitiPage() {
   const [notes, setNotes] = useState<Record<string, string>>(() => safeRead('theclass_notes', {}))
   const [editingNote, setEditingNote] = useState<string | null>(null)
   const [priceAlerts, setPriceAlerts] = useState<string[]>(() => safeRead('theclass_price_alerts', []))
+
+  // ── New feature states ──────────────────────────────────────────────────────
+  const [wishlistPrivate, setWishlistPrivate] = useState<boolean>(() => safeRead('theclass_wishlist_private', false))
+  const [wishlistName, setWishlistName] = useState<string>(() => safeRead('theclass_wishlist_name', 'La mia selezione'))
+  const [editingName, setEditingName] = useState(false)
+  const [availabilityAlerts, setAvailabilityAlerts] = useState<string[]>(() => safeRead('theclass_avail_alerts', []))
+  const nameInputRef = useRef<HTMLInputElement>(null)
+
+  // Saved dates for each item
+  const savedDates = useMemo(() => {
+    const map: Record<string, string> = {}
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i)
+      if (k?.startsWith('theclass_saved_dates_')) {
+        const lid = k.replace('theclass_saved_dates_', '')
+        map[lid] = localStorage.getItem(k) ?? ''
+      }
+    }
+    return map
+  }, [favorites])
 
   const favListings = listings.filter(l => favorites.includes(l.id))
   const totalValue = favListings.reduce((s, l) => s + l.price, 0)
@@ -152,11 +214,46 @@ export function PreferitiPage() {
               La tua selezione
             </p>
           </div>
+
+          {/* ── 9. Wishlist naming ── */}
+          <div className="flex items-center gap-2 mb-3">
+            {editingName ? (
+              <>
+                <input
+                  ref={nameInputRef}
+                  value={wishlistName}
+                  onChange={e => setWishlistName(e.target.value)}
+                  className="font-[family-name:var(--font-family-display)] text-2xl font-medium text-[#1C1C1C] bg-transparent border-b-2 border-[#C5A059] outline-none"
+                  autoFocus
+                />
+                <button
+                  onClick={() => {
+                    safeWrite('theclass_wishlist_name', wishlistName)
+                    setEditingName(false)
+                    toast.success('Nome aggiornato')
+                  }}
+                  className="p-1 rounded-lg bg-[#C5A059] text-white"
+                >
+                  <Check size={12} />
+                </button>
+                <button onClick={() => setEditingName(false)} className="p-1 text-[#5A4F44]">
+                  <X size={12} />
+                </button>
+              </>
+            ) : (
+              <>
+                <h1 className="font-[family-name:var(--font-family-display)] text-4xl font-medium text-[#1C1C1C] tracking-tight">
+                  {wishlistName}
+                </h1>
+                <button onClick={() => setEditingName(true)} className="text-[#5A4F44]/50 hover:text-[#C5A059] transition-colors mt-2">
+                  <Edit3 size={14} />
+                </button>
+              </>
+            )}
+          </div>
+
           <div className="flex flex-col sm:flex-row sm:items-end gap-4 justify-between">
             <div>
-              <h1 className="font-[family-name:var(--font-family-display)] text-4xl font-medium text-[#1C1C1C] tracking-tight mb-2">
-                Preferiti
-              </h1>
               {favListings.length > 0 && (
                 <p className="text-[#5A4F44] font-light text-sm">
                   {favListings.length} {favListings.length === 1 ? 'servizio salvato' : 'servizi salvati'}
