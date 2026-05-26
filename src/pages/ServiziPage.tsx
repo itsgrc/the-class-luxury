@@ -731,6 +731,16 @@ export function ServiziPage() {
           >
             I nostri servizi
           </motion.h1>
+          {wishlistCount > 0 && (
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.4 }}
+              className="text-white/60 text-xs mt-2"
+            >
+              ❤️ {wishlistCount} {wishlistCount === 1 ? 'item' : 'items'} nel wishlist
+            </motion.p>
+          )}
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -859,11 +869,20 @@ export function ServiziPage() {
                   <span className="font-[family-name:var(--font-family-mono)] text-[11px] text-[#5A4F44]">100</span>
                 </div>
               </div>
+
+              {/* Package sidebar badge */}
+              <PackageSidebarBadge />
             </div>
           </aside>
 
           {/* ── Grid ── */}
           <div className="flex-1">
+
+            {/* ── 10. AI Search bar ── */}
+            <AISearchBar onResults={setAiFilterIds} />
+
+            {/* ── 5. Recommendation strip ── */}
+            <RecommendationStrip />
 
             {/* ── 9. Visti di recente ── */}
             <RecentlyViewedStrip />
@@ -956,6 +975,40 @@ export function ServiziPage() {
                 </button>
               </div>
 
+              {/* ── 9. Currency toggle ── */}
+              <div className="relative" ref={currencyRef}>
+                <button
+                  onClick={() => setCurrencyOpen(v => !v)}
+                  className="flex items-center gap-1.5 glass px-3.5 py-2 rounded-full text-xs text-[#5A4F44] hover:text-[#C5A059] transition-colors"
+                >
+                  {currency}
+                  <ChevronDown size={10} className={cn('transition-transform', currencyOpen && 'rotate-180')} />
+                </button>
+                <AnimatePresence>
+                  {currencyOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -6, scale: 0.97 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: -6, scale: 0.97 }}
+                      className="absolute right-0 top-full mt-2 bg-white border border-[rgba(197,160,89,0.2)] rounded-xl shadow-lg z-20 min-w-[100px] overflow-hidden"
+                    >
+                      {(Object.keys(CURRENCY_RATES) as CurrencyKey[]).map(c => (
+                        <button
+                          key={c}
+                          onClick={() => { setCurrency(c); setCurrencyOpen(false) }}
+                          className={cn(
+                            'w-full text-left px-4 py-2.5 text-xs transition-colors hover:bg-[rgba(197,160,89,0.07)]',
+                            currency === c ? 'text-[#C5A059] font-medium' : 'text-[#5A4F44]',
+                          )}
+                        >
+                          {CURRENCY_SYMBOLS[c]}{c}
+                        </button>
+                      ))}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
               {/* ── 6. Map toggle ── */}
               <button
                 onClick={() => setShowMap(true)}
@@ -1004,11 +1057,11 @@ export function ServiziPage() {
                     />
                   ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                      {filtered.map((l, i) => (
-                        <ServiceCard
+                      {filtered.map((l, _i) => (
+                        <CardWithPreview
                           key={l.id}
                           listing={l}
-                          delay={i * 0.04}
+                          currency={currency}
                           compareSelected={isSelected(l.id)}
                           onCompareToggle={() => toggleCompare(l.id)}
                         />

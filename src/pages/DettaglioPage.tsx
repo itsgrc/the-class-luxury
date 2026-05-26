@@ -1,10 +1,10 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import { Helmet } from 'react-helmet-async'
 import { useParams, Link } from '@tanstack/react-router'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   ArrowLeft, Star, MapPin, Check, Heart, Sparkles, Calendar, Share2, Gift, Scan,
-  Bell, Play, ChevronLeft, ChevronRight, X,
+  Bell, Play, ChevronLeft, ChevronRight, X, User, CreditCard, ChevronDown,
 } from 'lucide-react'
 import { DayPicker, type DateRange } from 'react-day-picker'
 import { it } from 'date-fns/locale'
@@ -20,6 +20,47 @@ import { Breadcrumbs } from '@/components/Breadcrumbs'
 import { WeatherWidget } from '@/components/WeatherWidget'
 import { GiftModal } from '@/components/GiftModal'
 import { ARPreviewModal } from '@/components/ARPreviewModal'
+import { safeRead } from '@/lib/errorHandler'
+
+// ─── Crew data ────────────────────────────────────────────────────────────────
+const CREW_DATA = [
+  { initials: 'MC', name: 'Marco Conti', role: 'Captain', years: 18 },
+  { initials: 'SB', name: 'Sofia Bianchi', role: 'Chef privato', years: 12 },
+  { initials: 'AL', name: 'Andrea Lupo', role: 'Hostess', years: 7 },
+]
+
+// ─── FAQ by category ─────────────────────────────────────────────────────────
+const FAQ_MAP: Record<string, Array<{ q: string; a: string }>> = {
+  yacht: [
+    { q: 'Il carburante è incluso?', a: 'Il carburante non è incluso nel prezzo base. Viene calcolato a fine noleggio in base alle miglia percorse.' },
+    { q: 'Posso portare animali a bordo?', a: 'Sì, previo accordo con il proprietario. È richiesto un deposito aggiuntivo.' },
+    { q: 'Qual è la capienza massima?', a: 'Dipende dalla barca specifica. Indicativamente 8-12 persone per yacht da 50+ piedi.' },
+  ],
+  jet: [
+    { q: 'Qual è la capacità bagagli?', a: 'Ogni passeggero può portare circa 20 kg di bagagli. Per quantità superiori è necessaria comunicazione preventiva.' },
+    { q: 'I voli sono flessibili negli orari?', a: 'Sì, i jet privati si adattano ai tuoi orari. Possono essere richieste modifiche fino a 2 ore prima.' },
+    { q: 'È previsto catering a bordo?', a: 'Il servizio catering è incluso in tutte le tratte superiori ai 60 minuti.' },
+  ],
+  villa: [
+    { q: 'Gli animali domestici sono ammessi?', a: 'La maggior parte delle ville accetta animali di piccola taglia. Contatta il concierge per conferma.' },
+    { q: 'È incluso il personale di servizio?', a: 'Alcune ville includono chef, maggiordomo e personale. Verificare nella descrizione della singola proprietà.' },
+    { q: 'Qual è il check-in orario?', a: 'Il check-in standard è alle 15:00. Possono essere richieste modifiche su richiesta.' },
+  ],
+}
+
+const DEFAULT_FAQ = [
+  { q: 'Come funziona il processo di prenotazione?', a: 'Invii una richiesta tramite il portale, il concierge la elabora in 2 ore e vi metterà in contatto con il fornitore.' },
+  { q: 'Il prezzo è negoziabile?', a: 'Per soggiorni lunghi o pacchetti combinati sono possibili condizioni speciali. Contatta il concierge.' },
+  { q: "Cosa succede in caso di cancellazione?", a: 'La politica di cancellazione varia per servizio. È specificata al momento della conferma.' },
+]
+
+// ─── Upgrade options for interactive section ──────────────────────────────────
+const EXTRA_UPGRADES = [
+  { id: 'chef', label: 'Chef privato stellato', price: 800 },
+  { id: 'heli', label: 'Elicottero transfer', price: 2000 },
+  { id: 'photo', label: 'Fotografo professionale', price: 500 },
+  { id: 'flowers', label: 'Fiori a bordo', price: 150 },
+]
 
 function getDisabledDates(seed: string): Date[] {
   const hash = seed.split('').reduce((a, c) => a + c.charCodeAt(0), 0)
@@ -89,6 +130,44 @@ export function DettaglioPage() {
   // Month grid (memoised)
   const monthGrid = useMemo(() => buildMonthGrid(), [])
   const now = new Date()
+
+  // ── New feature states ───────────────────────────────────────────────────────
+  const [galleryTab, setGalleryTab] = useState<'gallery' | 'tour'>('gallery')
+  const [seasonalOpen, setSeasonalOpen] = useState(false)
+  const [referralEmail, setReferralEmail] = useState('')
+  const [viewersCount, setViewersCount] = useState(() => 5 + Math.floor(Math.random() * 18))
+  const [selectedExtraUpgrades, setSelectedExtraUpgrades] = useState<string[]>([])
+  const [faqOpenIndex, setFaqOpenIndex] = useState<number | null>(null)
+  const viewersRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  // Update viewers count every 30s
+  useEffect(() => {
+    viewersRef.current = setInterval(() => {
+      setViewersCount(5 + Math.floor(Math.random() * 18))
+    }, 30000)
+    return () => { if (viewersRef.current) clearInterval(viewersRef.current) }
+  }, [])
+
+  // Extra upgrades total
+  const extraUpgradeTotal = EXTRA_UPGRADES
+    .filter(u => selectedExtraUpgrades.includes(u.id))
+    .reduce((s, u) => s + u.price, 0)
+
+  // Past booking check
+  const pastRequests = safeRead<Array<{ listingTitle: string; timestamp: number }>>('theclass_requests', [])
+  const pastBooking = listing
+    ? pastRequests.find(r => r.listingTitle === listing.title)
+    : null
+
+  // Min nights (deterministic per listing)
+  const minNights = listing
+    ? 2 + (listing.id.charCodeAt(0) % 5)
+    : 2
+
+  // FAQ for this category
+  const faqs = listing
+    ? (FAQ_MAP[listing.category] ?? DEFAULT_FAQ)
+    : DEFAULT_FAQ
 
   if (!listing) {
     return (
@@ -353,24 +432,51 @@ export function DettaglioPage() {
               </span>
             </div>
 
-            {/* Photo gallery strip */}
+            {/* Photo gallery strip + 360° tour tab */}
             {allImages.length > 1 && (
               <div>
-                <h2 className="font-[family-name:var(--font-family-display)] text-xl font-medium text-[#1C1C1C] mb-4">
-                  Galleria
-                </h2>
-                <div className="flex gap-2 overflow-x-auto pb-1">
-                  {allImages.map((img, i) => (
+                {/* Tab switcher */}
+                <div className="flex gap-1 bg-[rgba(197,160,89,0.07)] rounded-xl p-1 mb-4 w-fit">
+                  {(['gallery', 'tour'] as const).map(tab => (
                     <button
-                      key={i}
-                      onClick={() => setLightboxIndex(i)}
-                      className="shrink-0 w-28 h-20 rounded-xl overflow-hidden border-2 transition-all hover:border-[#C5A059]"
-                      style={{ borderColor: lightboxIndex === i ? '#C5A059' : 'transparent' }}
+                      key={tab}
+                      onClick={() => setGalleryTab(tab)}
+                      className={cn(
+                        'px-4 py-1.5 rounded-lg text-xs font-medium transition-colors',
+                        galleryTab === tab ? 'bg-white text-[#1C1C1C] shadow-sm' : 'text-[#5A4F44] hover:text-[#1C1C1C]',
+                      )}
                     >
-                      <img src={img} alt="" className="w-full h-full object-cover" loading="lazy" />
+                      {tab === 'gallery' ? 'Galleria' : 'Tour virtuale'}
                     </button>
                   ))}
                 </div>
+
+                {galleryTab === 'gallery' ? (
+                  <div className="flex gap-2 overflow-x-auto pb-1">
+                    {allImages.map((img, i) => (
+                      <button
+                        key={i}
+                        onClick={() => setLightboxIndex(i)}
+                        className="shrink-0 w-28 h-20 rounded-xl overflow-hidden border-2 transition-all hover:border-[#C5A059]"
+                        style={{ borderColor: lightboxIndex === i ? '#C5A059' : 'transparent' }}
+                      >
+                        <img src={img} alt="" className="w-full h-full object-cover" loading="lazy" />
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  /* ── 1. 360° tour placeholder ── */
+                  <div className="aspect-video bg-[#1C1C1C] rounded-2xl flex flex-col items-center justify-center gap-4 border border-[rgba(197,160,89,0.15)]">
+                    <div
+                      className="w-16 h-16 rounded-full border-4 border-[#C5A059] flex items-center justify-center"
+                      style={{ animation: 'spin 4s linear infinite' }}
+                    >
+                      <span className="text-[#C5A059] text-2xl font-bold">360°</span>
+                    </div>
+                    <p className="text-white/60 text-sm font-light">Tour virtuale disponibile su richiesta</p>
+                    <p className="text-white/30 text-xs">Contatta il concierge per accedere</p>
+                  </div>
+                )}
               </div>
             )}
 
@@ -380,6 +486,117 @@ export function DettaglioPage() {
                 Il servizio
               </h2>
               <p className="text-[#5A4F44] font-light leading-relaxed">{listing.description}</p>
+
+              {/* ── 4. Minimum stay badge ── */}
+              <div className="mt-4 inline-flex items-center gap-2 px-3 py-1.5 bg-[rgba(197,160,89,0.08)] border border-[rgba(197,160,89,0.25)] rounded-full">
+                <Calendar size={11} className="text-[#C5A059]" />
+                <span className="text-xs text-[#5A4F44]">Min. <strong className="text-[#1C1C1C]">{minNights} notti</strong></span>
+              </div>
+
+              {/* ── 6. Inquiry counter ── */}
+              <p className="mt-3 text-xs text-red-500 font-medium">
+                🔥 {viewersCount} persone stanno guardando questo
+              </p>
+
+              {/* ── 9. Past client section ── */}
+              {pastBooking && (
+                <motion.div
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mt-4 p-4 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center justify-between gap-4"
+                >
+                  <div>
+                    <p className="text-sm font-medium text-emerald-800">Hai già prenotato questo servizio</p>
+                    <p className="text-xs text-emerald-700 mt-0.5">
+                      il {new Date(pastBooking.timestamp).toLocaleDateString('it-IT')}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setModalOpen(true)}
+                    className="shrink-0 px-4 py-2 bg-emerald-600 text-white text-xs rounded-xl hover:bg-emerald-700 transition-colors"
+                  >
+                    Prenota di nuovo
+                  </button>
+                </motion.div>
+              )}
+            </div>
+
+            {/* ── 2. Crew showcase ── */}
+            <div>
+              <h2 className="font-[family-name:var(--font-family-display)] text-xl font-medium text-[#1C1C1C] mb-4">
+                Il team dedicato a te
+              </h2>
+              <div className="grid grid-cols-3 gap-4">
+                {CREW_DATA.map(member => (
+                  <div key={member.initials} className="bg-[#FCFAF5] rounded-2xl border border-[rgba(197,160,89,0.18)] p-4 text-center">
+                    <div className="w-12 h-12 rounded-full bg-[rgba(197,160,89,0.15)] border border-[rgba(197,160,89,0.3)] flex items-center justify-center mx-auto mb-2">
+                      <span className="font-[family-name:var(--font-family-display)] text-sm font-medium text-[#C5A059]">
+                        {member.initials}
+                      </span>
+                    </div>
+                    <User size={12} className="text-[#C5A059] mx-auto mb-1" />
+                    <p className="text-xs font-medium text-[#1C1C1C]">{member.name}</p>
+                    <p className="text-[10px] text-[#5A4F44] mt-0.5">{member.role}</p>
+                    <p className="text-[9px] text-[#C5A059] mt-1">{member.years} anni esp.</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* ── 3. Seasonal pricing table ── */}
+            <div>
+              <button
+                onClick={() => setSeasonalOpen(v => !v)}
+                className="flex items-center gap-2 text-sm font-medium text-[#1C1C1C] mb-3 hover:text-[#C5A059] transition-colors"
+              >
+                <ChevronDown size={14} className={cn('transition-transform', seasonalOpen && 'rotate-180')} />
+                Tariffe stagionali
+              </button>
+              <AnimatePresence>
+                {seasonalOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="bg-[#FCFAF5] rounded-2xl border border-[rgba(197,160,89,0.18)] overflow-hidden">
+                      <table className="w-full text-xs">
+                        <thead>
+                          <tr className="bg-[rgba(197,160,89,0.08)]">
+                            <th className="text-left p-3 text-[#5A4F44] font-medium">Stagione</th>
+                            <th className="text-left p-3 text-[#5A4F44] font-medium">Periodo</th>
+                            <th className="text-right p-3 text-[#5A4F44] font-medium">Tariffa</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-[rgba(197,160,89,0.1)]">
+                          <tr>
+                            <td className="p-3 text-[#1C1C1C] font-medium">🌞 Alta stagione</td>
+                            <td className="p-3 text-[#5A4F44]">Lug – Ago</td>
+                            <td className="p-3 text-right font-[family-name:var(--font-family-mono)] text-[#C5A059]">
+                              {formatPrice(Math.round(listing.price * 1.4))}
+                            </td>
+                          </tr>
+                          <tr>
+                            <td className="p-3 text-[#1C1C1C] font-medium">🌤 Media stagione</td>
+                            <td className="p-3 text-[#5A4F44]">Mag–Giu, Set</td>
+                            <td className="p-3 text-right font-[family-name:var(--font-family-mono)] text-[#5A4F44]">
+                              {formatPrice(listing.price)}
+                            </td>
+                          </tr>
+                          <tr>
+                            <td className="p-3 text-[#1C1C1C] font-medium">🍂 Bassa stagione</td>
+                            <td className="p-3 text-[#5A4F44]">Ott – Apr</td>
+                            <td className="p-3 text-right font-[family-name:var(--font-family-mono)] text-emerald-600">
+                              {formatPrice(Math.round(listing.price * 0.75))}
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
 
             {/* Incluso nel prezzo */}
@@ -644,6 +861,151 @@ export function DettaglioPage() {
                     </motion.div>
                   )
                 })}
+              </div>
+            </div>
+
+            {/* ── 7. Deposit info box ── */}
+            <div className="p-5 bg-[#FCFAF5] rounded-2xl border border-[rgba(197,160,89,0.18)]">
+              <h3 className="font-[family-name:var(--font-family-display)] text-base font-medium text-[#1C1C1C] mb-4 flex items-center gap-2">
+                <CreditCard size={15} className="text-[#C5A059]" />
+                Come funziona il pagamento
+              </h3>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-[rgba(197,160,89,0.12)] flex items-center justify-center shrink-0">
+                    <span className="text-xs font-bold text-[#C5A059]">30%</span>
+                  </div>
+                  <div>
+                    <p className="text-xs font-medium text-[#1C1C1C]">Alla prenotazione</p>
+                    <p className="text-[10px] text-[#5A4F44]">Deposito di conferma</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-[rgba(197,160,89,0.12)] flex items-center justify-center shrink-0">
+                    <span className="text-xs font-bold text-[#C5A059]">70%</span>
+                  </div>
+                  <div>
+                    <p className="text-xs font-medium text-[#1C1C1C]">30 gg prima</p>
+                    <p className="text-[10px] text-[#5A4F44]">Saldo rimanente</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* ── 8. Upgrade options interactive ── */}
+            <div>
+              <h2 className="font-[family-name:var(--font-family-display)] text-xl font-medium text-[#1C1C1C] mb-2">
+                Personalizza la tua esperienza
+              </h2>
+              <p className="text-sm text-[#5A4F44] font-light mb-4">Seleziona i servizi aggiuntivi desiderati</p>
+              <div className="space-y-2 mb-4">
+                {EXTRA_UPGRADES.map(up => {
+                  const sel = selectedExtraUpgrades.includes(up.id)
+                  return (
+                    <label
+                      key={up.id}
+                      className={cn(
+                        'flex items-center justify-between p-4 rounded-xl border cursor-pointer transition-colors',
+                        sel ? 'border-[#C5A059] bg-[rgba(197,160,89,0.06)]' : 'border-[rgba(197,160,89,0.18)] hover:border-[rgba(197,160,89,0.4)]',
+                      )}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={cn(
+                          'w-4 h-4 rounded border flex items-center justify-center transition-colors',
+                          sel ? 'bg-[#C5A059] border-[#C5A059]' : 'border-[rgba(197,160,89,0.4)]',
+                        )}>
+                          {sel && <Check size={9} className="text-white" />}
+                        </div>
+                        <span className="text-sm text-[#1C1C1C]">{up.label}</span>
+                      </div>
+                      <span className="font-[family-name:var(--font-family-mono)] text-xs text-[#C5A059]">
+                        +€{up.price.toLocaleString('it-IT')}
+                      </span>
+                      <input
+                        type="checkbox"
+                        className="hidden"
+                        checked={sel}
+                        onChange={() => setSelectedExtraUpgrades(prev =>
+                          prev.includes(up.id) ? prev.filter(x => x !== up.id) : [...prev, up.id]
+                        )}
+                      />
+                    </label>
+                  )
+                })}
+              </div>
+              {extraUpgradeTotal > 0 && (
+                <div className="flex justify-between items-center p-4 bg-[rgba(197,160,89,0.08)] rounded-xl border border-[rgba(197,160,89,0.2)]">
+                  <span className="text-sm font-medium text-[#1C1C1C]">Totale con upgrade</span>
+                  <span className="font-[family-name:var(--font-family-mono)] text-lg text-[#C5A059] font-medium">
+                    {formatPrice(listing.price + extraUpgradeTotal)}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {/* ── 5. Porta un amico referral ── */}
+            <div className="p-5 bg-[rgba(197,160,89,0.06)] rounded-2xl border border-[rgba(197,160,89,0.18)]">
+              <h3 className="font-[family-name:var(--font-family-display)] text-base font-medium text-[#1C1C1C] mb-2">
+                🎁 Invita un amico, risparmia €200
+              </h3>
+              <p className="text-xs text-[#5A4F44] font-light mb-3">
+                Invita un amico e risparmia €200 su questa prenotazione
+              </p>
+              <div className="flex gap-2">
+                <input
+                  type="email"
+                  value={referralEmail}
+                  onChange={e => setReferralEmail(e.target.value)}
+                  placeholder="email@amico.it"
+                  className="flex-1 bg-white border border-[rgba(197,160,89,0.25)] rounded-xl px-3 py-2 text-xs text-[#1C1C1C] placeholder:text-[#5A4F44]/40 focus:outline-none focus:border-[#C5A059] transition-colors"
+                />
+                <button
+                  onClick={() => {
+                    if (!referralEmail.trim()) return
+                    toast.success('Invito inviato!')
+                    setReferralEmail('')
+                  }}
+                  className="px-4 py-2 bg-[#C5A059] text-white text-xs rounded-xl hover:bg-[#b8924a] transition-colors shrink-0"
+                >
+                  Invia invito
+                </button>
+              </div>
+            </div>
+
+            {/* ── 10. FAQs ── */}
+            <div>
+              <h2 className="font-[family-name:var(--font-family-display)] text-xl font-medium text-[#1C1C1C] mb-4">
+                Domande frequenti
+              </h2>
+              <div className="space-y-2">
+                {faqs.map((faq, i) => (
+                  <div key={i} className="bg-[#FCFAF5] rounded-xl border border-[rgba(197,160,89,0.18)] overflow-hidden">
+                    <button
+                      onClick={() => setFaqOpenIndex(faqOpenIndex === i ? null : i)}
+                      className="w-full text-left px-5 py-4 flex items-center justify-between gap-3"
+                    >
+                      <span className="text-sm font-medium text-[#1C1C1C]">{faq.q}</span>
+                      <ChevronDown
+                        size={14}
+                        className={cn('text-[#C5A059] shrink-0 transition-transform', faqOpenIndex === i && 'rotate-180')}
+                      />
+                    </button>
+                    <AnimatePresence>
+                      {faqOpenIndex === i && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: 'auto', opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          className="overflow-hidden"
+                        >
+                          <p className="px-5 pb-4 text-sm text-[#5A4F44] font-light leading-relaxed border-t border-[rgba(197,160,89,0.12)] pt-3">
+                            {faq.a}
+                          </p>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                ))}
               </div>
             </div>
 
