@@ -1,9 +1,9 @@
 // src/pages/StoriesPage.tsx
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Helmet } from 'react-helmet-async'
 import { Link } from '@tanstack/react-router'
-import { Clock, ArrowRight, Search, Share2, Star } from 'lucide-react'
+import { Clock, ArrowRight, Search, Share2, Star, Grid2X2, LayoutGrid, ChevronDown } from 'lucide-react'
 import { toast } from 'sonner'
 import { stories } from '@/data/stories'
 import { cn } from '@/lib/utils'
@@ -11,19 +11,49 @@ import { cn } from '@/lib/utils'
 const CATEGORIES = ['Tutto', 'Yacht', 'Jet Privati', 'Auto', 'Esperienze', 'Villa'] as const
 type Category = typeof CATEGORIES[number]
 
+type ReadTimeFilter = 'Tutti' | 'Brevi' | 'Medie' | 'Lunghe'
+
+// Mark 2 stories as trending
+const TRENDING_IDS = new Set(['st-001', 'st-005'])
+
+const storiesWithTrending = stories.map(s => ({ ...s, trending: TRENDING_IDS.has(s.id) }))
+
 export function StoriesPage() {
-  const [featured, ...rest] = stories
+  const [featured, ...rest] = storiesWithTrending
   const [search, setSearch] = useState('')
   const [activeCategory, setActiveCategory] = useState<Category>('Tutto')
+  const [readTimeFilter, setReadTimeFilter] = useState<ReadTimeFilter>('Tutti')
+  const [selectedAuthor, setSelectedAuthor] = useState<string>('Tutti')
+  const [gridCols, setGridCols] = useState<2 | 3>(3)
   const [newsletterEmail, setNewsletterEmail] = useState('')
+  const [bookmarkCount, setBookmarkCount] = useState(0)
+  const [bookmarkedIds, setBookmarkedIds] = useState<string[]>([])
+
+  useEffect(() => {
+    try {
+      const saved: string[] = JSON.parse(localStorage.getItem('theclass_bookmarks') ?? '[]')
+      setBookmarkCount(saved.length)
+      setBookmarkedIds(saved)
+    } catch { /* ignore */ }
+  }, [])
+
+  const authors = ['Tutti', ...Array.from(new Set(storiesWithTrending.map(s => s.author.name)))]
 
   const filteredStories = rest.filter(s => {
     const matchesCategory = activeCategory === 'Tutto' || s.category === activeCategory
     const matchesSearch = s.title.toLowerCase().includes(search.toLowerCase())
-    return matchesCategory && matchesSearch
+    const matchesAuthor = selectedAuthor === 'Tutti' || s.author.name === selectedAuthor
+    const matchesReadTime =
+      readTimeFilter === 'Tutti' ? true
+        : readTimeFilter === 'Brevi' ? s.readTime < 5
+          : readTimeFilter === 'Medie' ? s.readTime >= 5 && s.readTime <= 10
+            : s.readTime > 10
+    return matchesCategory && matchesSearch && matchesAuthor && matchesReadTime
   })
 
-  const mostRead = [...stories]
+  const totalReadTime = filteredStories.reduce((acc, s) => acc + s.readTime, 0)
+
+  const mostRead = [...storiesWithTrending]
     .sort((a, b) => b.readTime - a.readTime)
     .slice(0, 3)
 
@@ -46,12 +76,41 @@ export function StoriesPage() {
     setNewsletterEmail('')
   }
 
+  // Count stories per category among filtered+rest (using all rest for chip counters)
+  const getCategoryCount = (cat: Category) => {
+    if (cat === 'Tutto') return rest.length
+    return rest.filter(s => s.category === cat).length
+  }
+
+  const READ_TIME_TABS: ReadTimeFilter[] = ['Tutti', 'Brevi', 'Medie', 'Lunghe']
+  const READ_TIME_LABELS: Record<ReadTimeFilter, string> = {
+    Tutti: 'Tutti',
+    Brevi: 'Brevi (< 5 min)',
+    Medie: 'Medie (5-10)',
+    Lunghe: 'Lunghe (> 10)',
+  }
+
   return (
     <div className="min-h-screen bg-[#FDF9F2] pt-24 pb-20">
       <Helmet>
         <title>Stories — the Class</title>
         <meta name="description" content="Reportage, itinerari e ispirazioni dal mondo del lusso. Storie di yacht, jet e esperienze irripetibili." />
       </Helmet>
+
+      {/* Editoriale del mese pull-quote */}
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-[#FAF6EE] border-y border-[rgba(197,160,89,0.2)] py-10 mb-10"
+      >
+        <div className="max-w-3xl mx-auto px-6 text-center">
+          <p className="text-[10px] text-[#C5A059] uppercase tracking-[0.3em] mb-4">Editoriale del mese</p>
+          <blockquote className="font-[family-name:var(--font-family-display)] text-xl md:text-2xl italic text-[#1C1C1C] leading-relaxed mb-4">
+            "{featured.excerpt}"
+          </blockquote>
+          <p className="text-xs text-[#C5A059] uppercase tracking-widest">— Alessandro Ferrari, Direttore Editoriale</p>
+        </div>
+      </motion.div>
 
       <div className="max-w-6xl mx-auto px-6">
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
@@ -78,12 +137,31 @@ export function StoriesPage() {
           />
         </motion.div>
 
-        {/* Category filter chips */}
+        {/* Author filter dropdown */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.12 }}
+          className="relative inline-block mb-4"
+        >
+          <select
+            value={selectedAuthor}
+            onChange={e => setSelectedAuthor(e.target.value)}
+            className="appearance-none pl-4 pr-9 py-2 bg-white border border-[rgba(197,160,89,0.3)] rounded-xl text-xs text-[#5A4F44] focus:outline-none focus:border-[#C5A059] cursor-pointer"
+          >
+            {authors.map(a => (
+              <option key={a} value={a}>{a === 'Tutti' ? 'Filtra per autore' : a}</option>
+            ))}
+          </select>
+          <ChevronDown size={12} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#C5A059] pointer-events-none" />
+        </motion.div>
+
+        {/* Category filter chips — sticky on mobile */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.15 }}
-          className="flex flex-wrap gap-2 mb-4"
+          className="sticky top-16 z-20 bg-[#FDF9F2] py-2 flex flex-wrap gap-2 mb-4"
         >
           {CATEGORIES.map(cat => (
             <button
@@ -96,15 +174,71 @@ export function StoriesPage() {
                   : 'bg-white text-[#5A4F44] border-[rgba(197,160,89,0.3)] hover:border-[#C5A059]'
               )}
             >
-              {cat}
+              {cat} {cat !== 'Tutto' && `(${getCategoryCount(cat)})`}
             </button>
           ))}
         </motion.div>
 
-        {/* Story counter */}
-        <p className="text-xs text-[#5A4F44] mb-8">
-          <span className="text-[#C5A059] font-medium">{filteredStories.length}</span> {filteredStories.length === 1 ? 'storia' : 'storie'}
-        </p>
+        {/* Reading time filter tabs */}
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.18 }}
+          className="flex flex-wrap gap-2 mb-5"
+        >
+          {READ_TIME_TABS.map(tab => (
+            <button
+              key={tab}
+              onClick={() => setReadTimeFilter(tab)}
+              className={cn(
+                'px-3 py-1 rounded-full text-[11px] font-medium transition-colors border',
+                readTimeFilter === tab
+                  ? 'bg-[#1C1C1C] text-white border-[#1C1C1C]'
+                  : 'bg-white text-[#5A4F44] border-[rgba(197,160,89,0.2)] hover:border-[#C5A059]'
+              )}
+            >
+              {READ_TIME_LABELS[tab]}
+            </button>
+          ))}
+        </motion.div>
+
+        {/* Story counter + total reading time */}
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <p className="text-xs text-[#5A4F44]">
+              <span className="text-[#C5A059] font-medium">{filteredStories.length}</span>{' '}
+              {filteredStories.length === 1 ? 'storia' : 'storie'}
+            </p>
+            {filteredStories.length > 0 && (
+              <p className="text-[10px] text-[#5A4F44]/60 mt-0.5">
+                Tempo di lettura totale: <span className="text-[#C5A059]">{totalReadTime} min</span>
+              </p>
+            )}
+          </div>
+          {/* Grid layout toggle */}
+          <div className="hidden md:flex items-center gap-1">
+            <button
+              onClick={() => setGridCols(3)}
+              className={cn(
+                'w-8 h-8 flex items-center justify-center rounded-lg transition-colors',
+                gridCols === 3 ? 'bg-[#C5A059] text-white' : 'bg-white border border-[rgba(197,160,89,0.2)] text-[#5A4F44] hover:border-[#C5A059]'
+              )}
+              title="3 colonne"
+            >
+              <LayoutGrid size={14} />
+            </button>
+            <button
+              onClick={() => setGridCols(2)}
+              className={cn(
+                'w-8 h-8 flex items-center justify-center rounded-lg transition-colors',
+                gridCols === 2 ? 'bg-[#C5A059] text-white' : 'bg-white border border-[rgba(197,160,89,0.2)] text-[#5A4F44] hover:border-[#C5A059]'
+              )}
+              title="2 colonne"
+            >
+              <Grid2X2 size={14} />
+            </button>
+          </div>
+        </div>
 
         {/* Featured */}
         <div className="relative mb-10 group">
@@ -112,6 +246,11 @@ export function StoriesPage() {
           <span className="absolute top-4 left-4 z-10 text-[10px] bg-white text-[#C5A059] border border-[#C5A059] px-2.5 py-1 rounded-full uppercase tracking-widest font-medium">
             In evidenza
           </span>
+          {featured.trending && (
+            <span className="absolute top-4 left-28 z-10 text-[10px] bg-[#991B1B] text-white px-2.5 py-1 rounded-full uppercase tracking-widest font-medium flex items-center gap-1">
+              🔥 Trending
+            </span>
+          )}
           <Link to="/stories/$slug" params={{ slug: featured.slug }} className="block">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -136,6 +275,11 @@ export function StoriesPage() {
                     <Clock size={9} />
                     {featured.readTime} min
                   </span>
+                  {bookmarkedIds.includes(featured.id) && (
+                    <span className="text-[10px] bg-white/20 text-white px-2 py-0.5 rounded-full">
+                      💾 Salvato
+                    </span>
+                  )}
                 </div>
               </div>
             </motion.div>
@@ -193,14 +337,17 @@ export function StoriesPage() {
             <p className="font-[family-name:var(--font-family-display)] text-xl text-[#1C1C1C] mb-2">Nessuna storia trovata</p>
             <p className="text-sm text-[#5A4F44] font-light">Prova un termine diverso o un'altra categoria.</p>
             <button
-              onClick={() => { setSearch(''); setActiveCategory('Tutto') }}
+              onClick={() => { setSearch(''); setActiveCategory('Tutto'); setReadTimeFilter('Tutti'); setSelectedAuthor('Tutti') }}
               className="mt-4 text-xs text-[#C5A059] underline underline-offset-2"
             >
               Azzera filtri
             </button>
           </motion.div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className={cn(
+            'grid grid-cols-1 gap-6',
+            gridCols === 3 ? 'md:grid-cols-2 lg:grid-cols-3' : 'md:grid-cols-2'
+          )}>
             {filteredStories.map((story, i) => (
               <div key={story.id} className="relative">
                 <Link to="/stories/$slug" params={{ slug: story.slug }}>
@@ -221,6 +368,12 @@ export function StoriesPage() {
                         <Clock size={9} />
                         {story.readTime} min
                       </span>
+                      {/* Trending badge */}
+                      {story.trending && (
+                        <span className="absolute bottom-3 left-3 text-[10px] bg-[#991B1B] text-white px-2.5 py-1 rounded-full font-semibold tracking-wide">
+                          🔥 Trending
+                        </span>
+                      )}
                     </div>
                     <div className="p-5">
                       <h3 className="font-[family-name:var(--font-family-display)] text-base font-medium text-[#1C1C1C] leading-snug mb-2 group-hover:text-[#C5A059] transition-colors">
@@ -232,9 +385,16 @@ export function StoriesPage() {
                           <img src={story.author.avatar} alt={story.author.name} className="w-5 h-5 rounded-full object-cover" loading="lazy" decoding="async" />
                           <span className="text-[10px] text-[#5A4F44]">{story.author.name}</span>
                         </div>
-                        <div className="flex items-center gap-1 text-[#C5A059]">
-                          <span className="text-[10px]">Leggi</span>
-                          <ArrowRight size={10} />
+                        <div className="flex items-center gap-2">
+                          {bookmarkedIds.includes(story.id) && (
+                            <span className="text-[10px] bg-[rgba(197,160,89,0.1)] text-[#C5A059] px-2 py-0.5 rounded-full">
+                              💾 {bookmarkCount}
+                            </span>
+                          )}
+                          <div className="flex items-center gap-1 text-[#C5A059]">
+                            <span className="text-[10px]">Leggi</span>
+                            <ArrowRight size={10} />
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -282,6 +442,25 @@ export function StoriesPage() {
               Iscriviti
             </button>
           </form>
+
+          {/* Leggi offline CTA */}
+          <div className="mt-6 pt-6 border-t border-white/10">
+            <p className="text-white/40 text-xs mb-3">Oppure scarica l'app per leggere offline</p>
+            <div className="flex items-center justify-center gap-3">
+              <a
+                href="#"
+                className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-white/10 border border-white/20 text-white/70 text-xs hover:bg-white/15 transition-colors"
+              >
+                🍎 App Store
+              </a>
+              <a
+                href="#"
+                className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-white/10 border border-white/20 text-white/70 text-xs hover:bg-white/15 transition-colors"
+              >
+                ▶ Google Play
+              </a>
+            </div>
+          </div>
         </motion.div>
       </div>
     </div>

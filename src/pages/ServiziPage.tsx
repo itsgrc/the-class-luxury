@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { SlidersHorizontal, X, MapPin, RotateCcw, Map, LayoutGrid, List as ListIcon, ArrowUpDown, ChevronDown, Clock } from 'lucide-react'
+import { SlidersHorizontal, X, MapPin, RotateCcw, Map, LayoutGrid, List as ListIcon, ArrowUpDown, ChevronDown, Clock, Search, Package } from 'lucide-react'
 import { Helmet } from 'react-helmet-async'
 import { listings, type Category, getCategoryLabel, ALL_CATEGORIES } from '@/data/listings'
 import { ServiceCard } from '@/components/ServiceCard'
@@ -14,10 +14,179 @@ import type { CSSProperties } from 'react'
 import { safeRead, safeWrite } from '@/lib/errorHandler'
 import { Link } from '@tanstack/react-router'
 
+// ─── Currency rates ───────────────────────────────────────────────────────────
+type CurrencyKey = 'EUR' | 'USD' | 'GBP' | 'CHF'
+const CURRENCY_RATES: Record<CurrencyKey, number> = { EUR: 1, USD: 1.08, GBP: 0.86, CHF: 0.97 }
+const CURRENCY_SYMBOLS: Record<CurrencyKey, string> = { EUR: '€', USD: '$', GBP: '£', CHF: 'CHF ' }
+
+// ─── Deterministic social proof numbers ──────────────────────────────────────
+function seenCount(id: string): number {
+  const hash = id.split('').reduce((a, c) => a + c.charCodeAt(0), 0)
+  return 3 + (hash % 45)
+}
+
+// ─── New listings (first 3 by index) ─────────────────────────────────────────
+const NEW_LISTING_IDS = new Set(listings.slice(0, 3).map(l => l.id))
+
+// ─── Instant booking IDs (simulate 3) ────────────────────────────────────────
+const INSTANT_IDS = new Set(listings.slice(3, 6).map(l => l.id))
+
+// ─── Certified IDs (5 listings) ──────────────────────────────────────────────
+const CERTIFIED_IDS = new Set(listings.slice(0, 5).map(l => l.id))
+
 // ─── Types ───────────────────────────────────────────────────────────────────
 type SortKey = 'default' | 'price_asc' | 'price_desc' | 'rating' | 'trending'
 type ViewMode = 'grid' | 'list'
 type ListingItem = (typeof listings)[number]
+
+// ─── Quick Preview Hover Card ─────────────────────────────────────────────────
+function QuickPreview({ listing, onClose }: { listing: ListingItem; onClose: () => void }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.95, y: 8 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.95, y: 8 }}
+      transition={{ duration: 0.18 }}
+      className="absolute z-40 top-0 left-full ml-3 w-72 bg-white rounded-2xl border border-[rgba(197,160,89,0.25)] shadow-[0_12px_40px_rgba(26,24,22,0.15)] overflow-hidden pointer-events-auto"
+      onMouseLeave={onClose}
+    >
+      <div className="h-40 overflow-hidden">
+        <img
+          src={listing.image}
+          alt={listing.title}
+          className="w-full h-full object-cover"
+          onError={e => { (e.target as HTMLImageElement).src = 'https://placehold.co/288x160/1a2d4a/C5A059?text=The+Class' }}
+        />
+      </div>
+      <div className="p-4">
+        <h4 className="font-[family-name:var(--font-family-display)] text-sm font-medium text-[#1C1C1C] mb-1 leading-tight">
+          {listing.title}
+        </h4>
+        <p className="text-[11px] text-[#5A4F44] font-light line-clamp-2 mb-3">{listing.description}</p>
+        {listing.features.slice(0, 3).map(f => (
+          <div key={f} className="flex items-center gap-1.5 mb-1">
+            <span className="w-1 h-1 rounded-full bg-[#C5A059] shrink-0" />
+            <span className="text-[10px] text-[#5A4F44]">{f}</span>
+          </div>
+        ))}
+        <div className="flex items-center justify-between mt-3 pt-3 border-t border-[rgba(197,160,89,0.15)]">
+          <span className="font-[family-name:var(--font-family-mono)] text-sm text-[#C5A059]">
+            €{listing.price.toLocaleString('it-IT')}
+          </span>
+          <Link
+            to="/servizi/$id"
+            params={{ id: listing.id }}
+            className="text-[10px] px-3 py-1.5 rounded-full bg-[#C5A059] text-white hover:bg-[#b8924a] transition-colors"
+          >
+            Dettagli →
+          </Link>
+        </div>
+      </div>
+    </motion.div>
+  )
+}
+
+// ─── Card with hover preview wrapper ─────────────────────────────────────────
+function CardWithPreview({ listing, compareSelected, onCompareToggle, currency }: {
+  listing: ListingItem
+  compareSelected: boolean
+  onCompareToggle: () => void
+  currency: CurrencyKey
+}) {
+  const [showPreview, setShowPreview] = useState(false)
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [packageIds, setPackageIds] = useState<string[]>(() => safeRead<string[]>('theclass_custom_package', []))
+
+  const handleMouseEnter = () => {
+    timerRef.current = setTimeout(() => setShowPreview(true), 400)
+  }
+  const handleMouseLeave = () => {
+    if (timerRef.current) clearTimeout(timerRef.current)
+    setShowPreview(false)
+  }
+
+  const inPackage = packageIds.includes(listing.id)
+  const togglePackage = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    const next = inPackage
+      ? packageIds.filter(id => id !== listing.id)
+      : [...packageIds, listing.id]
+    setPackageIds(next)
+    safeWrite('theclass_custom_package', next)
+  }
+
+  const rate = CURRENCY_RATES[currency]
+  const sym = CURRENCY_SYMBOLS[currency]
+  const displayPrice = Math.round(listing.price * rate).toLocaleString('it-IT')
+
+  return (
+    <div className="relative" onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
+      {/* Badges */}
+      <div className="absolute top-2 left-2 z-10 flex flex-col gap-1">
+        {NEW_LISTING_IDS.has(listing.id) && (
+          <span className="bg-emerald-500 text-white text-[9px] font-semibold px-2 py-0.5 rounded-full uppercase tracking-wider">
+            Nuovo
+          </span>
+        )}
+        {INSTANT_IDS.has(listing.id) && (
+          <span className="bg-blue-500 text-white text-[9px] font-semibold px-2 py-0.5 rounded-full uppercase tracking-wider">
+            ⚡ Prenota subito
+          </span>
+        )}
+        {CERTIFIED_IDS.has(listing.id) && (
+          <span
+            className="bg-[#C5A059] text-white text-[9px] font-semibold px-2 py-0.5 rounded-full uppercase tracking-wider"
+            title="Verificato dal team The Class"
+          >
+            ✓ Certificato
+          </span>
+        )}
+      </div>
+
+      <ServiceCard
+        listing={listing}
+        delay={0}
+        compareSelected={compareSelected}
+        onCompareToggle={onCompareToggle}
+      />
+
+      {/* Social proof */}
+      <p className="mt-1 text-[10px] text-[#5A4F44]/60 text-center">
+        {seenCount(listing.id)} persone lo hanno visto questa settimana
+      </p>
+
+      {/* Currency-adjusted price pill */}
+      {currency !== 'EUR' && (
+        <div className="mt-1 text-center">
+          <span className="text-[10px] font-[family-name:var(--font-family-mono)] text-[#C5A059]">
+            ≈ {sym}{displayPrice}
+          </span>
+        </div>
+      )}
+
+      {/* Add to package button */}
+      <button
+        onClick={togglePackage}
+        className={cn(
+          'mt-2 w-full text-[10px] py-1.5 rounded-full border transition-colors',
+          inPackage
+            ? 'border-[#C5A059] bg-[rgba(197,160,89,0.1)] text-[#C5A059]'
+            : 'border-[rgba(197,160,89,0.2)] text-[#5A4F44] hover:border-[#C5A059] hover:text-[#C5A059]',
+        )}
+      >
+        {inPackage ? '✓ Nel pacchetto' : '+ Aggiungi a pacchetto'}
+      </button>
+
+      {/* Quick preview on hover (desktop only) */}
+      <AnimatePresence>
+        {showPreview && (
+          <QuickPreview listing={listing} onClose={() => setShowPreview(false)} />
+        )}
+      </AnimatePresence>
+    </div>
+  )
+}
 
 // ─── Recently Viewed ─────────────────────────────────────────────────────────
 const RV_KEY = 'theclass_recently_viewed'
@@ -285,6 +454,125 @@ function RecentlyViewedStrip() {
   )
 }
 
+// ─── AI Search Bar ────────────────────────────────────────────────────────────
+function AISearchBar({ onResults }: { onResults: (ids: string[] | null) => void }) {
+  const [query, setQuery] = useState('')
+
+  const handleSearch = () => {
+    if (!query.trim()) { onResults(null); return }
+    const q = query.toLowerCase()
+    const keywords = q.split(/\s+/)
+    const matched = listings.filter(l => {
+      const text = `${l.title} ${l.description} ${l.category} ${l.location}`.toLowerCase()
+      return keywords.some(k => text.includes(k))
+    })
+    onResults(matched.map(l => l.id))
+  }
+
+  return (
+    <div className="mb-6">
+      <div className="relative flex items-center gap-2">
+        <div className="relative flex-1">
+          <Search size={13} className="absolute left-3.5 top-3 text-[#C5A059]" />
+          <input
+            value={query}
+            onChange={e => { setQuery(e.target.value); if (!e.target.value.trim()) onResults(null) }}
+            onKeyDown={e => e.key === 'Enter' && handleSearch()}
+            placeholder="Es. 'villa con piscina per 8 persone'"
+            className="w-full bg-white border border-[rgba(197,160,89,0.25)] rounded-xl pl-9 pr-4 py-2.5 text-sm text-[#1C1C1C] placeholder:text-[#5A4F44]/40 focus:outline-none focus:border-[#C5A059] transition-colors shadow-sm"
+          />
+        </div>
+        <button
+          onClick={handleSearch}
+          className="px-4 py-2.5 bg-[#C5A059] text-white text-sm rounded-xl hover:bg-[#b8924a] transition-colors shrink-0"
+        >
+          Cerca
+        </button>
+        {query && (
+          <button onClick={() => { setQuery(''); onResults(null) }} className="text-[#5A4F44] hover:text-[#C5A059]">
+            <X size={14} />
+          </button>
+        )}
+      </div>
+      <p className="text-[10px] text-[#5A4F44]/50 mt-1.5 ml-1">Cerca con parole tue: yacht, coppie, piscina, Roma…</p>
+    </div>
+  )
+}
+
+// ─── Recommendation strip ─────────────────────────────────────────────────────
+function RecommendationStrip() {
+  const profile = safeRead<string | null>('theclass_quiz_profile', null)
+  const [dismissed, setDismissed] = useState(false)
+  const profileCategoryMap: Record<string, Category> = {
+    adventurer: 'yacht', relaxer: 'villa', explorer: 'esperienza', business: 'jet',
+  }
+  if (!profile || dismissed) return null
+  const cat = profileCategoryMap[profile]
+  if (!cat) return null
+  const recommended = listings.filter(l => l.category === cat).slice(0, 3)
+
+  return (
+    <div className="mb-6 p-4 bg-[rgba(197,160,89,0.07)] border border-[rgba(197,160,89,0.2)] rounded-2xl relative">
+      <button
+        onClick={() => setDismissed(true)}
+        className="absolute top-3 right-3 text-[#5A4F44] hover:text-[#C5A059] transition-colors"
+      >
+        <X size={12} />
+      </button>
+      <p className="text-[10px] uppercase tracking-wider text-[#C5A059] mb-2">In base al tuo profilo:</p>
+      <div className="flex gap-3 overflow-x-auto pb-1 scrollbar-hide">
+        {recommended.map(l => (
+          <Link
+            key={l.id}
+            to="/servizi/$id"
+            params={{ id: l.id }}
+            className="shrink-0 flex items-center gap-2.5 bg-white border border-[rgba(197,160,89,0.15)] rounded-xl px-3 py-2 hover:border-[#C5A059] transition-colors"
+          >
+            <img src={l.image} alt={l.title} className="w-8 h-8 rounded-lg object-cover" />
+            <div>
+              <p className="text-[10px] font-medium text-[#1C1C1C] line-clamp-1">{l.title}</p>
+              <p className="text-[9px] text-[#C5A059]">€{l.price.toLocaleString('it-IT')}</p>
+            </div>
+          </Link>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// ─── Package sidebar badge ────────────────────────────────────────────────────
+function PackageSidebarBadge() {
+  const [ids, setIds] = useState<string[]>(() => safeRead<string[]>('theclass_custom_package', []))
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setIds(safeRead<string[]>('theclass_custom_package', []))
+    }, 1000)
+    return () => clearInterval(interval)
+  }, [])
+
+  if (ids.length === 0) return null
+
+  return (
+    <div className="mt-6 p-4 bg-[rgba(197,160,89,0.07)] border border-[rgba(197,160,89,0.2)] rounded-2xl">
+      <div className="flex items-center gap-2 mb-2">
+        <Package size={12} className="text-[#C5A059]" />
+        <p className="text-[10px] font-medium text-[#1C1C1C]">Il tuo pacchetto</p>
+        <span className="w-4 h-4 rounded-full bg-[#C5A059] text-white text-[9px] flex items-center justify-center">
+          {ids.length}
+        </span>
+      </div>
+      <p className="text-[10px] text-[#5A4F44] mb-3">{ids.length} {ids.length === 1 ? 'servizio' : 'servizi'} selezionati</p>
+      <Link
+        to="/richiesta-su-misura"
+        className="block text-center text-[10px] px-3 py-2 rounded-lg bg-[#C5A059] text-white hover:bg-[#b8924a] transition-colors"
+      >
+        Richiedi preventivo pacchetto →
+      </Link>
+    </div>
+  )
+}
+
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export function ServiziPage() {
   const [selectedCats, setSelectedCats] = useState<Category[]>([])
@@ -298,19 +586,35 @@ export function ServiziPage() {
   const [viewMode, setViewMode] = useState<ViewMode>('grid')
   const [sortKey, setSortKey] = useState<SortKey>('default')
   const [sortOpen, setSortOpen] = useState(false)
+  const [currency, setCurrency] = useState<CurrencyKey>('EUR')
+  const [currencyOpen, setCurrencyOpen] = useState(false)
+  const [aiFilterIds, setAiFilterIds] = useState<string[] | null>(null)
+  const [wishlistCount, setWishlistCount] = useState(0)
+  const currencyRef = useRef<HTMLDivElement>(null)
   const sortRef = useRef<HTMLDivElement>(null)
   const { comparing, toggle: toggleCompare, clear: clearCompare, isSelected } = useComparison()
 
-  // 1s skeleton loading on mount
+  // 1s skeleton loading on mount + wishlist count
   useEffect(() => {
     const t = setTimeout(() => setLoading(false), 1000)
+    // Count wishlist items
+    let count = 0
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i)
+      if (k?.startsWith('theclass_favorites_')) {
+        const arr = safeRead<string[]>(k, [])
+        count += arr.length
+      }
+    }
+    setWishlistCount(count)
     return () => clearTimeout(t)
   }, [])
 
-  // Close sort dropdown on outside click
+  // Close dropdowns on outside click
   useEffect(() => {
     function handler(e: MouseEvent) {
       if (sortRef.current && !sortRef.current.contains(e.target as Node)) setSortOpen(false)
+      if (currencyRef.current && !currencyRef.current.contains(e.target as Node)) setCurrencyOpen(false)
     }
     document.addEventListener('mousedown', handler)
     return () => document.removeEventListener('mousedown', handler)
@@ -362,6 +666,7 @@ export function ServiziPage() {
 
   const filtered = useMemo(() => {
     let result = listings.filter(l => {
+      if (aiFilterIds !== null && !aiFilterIds.includes(l.id)) return false
       if (selectedCats.length && !selectedCats.includes(l.category)) return false
       if (l.price < priceRange[0] || l.price > priceRange[1]) return false
       if (location && !l.location.toLowerCase().includes(location.toLowerCase())) return false
@@ -373,7 +678,7 @@ export function ServiziPage() {
     else if (sortKey === 'rating') result = [...result].sort((a, b) => b.rating - a.rating)
     else if (sortKey === 'trending') result = [...result].sort((a, b) => (b.trending ? 1 : 0) - (a.trending ? 1 : 0))
     return result
-  }, [selectedCats, priceRange, location, minQuality, sortKey])
+  }, [selectedCats, priceRange, location, minQuality, sortKey, aiFilterIds])
 
   const comparingListings = listings.filter(l => comparing.includes(l.id))
 

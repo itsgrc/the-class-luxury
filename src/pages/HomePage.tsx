@@ -1,7 +1,7 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
 import { Link } from '@tanstack/react-router'
 import { motion, useInView, useScroll, useTransform, AnimatePresence } from 'framer-motion'
-import { Shield, Clock, Gem, Anchor, Plane, Car, Star } from 'lucide-react'
+import { Shield, Clock, Gem, Anchor, Plane, Car, Star, MessageSquare, Wand2, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { generateId } from '@/lib/utils'
 import { PartnerLogos } from '@/components/PartnerLogos'
@@ -16,6 +16,229 @@ const TESTIMONIALS = [
   { name: 'Famiglia Rossi', role: 'Clienti Premium', text: "La villa in Sardegna era esattamente come la sognavamo. I bambini hanno vissuto un'estate magica.", avatar: 'FR' },
   { name: 'Marco B.', role: 'Luxury Collector', text: 'Nessun altro servizio offre questa combinazione di qualità, riservatezza e risposta in tempo reale.', avatar: 'MB' },
 ]
+
+// ── 1. Social proof ticker items ──
+const TICKER_ITEMS = [
+  '2 ore fa: Yacht 25m — Costa Amalfitana prenotato',
+  '5 ore fa: Jet Cessna Citation — Milano → Ginevra',
+  '1 ora fa: Villa Sardegna — 7 notti confermato',
+  '3 ore fa: Lamborghini Urus — Roma weekend',
+  '6 ore fa: Gulfstream G650 — Londra → Dubai',
+  '30 min fa: Suite Ritz Paris — 4 notti prenotato',
+]
+
+// ── 2. Last-minute offers ──
+function getCountdown(targetMs: number): string {
+  const diff = Math.max(0, targetMs - Date.now())
+  const h = Math.floor(diff / 3_600_000)
+  const m = Math.floor((diff % 3_600_000) / 60_000)
+  return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`
+}
+
+const LAST_MINUTE = [
+  { title: 'Riva Aquarama 8h', location: 'Lago di Como', priceOriginal: '€4.200', price: '€2.940', deadline: Date.now() + 5 * 3_600_000 + 12 * 60_000 },
+  { title: 'Falcon 7X Slot', location: 'Milano → Nizza', priceOriginal: '€18.000', price: '€11.900', deadline: Date.now() + 11 * 3_600_000 + 33 * 60_000 },
+  { title: 'Villa Positano', location: 'Costiera Amalfitana, 3 notti', priceOriginal: '€9.600', price: '€6.720', deadline: Date.now() + 8 * 3_600_000 + 5 * 60_000 },
+]
+
+function LastMinuteSection() {
+  const [ticks, setTicks] = useState(0)
+  useEffect(() => {
+    const t = setInterval(() => setTicks(v => v + 1), 60_000)
+    return () => clearInterval(t)
+  }, [])
+  return (
+    <section className="max-w-7xl mx-auto px-6 py-14">
+      <div className="flex items-center gap-3 mb-8">
+        <span className="inline-flex items-center gap-1.5 text-[10px] font-[family-name:var(--font-family-mono)] tracking-widest uppercase bg-red-600 text-white px-3 py-1 rounded-full">
+          ● Last Minute
+        </span>
+        <h2 className="font-playfair text-2xl text-[#1C1C1C]">Offerte in scadenza</h2>
+      </div>
+      <div className="grid md:grid-cols-3 gap-5">
+        {LAST_MINUTE.map((item, _i) => (
+          <div key={item.title} className="bg-white rounded-2xl border border-[rgba(197,160,89,0.18)] p-5 shadow-sm relative overflow-hidden">
+            <span className="absolute top-3 right-3 bg-red-600 text-white text-[10px] font-[family-name:var(--font-family-mono)] px-2.5 py-0.5 rounded-full tracking-wider">
+              Scade tra {getCountdown(item.deadline)} h
+            </span>
+            <p className="font-playfair text-lg text-[#1C1C1C] leading-snug mb-1 pr-24">{item.title}</p>
+            <p className="text-xs text-[#5A4F44] font-[family-name:var(--font-family-mono)] mb-4">{item.location}</p>
+            <div className="flex items-end gap-2 mb-4">
+              <span className="line-through text-[#5A4F44] text-sm">{item.priceOriginal}</span>
+              <span className="text-[#C5A059] font-[family-name:var(--font-family-mono)] text-lg font-medium">{item.price}</span>
+            </div>
+            <button
+              onClick={() => toast.success(`Opzione bloccata: ${item.title}`, { description: 'Il concierge ti contatterà entro 30 minuti' })}
+              className="w-full py-2.5 bg-[#1C1C1C] text-[#FDF9F2] rounded-full font-[family-name:var(--font-family-mono)] text-[11px] tracking-widest uppercase hover:bg-[#C5A059] hover:text-[#1C1C1C] transition-colors"
+            >
+              Blocca ora
+            </button>
+            {/* invisible dep to re-render on tick */}
+            <span className="hidden">{ticks}</span>
+          </div>
+        ))}
+      </div>
+    </section>
+  )
+}
+
+// ── 3. "Per te" personalized section ──
+function PerTeSection() {
+  const profile = (() => {
+    try { return JSON.parse(localStorage.getItem('theclass_quiz_profile') ?? 'null') } catch { return null }
+  })()
+  if (!profile) {
+    return (
+      <section className="bg-[rgba(197,160,89,0.04)] py-10 px-6">
+        <div className="max-w-3xl mx-auto text-center">
+          <p className="text-[10px] tracking-[0.25em] text-[#C5A059] font-[family-name:var(--font-family-mono)] uppercase mb-3">Personalizzazione</p>
+          <h2 className="font-playfair text-2xl text-[#1C1C1C] mb-3">Scopri le esperienze per te</h2>
+          <p className="text-[#5A4F44] text-sm mb-6">Rispondi a 3 domande e il concierge costruirà la tua selezione personale.</p>
+          <Link to="/quiz" className="inline-flex items-center gap-2 px-7 py-3 bg-[#C5A059] text-white rounded-full font-[family-name:var(--font-family-mono)] text-[11px] tracking-widest uppercase hover:opacity-90 transition">
+            Fai il quiz →
+          </Link>
+        </div>
+      </section>
+    )
+  }
+  const category = (profile as { category?: string }).category ?? 'yacht'
+  const filtered = listings.filter(l => l.category === category).slice(0, 3)
+  return (
+    <section className="max-w-7xl mx-auto px-6 py-14">
+      <div className="mb-8">
+        <p className="text-[10px] tracking-[0.25em] text-[#C5A059] font-[family-name:var(--font-family-mono)] uppercase mb-2">Per te</p>
+        <h2 className="font-playfair text-2xl text-[#1C1C1C]">Basato sul tuo profilo: <em className="text-[#C5A059] not-italic capitalize">{category}</em></h2>
+      </div>
+      <div className="grid md:grid-cols-3 gap-5">
+        {filtered.map(l => (
+          <motion.div key={l.id} whileHover={{ y: -4 }} transition={{ duration: 0.3 }}
+            className="bg-white rounded-2xl overflow-hidden border border-[rgba(197,160,89,0.15)] shadow-sm">
+            <img src={l.image} className="w-full h-40 object-cover" alt={l.title} loading="lazy" />
+            <div className="p-4">
+              <p className="font-playfair text-base text-[#1C1C1C] mb-1">{l.title}</p>
+              <p className="text-xs text-[#5A4F44]">{l.location}</p>
+              <p className="font-[family-name:var(--font-family-mono)] text-[#C5A059] text-sm mt-2">€{l.price.toLocaleString('it-IT')}/{l.priceUnit}</p>
+            </div>
+          </motion.div>
+        ))}
+      </div>
+    </section>
+  )
+}
+
+// ── 4. Booking count strip ──
+function BookingCountStrip() {
+  const ref = useRef<HTMLDivElement>(null)
+  const inView = useInView(ref, { once: true, margin: '-15%' })
+  const STATS = [
+    { label: 'Clienti', value: 2400, suffix: '+' },
+    { label: 'Asset disponibili', value: 500, suffix: '+' },
+    { label: 'Destinazioni', value: 48, suffix: '' },
+    { label: 'Risposta media', value: 2, suffix: 'h' },
+  ]
+  useEffect(() => {
+    if (!inView || !ref.current) return
+    ref.current.querySelectorAll<HTMLElement>('.bcs-number').forEach(el => {
+      const target = parseInt(el.dataset.target ?? '0')
+      const dur = 1400
+      const step = target / (dur / 16)
+      let cur = 0
+      const tick = () => {
+        cur += step
+        if (cur < target) { el.innerText = Math.floor(cur).toLocaleString('it-IT'); requestAnimationFrame(tick) }
+        else { el.innerText = target.toLocaleString('it-IT') }
+      }
+      requestAnimationFrame(tick)
+    })
+  }, [inView])
+  return (
+    <div ref={ref} className="bg-[#1C1C1C] py-8">
+      <div className="max-w-5xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+        {STATS.map(s => (
+          <div key={s.label}>
+            <div className="flex items-end justify-center gap-0.5">
+              {s.label === 'Risposta media' && <span className="text-[#C5A059] font-[family-name:var(--font-family-mono)] text-2xl mb-0.5">{'< '}</span>}
+              <span className="bcs-number font-[family-name:var(--font-family-mono)] text-4xl text-[#C5A059]" data-target={s.value}>0</span>
+              <span className="font-[family-name:var(--font-family-mono)] text-xl text-[#C5A059] mb-0.5">{s.suffix}</span>
+            </div>
+            <p className="text-white/50 text-[10px] font-[family-name:var(--font-family-mono)] tracking-widest uppercase mt-1">{s.label}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// ── 7. Come funziona section ──
+function ComeFunzionaSection() {
+  const steps = [
+    { icon: MessageSquare, num: '1', title: 'Descrivi il desiderio', desc: 'Racconta cosa cerchi — anche un\'idea vaga. Il concierge capisce il non detto.' },
+    { icon: Wand2, num: '2', title: 'Il concierge costruisce la proposta', desc: 'Entro 2 ore ricevi una selezione personalizzata, curata a mano per te.' },
+    { icon: Star, num: '3', title: 'Vivi l\'esperienza', desc: 'Ogni dettaglio gestito. Tu arrivi. Noi abbiamo già pensato a tutto.' },
+  ]
+  return (
+    <section className="bg-[#F5EFE4] py-16 px-6">
+      <div className="max-w-5xl mx-auto">
+        <div className="text-center mb-12">
+          <p className="text-[10px] tracking-[0.25em] text-[#C5A059] font-[family-name:var(--font-family-mono)] uppercase mb-3">Il processo</p>
+          <h2 className="font-playfair text-3xl text-[#1C1C1C]">Come funziona</h2>
+          <div className="divider-gold-short" />
+        </div>
+        <div className="grid md:grid-cols-3 gap-8">
+          {steps.map((step, i) => (
+            <motion.div key={step.num}
+              initial={{ opacity: 0, y: 24 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.15, duration: 0.6 }}
+              className="text-center"
+            >
+              <div className="w-16 h-16 rounded-full bg-[rgba(197,160,89,0.12)] border border-[rgba(197,160,89,0.3)] flex items-center justify-center mx-auto mb-5">
+                <step.icon size={22} className="text-[#C5A059]" />
+              </div>
+              <p className="font-[family-name:var(--font-family-mono)] text-[10px] text-[#C5A059] tracking-widest uppercase mb-2">Step {step.num}</p>
+              <h3 className="font-playfair text-xl text-[#1C1C1C] mb-3">{step.title}</h3>
+              <p className="text-[#5A4F44] text-sm leading-relaxed">{step.desc}</p>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+// ── 8. Club preview locked section ──
+function ClubPreviewSection() {
+  return (
+    <section className="bg-[#1C1C1C] py-16 px-6 relative overflow-hidden">
+      <div className="absolute inset-0 bg-gradient-to-br from-[rgba(197,160,89,0.05)] to-transparent pointer-events-none" />
+      <div className="max-w-3xl mx-auto text-center relative">
+        <div
+          className="rounded-3xl border border-[rgba(197,160,89,0.2)] p-10 md:p-14 relative overflow-hidden"
+          style={{ backdropFilter: 'blur(8px)', background: 'rgba(28,28,28,0.6)' }}
+        >
+          {/* blur veil */}
+          <div className="absolute inset-0 rounded-3xl" style={{ backdropFilter: 'blur(8px)' }} />
+          <div className="relative z-10">
+            <span className="inline-block text-[9px] font-[family-name:var(--font-family-mono)] tracking-[0.3em] uppercase border border-[rgba(197,160,89,0.4)] text-[#C5A059] px-4 py-1 rounded-full mb-6">
+              Accesso Club Riservato
+            </span>
+            <div className="text-5xl mb-4">🔒</div>
+            <h2 className="font-playfair text-3xl text-white mb-4">Offerte private, aste silenziose,<br />esperienze non in catalogo</h2>
+            <p className="text-white/50 text-sm mb-8 leading-relaxed max-w-md mx-auto">
+              Accesso esclusivo a dimore mai pubblicate, jet condivisi a costo zero e offerte riservate ai soci fondatori.
+              Membership su approvazione personale.
+            </p>
+            <Link to="/profilo"
+              className="inline-flex items-center gap-2 px-8 py-3.5 bg-gradient-to-r from-[#C5A059] to-[#D4AF71] text-[#1C1C1C] rounded-full font-[family-name:var(--font-family-mono)] text-[11px] tracking-widest uppercase hover:opacity-90 transition shadow-lg shadow-[rgba(197,160,89,0.2)]">
+              Richiedi membership →
+            </Link>
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
 
 function TestimonialsCarousel() {
   const [idx, setIdx] = useState(0)
@@ -49,6 +272,124 @@ function TestimonialsCarousel() {
         </div>
       </div>
     </section>
+  )
+}
+
+// ── 6. Sticky CTA bar ──
+function StickyCtaBar() {
+  const [visible, setVisible] = useState(false)
+  const [dismissed, setDismissed] = useState(false)
+  useEffect(() => {
+    const onScroll = () => setVisible(window.scrollY > 800)
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
+  if (dismissed) return null
+  return (
+    <AnimatePresence>
+      {visible && (
+        <motion.div
+          initial={{ y: 80, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          exit={{ y: 80, opacity: 0 }}
+          transition={{ duration: 0.35 }}
+          className="fixed bottom-0 left-0 right-0 z-40 bg-[#C5A059] text-white py-3 px-5 flex items-center justify-between shadow-xl"
+        >
+          <p className="text-sm font-[family-name:var(--font-family-mono)] tracking-wide">
+            Hai domande? Il concierge risponde in &lt;&nbsp;2h
+          </p>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => toast.success('Il concierge ti contatterà a breve!', { description: 'Disponibile anche su WhatsApp e Telegram' })}
+              className="px-5 py-2 bg-[#1C1C1C] text-white rounded-full text-[11px] font-[family-name:var(--font-family-mono)] tracking-widest uppercase hover:bg-white hover:text-[#1C1C1C] transition-colors"
+            >
+              Chatta ora
+            </button>
+            <button onClick={() => setDismissed(true)} className="text-white/80 hover:text-white transition" aria-label="Chiudi">
+              <X size={18} />
+            </button>
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  )
+}
+
+// ── 10. Exit intent newsletter modal ──
+function ExitIntentNewsletter() {
+  const [shown, setShown] = useState(false)
+  const [email, setEmail] = useState('')
+  const [submitted, setSubmitted] = useState(false)
+
+  useEffect(() => {
+    if (sessionStorage.getItem('theclass_exit_dismissed')) return
+    const handler = (e: MouseEvent) => {
+      if (e.clientY < 0 && !shown) {
+        setShown(true)
+      }
+    }
+    document.documentElement.addEventListener('mouseleave', handler)
+    return () => document.documentElement.removeEventListener('mouseleave', handler)
+  }, [shown])
+
+  const dismiss = useCallback(() => {
+    sessionStorage.setItem('theclass_exit_dismissed', '1')
+    setShown(false)
+  }, [])
+
+  const handleSubmit = useCallback((e: React.FormEvent) => {
+    e.preventDefault()
+    if (!email.trim()) return
+    sessionStorage.setItem('theclass_exit_dismissed', '1')
+    setSubmitted(true)
+    setTimeout(() => setShown(false), 2000)
+  }, [email])
+
+  if (!shown) return null
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#1C1C1C]/60 backdrop-blur-sm px-4" onClick={dismiss}>
+      <motion.div
+        initial={{ opacity: 0, scale: 0.92 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.92 }}
+        transition={{ duration: 0.3 }}
+        className="bg-[#FDF9F2] rounded-3xl max-w-md w-full p-10 shadow-2xl relative"
+        onClick={e => e.stopPropagation()}
+      >
+        <button onClick={dismiss} className="absolute top-4 right-4 text-[#5A4F44]/50 hover:text-[#1C1C1C] transition" aria-label="Chiudi">
+          <X size={20} />
+        </button>
+        {submitted ? (
+          <div className="text-center py-4">
+            <div className="text-4xl mb-4">✦</div>
+            <h3 className="font-playfair text-2xl text-[#C5A059] mb-2">Benvenuto nel Club</h3>
+            <p className="text-[#5A4F44] text-sm">Riceverai le offerte riservate in anticipo.</p>
+          </div>
+        ) : (
+          <>
+            <p className="text-[10px] tracking-[0.25em] text-[#C5A059] font-[family-name:var(--font-family-mono)] uppercase mb-3">Prima di andare...</p>
+            <h3 className="font-playfair text-2xl text-[#1C1C1C] mb-3">Iscriviti per accedere alle offerte riservate</h3>
+            <p className="text-[#5A4F44] text-sm mb-6 leading-relaxed">Last minute esclusivi, aste silenziose e selezioni private. Disponibili solo per iscritti.</p>
+            <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+              <input
+                type="email"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                placeholder="La tua email"
+                required
+                className="px-5 py-3.5 rounded-full border border-[rgba(197,160,89,0.3)] bg-white text-sm focus:outline-none focus:border-[#C5A059] transition"
+              />
+              <button type="submit" className="py-3.5 bg-[#C5A059] text-white rounded-full font-[family-name:var(--font-family-mono)] text-[11px] tracking-widest uppercase hover:opacity-90 transition">
+                Iscriviti
+              </button>
+            </form>
+            <button onClick={dismiss} className="mt-4 w-full text-center text-xs text-[#5A4F44]/50 hover:text-[#5A4F44] transition">
+              No grazie, continuo senza
+            </button>
+          </>
+        )}
+      </motion.div>
+    </div>
   )
 }
 
@@ -101,9 +442,42 @@ export function HomePage() {
 
   return (
     <>
+      {/* ── 1. Social proof ticker ── */}
+      <div className="bg-[#1C1C1C] overflow-hidden py-2.5">
+        <div
+          className="flex gap-12 whitespace-nowrap"
+          style={{
+            animation: 'marquee-scroll 32s linear infinite',
+            willChange: 'transform',
+          }}
+        >
+          {[...TICKER_ITEMS, ...TICKER_ITEMS].map((item, i) => (
+            <span key={i} className="text-white/80 text-[11px] font-[family-name:var(--font-family-mono)] tracking-wide">
+              <span className="text-[#C5A059] mr-2">✦</span>{item}
+            </span>
+          ))}
+        </div>
+        <style>{`
+          @keyframes marquee-scroll {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+          }
+        `}</style>
+      </div>
+
       {/* ══ HERO ══ */}
+      {/* ── 5. Hero video background ── */}
       <section ref={heroRef} className="relative h-screen flex items-center justify-center overflow-hidden">
         <motion.div style={{ y: heroY }} className="absolute inset-0 w-full h-full">
+          {/* Video background (CSS-ready, src empty — falls back to img) */}
+          <video
+            autoPlay
+            muted
+            loop
+            playsInline
+            src=""
+            className="absolute inset-0 object-cover w-full h-full opacity-30 z-0"
+          />
           <img
             className="absolute inset-0 w-full h-full object-cover"
             src="https://images.unsplash.com/photo-1567899378494-47b22a2ae96a?w=1920&q=90&auto=format&fit=crop"
@@ -172,6 +546,9 @@ export function HomePage() {
         </div>
       </section>
 
+      {/* ── 4. Booking count strip ── */}
+      <BookingCountStrip />
+
       {/* ══ PARTNER LOGOS ══ */}
       <PartnerLogos />
 
@@ -198,6 +575,12 @@ export function HomePage() {
           ))}
         </div>
       </section>
+
+      {/* ── 3. Per te personalized section ── */}
+      <PerTeSection />
+
+      {/* ── 2. Last minute urgency ── */}
+      <LastMinuteSection />
 
       {/* ══ ESPERIENZE ══ */}
       <section className="bg-card-bg py-14">
@@ -411,6 +794,21 @@ export function HomePage() {
         </div>
       </section>
 
+      {/* ── 7. Come funziona section (after yacht) ── */}
+      <ComeFunzionaSection />
+
+      {/* ── 9. "Sfoglia le Stories" with badge ── */}
+      <section className="max-w-7xl mx-auto px-6 py-8 text-center">
+        <div className="inline-flex items-center gap-3">
+          <Link to="/stories" className="font-[family-name:var(--font-family-mono)] text-[#C5A059] text-sm tracking-wider hover:underline underline-offset-4">
+            Sfoglia le Stories
+          </Link>
+          <span className="text-[10px] bg-[#C5A059] text-white font-[family-name:var(--font-family-mono)] tracking-wider px-2 py-0.5 rounded-full leading-none">
+            ✦ Novità
+          </span>
+        </div>
+      </section>
+
       {/* ══ MAGIC TRIP ══ */}
       <section className="py-16 bg-[#1C1C1C] reveal-on-scroll">
         <div className="max-w-5xl mx-auto px-6 text-center">
@@ -467,6 +865,9 @@ export function HomePage() {
         </div>
       </section>
 
+      {/* ── 8. Club preview locked section ── */}
+      <ClubPreviewSection />
+
       {/* ══ SMART SUGGESTIONS ══ */}
       {suggestions.length > 0 && (
         <section className="max-w-7xl mx-auto px-6 py-14 reveal-on-scroll">
@@ -502,6 +903,12 @@ export function HomePage() {
 
       {/* ══ TESTIMONIALS ══ */}
       <TestimonialsCarousel />
+
+      {/* ── 6. Sticky CTA bar ── */}
+      <StickyCtaBar />
+
+      {/* ── 10. Exit intent newsletter ── */}
+      <ExitIntentNewsletter />
     </>
   )
 }
