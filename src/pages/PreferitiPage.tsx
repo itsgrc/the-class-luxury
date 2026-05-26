@@ -1,21 +1,59 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { Link } from '@tanstack/react-router'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Heart, Trash2, Package, Share2 } from 'lucide-react'
+import { Heart, Trash2, Package, Share2, Printer, ArrowUpDown, StickyNote, Bell, Columns2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { listings } from '@/data/listings'
+import type { Category } from '@/data/listings'
 import { useFavorites } from '@/hooks/useFavorites'
 import { ServiceCard } from '@/components/ServiceCard'
 import { RequestModal } from '@/components/RequestModal'
 import { formatPrice } from '@/lib/utils'
+import { safeRead, safeWrite } from '@/lib/errorHandler'
+
+type SortKey = 'default' | 'price-asc' | 'price-desc' | 'recent'
+
+const CATEGORY_LABELS: Record<Category, string> = {
+  yacht: 'Yacht',
+  jet: 'Jet',
+  auto: 'Automobili',
+  villa: 'Ville',
+  esperienza: 'Esperienze',
+  fractional: 'Fractional',
+  concierge: 'Concierge',
+  staff: 'Staff',
+  asta: 'Aste',
+}
+
+const CATEGORY_ORDER: Category[] = ['yacht', 'jet', 'auto', 'villa', 'esperienza', 'fractional', 'concierge', 'staff', 'asta']
 
 export function PreferitiPage() {
   const { favorites, clear } = useFavorites()
   const [bulkModal, setBulkModal] = useState(false)
   const [confirmClear, setConfirmClear] = useState(false)
   const [sharedIds, setSharedIds] = useState<string[]>([])
+  const [sortKey, setSortKey] = useState<SortKey>('default')
+  const [compareMode, setCompareMode] = useState(false)
+  const [compareIds, setCompareIds] = useState<string[]>([])
+  const [notes, setNotes] = useState<Record<string, string>>(() => safeRead('theclass_notes', {}))
+  const [editingNote, setEditingNote] = useState<string | null>(null)
+  const [priceAlerts, setPriceAlerts] = useState<string[]>(() => safeRead('theclass_price_alerts', []))
+
   const favListings = listings.filter(l => favorites.includes(l.id))
   const totalValue = favListings.reduce((s, l) => s + l.price, 0)
+
+  // Smart suggestion from quiz profile
+  const quizProfile: string | null = safeRead('theclass_quiz_profile', null)
+  const profileCategoryMap: Record<string, Category> = {
+    adventurer: 'yacht',
+    relaxer: 'villa',
+    explorer: 'esperienza',
+    business: 'jet',
+  }
+  const suggestedCategory = quizProfile ? profileCategoryMap[quizProfile] : null
+  const suggestedListings = suggestedCategory
+    ? listings.filter(l => l.category === suggestedCategory && !favorites.includes(l.id)).slice(0, 3)
+    : []
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
@@ -40,35 +78,101 @@ export function PreferitiPage() {
     })
   }
 
-  const displayListings = sharedIds.length > 0
-    ? listings.filter(l => sharedIds.includes(l.id))
-    : favListings
+  const displayListings = useMemo(() => {
+    const base = sharedIds.length > 0
+      ? listings.filter(l => sharedIds.includes(l.id))
+      : favListings
+    switch (sortKey) {
+      case 'price-asc': return [...base].sort((a, b) => a.price - b.price)
+      case 'price-desc': return [...base].sort((a, b) => b.price - a.price)
+      case 'recent': return [...base].sort((a, b) => favorites.indexOf(a.id) - favorites.indexOf(b.id))
+      default: return base
+    }
+  }, [favListings, sharedIds, sortKey, favorites])
+
+  // Group by category
+  const grouped = useMemo(() => {
+    const map: Partial<Record<Category, typeof displayListings>> = {}
+    displayListings.forEach(l => {
+      if (!map[l.category]) map[l.category] = []
+      map[l.category]!.push(l)
+    })
+    return map
+  }, [displayListings])
+
+  const saveNote = (id: string, text: string) => {
+    const next = { ...notes, [id]: text }
+    setNotes(next)
+    safeWrite('theclass_notes', next)
+    setEditingNote(null)
+    toast.success('Nota salvata')
+  }
+
+  const togglePriceAlert = (id: string) => {
+    const next = priceAlerts.includes(id)
+      ? priceAlerts.filter(x => x !== id)
+      : [...priceAlerts, id]
+    setPriceAlerts(next)
+    safeWrite('theclass_price_alerts', next)
+    toast(next.includes(id) ? '🔔 Avviso prezzo attivato!' : 'Avviso prezzo rimosso')
+  }
+
+  const toggleCompare = (id: string) => {
+    setCompareIds(prev => {
+      if (prev.includes(id)) return prev.filter(x => x !== id)
+      if (prev.length >= 2) {
+        toast.error('Puoi confrontare massimo 2 servizi')
+        return prev
+      }
+      return [...prev, id]
+    })
+  }
+
+  const comparePair = compareIds.length === 2
+    ? listings.filter(l => compareIds.includes(l.id))
+    : []
+
+  // Random 3 suggestions for empty state
+  const randomSuggestions = useMemo(() => {
+    const shuffled = [...listings].sort(() => Math.random() - 0.5)
+    return shuffled.slice(0, 3)
+  }, [])
 
   return (
     <div className="min-h-screen bg-[#FDF9F2] pt-24 pb-24">
       <title>I Miei Preferiti — the Class</title>
       <meta name="description" content="La tua selezione personale di yacht, jet, auto ed esperienze luxury. Richiedi un preventivo combinato con un click." />
       <div className="max-w-7xl mx-auto px-6">
-        {/* Header */}
-        <div className="mb-12">
+
+        {/* Hero Header */}
+        <div className="mb-10">
           <div className="flex items-center gap-2 mb-2">
             <Heart size={14} className="text-[#C5A059]" />
             <p className="font-[family-name:var(--font-family-serif)] text-[#C5A059] italic text-sm tracking-widest uppercase">
               La tua selezione
             </p>
           </div>
-          <h1 className="font-[family-name:var(--font-family-display)] text-4xl font-medium text-[#1C1C1C] tracking-tight mb-2">
-            Preferiti
-          </h1>
-          {favListings.length > 0 && (
-            <p className="text-[#5A4F44] font-light text-sm">
-              {favListings.length} {favListings.length === 1 ? 'servizio salvato' : 'servizi salvati'}
-              {' — '}valore stimato:{' '}
-              <span className="font-[family-name:var(--font-family-mono)] text-[#C5A059]">
-                {formatPrice(totalValue)}
-              </span>
-            </p>
-          )}
+          <div className="flex flex-col sm:flex-row sm:items-end gap-4 justify-between">
+            <div>
+              <h1 className="font-[family-name:var(--font-family-display)] text-4xl font-medium text-[#1C1C1C] tracking-tight mb-2">
+                Preferiti
+              </h1>
+              {favListings.length > 0 && (
+                <p className="text-[#5A4F44] font-light text-sm">
+                  {favListings.length} {favListings.length === 1 ? 'servizio salvato' : 'servizi salvati'}
+                </p>
+              )}
+            </div>
+            {favListings.length > 0 && (
+              <div className="text-right bg-[rgba(197,160,89,0.07)] border border-[rgba(197,160,89,0.2)] rounded-2xl px-6 py-4">
+                <p className="text-[10px] text-[#5A4F44]/60 uppercase tracking-wider mb-1">Valore wishlist</p>
+                <p className="font-[family-name:var(--font-family-display)] text-3xl text-[#C5A059] font-medium">
+                  {formatPrice(totalValue)}
+                </p>
+                <p className="text-[10px] text-[#5A4F44]/50 mt-0.5">stima cumulativa</p>
+              </div>
+            )}
+          </div>
         </div>
 
         {sharedIds.length > 0 && (
@@ -85,7 +189,7 @@ export function PreferitiPage() {
               key="empty"
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
-              className="flex flex-col items-center justify-center py-24 text-center"
+              className="flex flex-col items-center justify-center py-16 text-center"
             >
               <div className="w-20 h-20 rounded-full border border-[rgba(197,160,89,0.28)] flex items-center justify-center mb-6">
                 <Heart size={26} className="text-[rgba(197,160,89,0.4)]" />
@@ -98,13 +202,26 @@ export function PreferitiPage() {
               </p>
               <Link
                 to="/servizi"
-                className="bg-[#C5A059] text-white px-8 py-3 rounded-full text-sm tracking-wide hover:bg-[#b8924a] transition-colors"
+                className="bg-[#C5A059] text-white px-8 py-3 rounded-full text-sm tracking-wide hover:bg-[#b8924a] transition-colors mb-12"
               >
                 Esplora i servizi
               </Link>
+
+              {/* Suggested listings for empty state */}
+              <div className="w-full">
+                <p className="text-[11px] tracking-[0.18em] text-[#C5A059] font-[family-name:var(--font-family-mono)] uppercase mb-4">
+                  Potrebbe piacerti
+                </p>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {randomSuggestions.map((l, i) => (
+                    <ServiceCard key={l.id} listing={l} delay={i * 0.06} />
+                  ))}
+                </div>
+              </div>
             </motion.div>
           ) : (
             <motion.div key="results" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+              {/* Toolbar */}
               <div className="flex items-center gap-3 mb-8 flex-wrap">
                 <button
                   onClick={() => setBulkModal(true)}
@@ -113,15 +230,52 @@ export function PreferitiPage() {
                   <Package size={13} />
                   Richiedi preventivo per tutti
                 </button>
+
                 {sharedIds.length === 0 && (
                   <button
                     onClick={shareWishlist}
                     className="flex items-center gap-2 border border-[rgba(197,160,89,0.28)] text-[#5A4F44] px-5 py-2.5 rounded-full text-sm font-light hover:border-[#C5A059] hover:text-[#C5A059] transition-colors"
                   >
                     <Share2 size={13} />
-                    Condividi wishlist
+                    Condividi
                   </button>
                 )}
+
+                <button
+                  onClick={() => window.print()}
+                  className="flex items-center gap-2 border border-[rgba(197,160,89,0.28)] text-[#5A4F44] px-5 py-2.5 rounded-full text-sm font-light hover:border-[#C5A059] hover:text-[#C5A059] transition-colors"
+                >
+                  <Printer size={13} />
+                  Esporta PDF
+                </button>
+
+                <button
+                  onClick={() => { setCompareMode(v => !v); setCompareIds([]) }}
+                  className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-light border transition-colors ${
+                    compareMode
+                      ? 'bg-[#1C1C1C] text-white border-[#1C1C1C]'
+                      : 'border-[rgba(197,160,89,0.28)] text-[#5A4F44] hover:border-[#C5A059] hover:text-[#C5A059]'
+                  }`}
+                >
+                  <Columns2 size={13} />
+                  {compareMode ? 'Esci da confronto' : 'Confronta'}
+                </button>
+
+                {/* Sort */}
+                <div className="flex items-center gap-2 ml-auto">
+                  <ArrowUpDown size={13} className="text-[#5A4F44]" />
+                  <select
+                    value={sortKey}
+                    onChange={e => setSortKey(e.target.value as SortKey)}
+                    className="border border-[rgba(197,160,89,0.28)] text-[#5A4F44] text-sm rounded-full px-3 py-2 bg-transparent outline-none hover:border-[#C5A059] transition-colors"
+                  >
+                    <option value="default">Ordine di default</option>
+                    <option value="price-asc">Prezzo (basso→alto)</option>
+                    <option value="price-desc">Prezzo (alto→basso)</option>
+                    <option value="recent">Recenti</option>
+                  </select>
+                </div>
+
                 {!confirmClear ? (
                   <button
                     onClick={() => setConfirmClear(true)}
@@ -149,11 +303,145 @@ export function PreferitiPage() {
                 )}
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {displayListings.map((l, i) => (
-                  <ServiceCard key={l.id} listing={l} delay={i * 0.05} />
-                ))}
-              </div>
+              {/* Compare mode: select 2 */}
+              {compareMode && (
+                <div className="mb-6 p-4 bg-[rgba(197,160,89,0.06)] border border-[rgba(197,160,89,0.2)] rounded-xl text-sm text-[#5A4F44] font-light">
+                  Seleziona 2 servizi per confrontarli. Selezionati: {compareIds.length}/2
+                </div>
+              )}
+
+              {/* Comparison table */}
+              {compareMode && comparePair.length === 2 && (
+                <motion.div
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mb-10 border border-[rgba(197,160,89,0.2)] rounded-2xl overflow-hidden"
+                >
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="bg-[rgba(197,160,89,0.08)]">
+                        <th className="text-left p-4 text-[#5A4F44] font-medium w-1/3">Caratteristica</th>
+                        {comparePair.map(l => (
+                          <th key={l.id} className="text-left p-4 text-[#1C1C1C] font-medium">{l.title}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[rgba(197,160,89,0.1)]">
+                      {[
+                        ['Prezzo', ...comparePair.map(l => `${formatPrice(l.price)} / ${l.priceUnit}`)],
+                        ['Categoria', ...comparePair.map(l => l.category)],
+                        ['Posizione', ...comparePair.map(l => l.location)],
+                        ['Rating', ...comparePair.map(l => `${l.rating} ★ (${l.reviews} rec.)`)],
+                      ].map(([label, ...vals]) => (
+                        <tr key={label}>
+                          <td className="p-4 text-[#5A4F44] font-medium">{label}</td>
+                          {vals.map((v, i) => (
+                            <td key={i} className="p-4 text-[#1C1C1C]">{v}</td>
+                          ))}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </motion.div>
+              )}
+
+              {/* Grouped by category */}
+              {CATEGORY_ORDER.filter(cat => grouped[cat]?.length).map(cat => (
+                <div key={cat} className="mb-12">
+                  <h2 className="font-[family-name:var(--font-family-display)] text-xl font-medium text-[#1C1C1C] mb-6 flex items-center gap-3">
+                    <span>{CATEGORY_LABELS[cat]}</span>
+                    <span className="text-sm text-[#C5A059] font-light font-[family-name:var(--font-family-mono)]">
+                      {grouped[cat]!.length}
+                    </span>
+                    <span className="flex-1 h-px bg-[rgba(197,160,89,0.15)]" />
+                  </h2>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {grouped[cat]!.map((l, i) => (
+                      <div key={l.id}>
+                        {/* Compare checkbox */}
+                        {compareMode && (
+                          <label className="flex items-center gap-2 mb-2 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={compareIds.includes(l.id)}
+                              onChange={() => toggleCompare(l.id)}
+                              className="accent-[#C5A059]"
+                            />
+                            <span className="text-xs text-[#5A4F44]">Seleziona per confronto</span>
+                          </label>
+                        )}
+
+                        <div className="relative">
+                          {l.lastMinute && (
+                            <div className="absolute -top-2 left-3 z-10">
+                              <span className="bg-red-500 text-white text-[9px] font-semibold px-2 py-0.5 rounded-full uppercase tracking-wider">
+                                Ultimi posti
+                              </span>
+                            </div>
+                          )}
+                          <ServiceCard listing={l} delay={i * 0.05} />
+                        </div>
+
+                        {/* Note + Price alert row */}
+                        <div className="mt-2 flex items-center gap-2">
+                          <button
+                            onClick={() => togglePriceAlert(l.id)}
+                            className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-[11px] border transition-colors ${
+                              priceAlerts.includes(l.id)
+                                ? 'bg-[rgba(197,160,89,0.12)] border-[#C5A059] text-[#C5A059]'
+                                : 'border-[rgba(197,160,89,0.2)] text-[#5A4F44] hover:border-[#C5A059]'
+                            }`}
+                          >
+                            <Bell size={10} />
+                            {priceAlerts.includes(l.id) ? 'Avviso attivo' : 'Avviso prezzo'}
+                          </button>
+                          <button
+                            onClick={() => setEditingNote(editingNote === l.id ? null : l.id)}
+                            className="flex items-center gap-1 px-3 py-1.5 rounded-full text-[11px] border border-[rgba(197,160,89,0.2)] text-[#5A4F44] hover:border-[#C5A059] transition-colors"
+                          >
+                            <StickyNote size={10} />
+                            {notes[l.id] ? 'Modifica nota' : 'Aggiungi nota'}
+                          </button>
+                        </div>
+
+                        {/* Note input */}
+                        {editingNote === l.id && (
+                          <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="mt-2">
+                            <NoteInput
+                              initialValue={notes[l.id] ?? ''}
+                              onSave={(text) => saveNote(l.id, text)}
+                              onCancel={() => setEditingNote(null)}
+                            />
+                          </motion.div>
+                        )}
+                        {notes[l.id] && editingNote !== l.id && (
+                          <p className="mt-1.5 text-xs text-[#5A4F44] italic pl-1 border-l-2 border-[rgba(197,160,89,0.3)]">
+                            {notes[l.id]}
+                          </p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+
+              {/* Smart suggestion based on quiz */}
+              {suggestedListings.length > 0 && quizProfile && (
+                <div className="mt-16 pt-10 border-t border-[rgba(197,160,89,0.15)]">
+                  <p className="text-[11px] tracking-[0.18em] text-[#C5A059] font-[family-name:var(--font-family-mono)] uppercase mb-2">
+                    Basato sul tuo profilo
+                  </p>
+                  <h2 className="font-[family-name:var(--font-family-display)] text-xl font-medium text-[#1C1C1C] mb-6">
+                    Potresti amare anche…
+                  </h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {suggestedListings.map((l, i) => (
+                      <ServiceCard key={l.id} listing={l} delay={i * 0.06} />
+                    ))}
+                  </div>
+                </div>
+              )}
             </motion.div>
           )}
         </AnimatePresence>
@@ -171,6 +459,39 @@ export function PreferitiPage() {
           }}
         />
       )}
+    </div>
+  )
+}
+
+// Small inline note input component
+function NoteInput({ initialValue, onSave, onCancel }: {
+  initialValue: string
+  onSave: (text: string) => void
+  onCancel: () => void
+}) {
+  const [value, setValue] = useState(initialValue)
+  return (
+    <div className="flex flex-col gap-2">
+      <textarea
+        value={value}
+        onChange={e => setValue(e.target.value)}
+        placeholder="Scrivi una nota personale..."
+        className="w-full text-xs text-[#1C1C1C] border border-[rgba(197,160,89,0.3)] rounded-xl px-3 py-2 resize-none outline-none focus:border-[#C5A059] bg-white h-16"
+      />
+      <div className="flex gap-2">
+        <button
+          onClick={() => onSave(value)}
+          className="px-4 py-1.5 bg-[#C5A059] text-white rounded-full text-[11px] hover:bg-[#b8924a] transition-colors"
+        >
+          Salva
+        </button>
+        <button
+          onClick={onCancel}
+          className="px-4 py-1.5 border border-[rgba(197,160,89,0.3)] text-[#5A4F44] rounded-full text-[11px] hover:border-[#C5A059] transition-colors"
+        >
+          Annulla
+        </button>
+      </div>
     </div>
   )
 }

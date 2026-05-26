@@ -1,6 +1,6 @@
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { SlidersHorizontal, X, MapPin, RotateCcw, Map } from 'lucide-react'
+import { SlidersHorizontal, X, MapPin, RotateCcw, Map, LayoutGrid, List as ListIcon, ArrowUpDown, ChevronDown, Clock } from 'lucide-react'
 import { Helmet } from 'react-helmet-async'
 import { listings, type Category, getCategoryLabel, ALL_CATEGORIES } from '@/data/listings'
 import { ServiceCard } from '@/components/ServiceCard'
@@ -11,8 +11,22 @@ import { CompareBar } from '@/components/CompareBar'
 import { CompareModal } from '@/components/CompareModal'
 import { List } from 'react-window'
 import type { CSSProperties } from 'react'
+import { safeRead, safeWrite } from '@/lib/errorHandler'
+import { Link } from '@tanstack/react-router'
 
-// ── Map Modal ──
+// ─── Types ───────────────────────────────────────────────────────────────────
+type SortKey = 'default' | 'price_asc' | 'price_desc' | 'rating' | 'trending'
+type ViewMode = 'grid' | 'list'
+type ListingItem = (typeof listings)[number]
+
+// ─── Recently Viewed ─────────────────────────────────────────────────────────
+const RV_KEY = 'theclass_recently_viewed'
+
+function getRecentlyViewed(): string[] {
+  return safeRead<string[]>(RV_KEY, [])
+}
+
+// ─── Map Modal ────────────────────────────────────────────────────────────────
 function MapModal({ open, onClose, count }: { open: boolean; onClose: () => void; count: number }) {
   if (!open) return null
 
@@ -57,7 +71,6 @@ function MapModal({ open, onClose, count }: { open: boolean; onClose: () => void
               </radialGradient>
             </defs>
             <rect x="100" y="100" width="250" height="280" fill="url(#sea)" />
-            {/* Simplified Italy */}
             <path
               d="M188 128 L222 128 L242 156 L252 185 L262 225 L270 265 L268 288 L255 283 L242 258 L232 238 L220 218 L214 196 L206 175 L200 155 Z"
               fill="#2a4060" fillOpacity="0.6"
@@ -65,7 +78,7 @@ function MapModal({ open, onClose, count }: { open: boolean; onClose: () => void
             <text x="165" y="240" fill="rgba(197,160,89,0.3)" fontSize="8" fontStyle="italic">
               Mediterraneo
             </text>
-            {markers.map((m, i) => (
+            {markers.map((m) => (
               <g key={m.name}>
                 <circle cx={m.x} cy={m.y} r={5} fill="#C5A059" fillOpacity="0.9" />
                 <circle cx={m.x} cy={m.y} r={10} fill="#C5A059" fillOpacity="0.15" />
@@ -84,6 +97,7 @@ function MapModal({ open, onClose, count }: { open: boolean; onClose: () => void
   )
 }
 
+// ─── Skeleton Card ────────────────────────────────────────────────────────────
 function SkeletonCard() {
   return (
     <div className="bg-[#FCFAF5] rounded-2xl overflow-hidden border border-[rgba(197,160,89,0.08)] animate-pulse">
@@ -97,11 +111,63 @@ function SkeletonCard() {
   )
 }
 
-// ── Virtual Grid for large datasets ──
+// ─── List-view row ────────────────────────────────────────────────────────────
+function ListingRow({ listing, compareSelected, onCompareToggle }: {
+  listing: ListingItem
+  compareSelected: boolean
+  onCompareToggle: () => void
+}) {
+  return (
+    <div className="bg-white border border-[rgba(197,160,89,0.15)] rounded-2xl flex overflow-hidden hover:shadow-md transition-shadow">
+      <div className="w-40 shrink-0 overflow-hidden">
+        <img
+          src={listing.image}
+          alt={listing.title}
+          className="w-full h-full object-cover"
+          onError={e => { (e.target as HTMLImageElement).src = 'https://placehold.co/160x120/1a2d4a/C5A059?text=The+Class' }}
+        />
+      </div>
+      <div className="flex-1 p-4 flex flex-col justify-between min-w-0">
+        <div>
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <span className="text-[10px] uppercase tracking-wider text-[#C5A059] font-medium">{getCategoryLabel(listing.category)}</span>
+              <h3 className="font-[family-name:var(--font-family-display)] text-sm font-medium text-[#1C1C1C] mt-0.5 leading-tight">{listing.title}</h3>
+            </div>
+            <p className="font-[family-name:var(--font-family-mono)] text-sm text-[#C5A059] shrink-0">
+              €{listing.price.toLocaleString('it-IT')}
+            </p>
+          </div>
+          <p className="text-xs text-[#5A4F44] font-light mt-1 line-clamp-2">{listing.description}</p>
+        </div>
+        <div className="flex items-center justify-between mt-3">
+          <div className="flex items-center gap-3">
+            <span className="text-[11px] text-[#5A4F44] flex items-center gap-1">
+              <MapPin size={10} /> {listing.location}
+            </span>
+            <span className="text-[11px] text-[#C5A059]">★ {listing.rating}</span>
+            <span className="text-[11px] text-[#5A4F44]">{listing.reviews} rec.</span>
+          </div>
+          <button
+            onClick={onCompareToggle}
+            className={cn(
+              'text-[10px] px-2.5 py-1 rounded-full border transition-colors',
+              compareSelected
+                ? 'border-[#C5A059] bg-[rgba(197,160,89,0.1)] text-[#C5A059]'
+                : 'border-[rgba(197,160,89,0.25)] text-[#5A4F44] hover:border-[#C5A059]',
+            )}
+          >
+            {compareSelected ? '✓ Confronta' : '+ Confronta'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── Virtual Grid ─────────────────────────────────────────────────────────────
 const CARD_HEIGHT = 380
 const COLS = 3
-
-type ListingItem = (typeof listings)[number]
 
 interface RowCellProps {
   items: ListingItem[]
@@ -136,7 +202,6 @@ function VirtualListRow({
           />
         </div>
       ))}
-      {/* Fill empty cells in last row */}
       {rowItems.length < COLS && Array.from({ length: COLS - rowItems.length }).map((_, i) => (
         <div key={`empty-${i}`} className="flex-1 min-w-0" />
       ))}
@@ -174,6 +239,53 @@ function VirtualGrid({ items, compareSelected, onCompareToggle }: RowCellProps) 
   )
 }
 
+// ─── Sort options ─────────────────────────────────────────────────────────────
+const SORT_OPTIONS: { key: SortKey; label: string }[] = [
+  { key: 'default', label: 'Consigliati' },
+  { key: 'price_asc', label: 'Prezzo ↑' },
+  { key: 'price_desc', label: 'Prezzo ↓' },
+  { key: 'rating', label: 'Rating' },
+  { key: 'trending', label: 'Trending' },
+]
+
+// ─── Recently Viewed Strip ────────────────────────────────────────────────────
+function RecentlyViewedStrip() {
+  const ids = getRecentlyViewed().slice(0, 5)
+  const items = ids.map(id => listings.find(l => l.id === id)).filter(Boolean) as ListingItem[]
+  if (items.length === 0) return null
+
+  return (
+    <div className="mb-8">
+      <p className="text-[10px] uppercase tracking-wider text-[#5A4F44] mb-3 flex items-center gap-1.5">
+        <Clock size={10} className="text-[#C5A059]" /> Visti di recente
+      </p>
+      <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+        {items.map(item => (
+          <Link
+            key={item.id}
+            to="/servizi/$id" params={{ id: item.id }}
+            className="shrink-0 w-36 rounded-xl border border-[rgba(197,160,89,0.15)] overflow-hidden bg-white hover:shadow-md transition-shadow"
+          >
+            <img
+              src={item.image}
+              alt={item.title}
+              className="w-full h-20 object-cover"
+              onError={e => { (e.target as HTMLImageElement).src = 'https://placehold.co/144x80/1a2d4a/C5A059?text=TC' }}
+            />
+            <div className="p-2">
+              <p className="text-[10px] font-medium text-[#1C1C1C] line-clamp-2 leading-tight">{item.title}</p>
+              <p className="text-[10px] text-[#C5A059] font-[family-name:var(--font-family-mono)] mt-0.5">
+                €{item.price.toLocaleString('it-IT')}
+              </p>
+            </div>
+          </Link>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// ─── Main Page ────────────────────────────────────────────────────────────────
 export function ServiziPage() {
   const [selectedCats, setSelectedCats] = useState<Category[]>([])
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 130000])
@@ -183,11 +295,25 @@ export function ServiziPage() {
   const [loading, setLoading] = useState(true)
   const [showCompare, setShowCompare] = useState(false)
   const [generatedLoaded, setGeneratedLoaded] = useState(false)
+  const [viewMode, setViewMode] = useState<ViewMode>('grid')
+  const [sortKey, setSortKey] = useState<SortKey>('default')
+  const [sortOpen, setSortOpen] = useState(false)
+  const sortRef = useRef<HTMLDivElement>(null)
   const { comparing, toggle: toggleCompare, clear: clearCompare, isSelected } = useComparison()
 
+  // 1s skeleton loading on mount
   useEffect(() => {
-    const t = setTimeout(() => setLoading(false), 350)
+    const t = setTimeout(() => setLoading(false), 1000)
     return () => clearTimeout(t)
+  }, [])
+
+  // Close sort dropdown on outside click
+  useEffect(() => {
+    function handler(e: MouseEvent) {
+      if (sortRef.current && !sortRef.current.contains(e.target as Node)) setSortOpen(false)
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
   }, [])
 
   // Sync with URL search params
@@ -227,15 +353,44 @@ export function ServiziPage() {
     window.history.replaceState({}, '', window.location.pathname)
   }
 
-  const filtered = useMemo(() => listings.filter(l => {
-    if (selectedCats.length && !selectedCats.includes(l.category)) return false
-    if (l.price < priceRange[0] || l.price > priceRange[1]) return false
-    if (location && !l.location.toLowerCase().includes(location.toLowerCase())) return false
-    if (minQuality > 0 && (l.qualityScore ?? 0) < minQuality) return false
-    return true
-  }), [selectedCats, priceRange, location, minQuality])
+  const removeFilter = (type: 'cat' | 'price' | 'location' | 'quality', value?: Category) => {
+    if (type === 'cat' && value) toggleCat(value)
+    if (type === 'price') setPriceRange([0, 130000])
+    if (type === 'location') setLocation('')
+    if (type === 'quality') setMinQuality(0)
+  }
+
+  const filtered = useMemo(() => {
+    let result = listings.filter(l => {
+      if (selectedCats.length && !selectedCats.includes(l.category)) return false
+      if (l.price < priceRange[0] || l.price > priceRange[1]) return false
+      if (location && !l.location.toLowerCase().includes(location.toLowerCase())) return false
+      if (minQuality > 0 && (l.qualityScore ?? 0) < minQuality) return false
+      return true
+    })
+    if (sortKey === 'price_asc') result = [...result].sort((a, b) => a.price - b.price)
+    else if (sortKey === 'price_desc') result = [...result].sort((a, b) => b.price - a.price)
+    else if (sortKey === 'rating') result = [...result].sort((a, b) => b.rating - a.rating)
+    else if (sortKey === 'trending') result = [...result].sort((a, b) => (b.trending ? 1 : 0) - (a.trending ? 1 : 0))
+    return result
+  }, [selectedCats, priceRange, location, minQuality, sortKey])
 
   const comparingListings = listings.filter(l => comparing.includes(l.id))
+
+  const currentSortLabel = SORT_OPTIONS.find(o => o.key === sortKey)?.label ?? 'Consigliati'
+
+  // Active filter chips
+  const filterChips: Array<{ label: string; onRemove: () => void }> = [
+    ...selectedCats.map(cat => ({
+      label: getCategoryLabel(cat),
+      onRemove: () => removeFilter('cat', cat),
+    })),
+    ...(priceRange[0] > 0 || priceRange[1] < 130000
+      ? [{ label: `€${priceRange[0].toLocaleString('it-IT')} – €${priceRange[1].toLocaleString('it-IT')}`, onRemove: () => removeFilter('price') }]
+      : []),
+    ...(location ? [{ label: `📍 ${location}`, onRemove: () => removeFilter('location') }] : []),
+    ...(minQuality > 0 ? [{ label: `Qualità ≥ ${minQuality}`, onRemove: () => removeFilter('quality') }] : []),
+  ]
 
   return (
     <div className="min-h-screen bg-[#FDF9F2] pt-16">
@@ -243,27 +398,51 @@ export function ServiziPage() {
         <title>Servizi Luxury — Yacht, Jet, Auto, Esperienze | the Class</title>
         <meta name="description" content="Scopri il catalogo esclusivo di the Class: yacht da charter, jet privati, auto di lusso e esperienze uniche in tutto il mondo." />
       </Helmet>
-      {/* Page header */}
-      <div className="bg-[#FCFAF5] border-b border-[rgba(197,160,89,0.18)] px-6 py-14">
-        <div className="max-w-7xl mx-auto">
-          <p className="font-[family-name:var(--font-family-serif)] text-[#C5A059] italic tracking-widest text-sm uppercase mb-2">
+
+      {/* ── 1. Hero section fullwidth con titolo animato ── */}
+      <div className="relative h-64 md:h-80 overflow-hidden">
+        <img
+          src="https://images.unsplash.com/photo-1567899378494-47b22a2ae96a?w=1600&q=80"
+          alt="Servizi luxury"
+          className="absolute inset-0 w-full h-full object-cover scale-105"
+          style={{ filter: 'brightness(0.45)' }}
+          onError={e => { (e.target as HTMLImageElement).src = 'https://placehold.co/1600x640/0f1e35/C5A059?text=The+Class' }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-black/30 to-black/60" />
+        <div className="relative h-full flex flex-col items-center justify-center text-center px-6">
+          <motion.p
+            initial={{ opacity: 0, y: -12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="font-[family-name:var(--font-family-serif)] text-[#C5A059] italic tracking-widest text-sm uppercase mb-3"
+          >
             Catalogo completo
-          </p>
-          <h1 className="font-[family-name:var(--font-family-display)] text-4xl font-medium text-[#1C1C1C] tracking-tight mb-2">
+          </motion.p>
+          <motion.h1
+            initial={{ opacity: 0, y: 18 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.1 }}
+            className="font-[family-name:var(--font-family-display)] text-5xl md:text-6xl font-medium text-white tracking-tight mb-4"
+          >
             I nostri servizi
-          </h1>
-          <p className="text-[#5A4F44] font-light text-sm">
-            {filtered.length} esperienze selezionate
-          </p>
+          </motion.h1>
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.6, delay: 0.25 }}
+            className="text-white/70 font-light text-sm"
+          >
+            {listings.length} esperienze selezionate per te
+          </motion.p>
         </div>
       </div>
 
       <div className="max-w-7xl mx-auto px-6 py-8">
         <div className="flex flex-col lg:flex-row gap-8">
 
-          {/* ── Sidebar ── */}
+          {/* ── 10. Sticky sidebar filtri su desktop ── */}
           <aside className="hidden lg:block w-64 shrink-0">
-            <div className="sticky top-20 bg-[#FCFAF5] rounded-2xl border border-[rgba(197,160,89,0.18)] p-6">
+            <div className="sticky top-20 max-h-[calc(100vh-5rem)] overflow-y-auto bg-[#FCFAF5] rounded-2xl border border-[rgba(197,160,89,0.18)] p-6 scrollbar-hide">
               {/* Title + reset */}
               <div className="flex items-center justify-between mb-5">
                 <span className="flex items-center gap-2 font-[family-name:var(--font-family-display)] text-sm font-medium text-[#1C1C1C]">
@@ -309,7 +488,7 @@ export function ServiziPage() {
                 </div>
               </div>
 
-              {/* Price slider */}
+              {/* ── 7. Price range slider ── */}
               <div className="mb-6">
                 <p className="text-[10px] text-[#5A4F44] uppercase tracking-wider mb-3">Prezzo</p>
                 <Slider.Root
@@ -380,19 +559,108 @@ export function ServiziPage() {
 
           {/* ── Grid ── */}
           <div className="flex-1">
-            {/* Toolbar */}
-            <div className="flex items-center justify-between mb-6">
-              <p className="text-sm text-[#5A4F44] font-light">
+
+            {/* ── 9. Visti di recente ── */}
+            <RecentlyViewedStrip />
+
+            {/* ── 4. Active filter chips ── */}
+            {filterChips.length > 0 && (
+              <div className="flex flex-wrap gap-2 mb-4">
+                {filterChips.map((chip, i) => (
+                  <span
+                    key={i}
+                    className="inline-flex items-center gap-1.5 bg-[rgba(197,160,89,0.1)] border border-[rgba(197,160,89,0.3)] text-[#5A4F44] text-[11px] px-2.5 py-1 rounded-full"
+                  >
+                    {chip.label}
+                    <button onClick={chip.onRemove} className="hover:text-[#C5A059] transition-colors">
+                      <X size={10} />
+                    </button>
+                  </span>
+                ))}
+                <button
+                  onClick={resetFilters}
+                  className="text-[11px] text-[#5A4F44] hover:text-[#C5A059] transition-colors underline"
+                >
+                  Azzera tutti
+                </button>
+              </div>
+            )}
+
+            {/* Toolbar: count + view toggle + sort + map */}
+            <div className="flex items-center gap-3 mb-6 flex-wrap">
+              <p className="text-sm text-[#5A4F44] font-light flex-1">
                 <span className="font-[family-name:var(--font-family-mono)] text-[#1C1C1C]">{filtered.length}</span> risultati
               </p>
+
+              {/* ── 3. Sort dropdown ── */}
+              <div className="relative" ref={sortRef}>
+                <button
+                  onClick={() => setSortOpen(v => !v)}
+                  className="flex items-center gap-1.5 glass px-3.5 py-2 rounded-full text-xs text-[#5A4F44] hover:text-[#C5A059] transition-colors"
+                >
+                  <ArrowUpDown size={11} />
+                  {currentSortLabel}
+                  <ChevronDown size={10} className={cn('transition-transform', sortOpen && 'rotate-180')} />
+                </button>
+                <AnimatePresence>
+                  {sortOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -6, scale: 0.97 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: -6, scale: 0.97 }}
+                      className="absolute right-0 top-full mt-2 bg-white border border-[rgba(197,160,89,0.2)] rounded-xl shadow-lg z-20 min-w-[160px] overflow-hidden"
+                    >
+                      {SORT_OPTIONS.map(opt => (
+                        <button
+                          key={opt.key}
+                          onClick={() => { setSortKey(opt.key); setSortOpen(false) }}
+                          className={cn(
+                            'w-full text-left px-4 py-2.5 text-xs transition-colors hover:bg-[rgba(197,160,89,0.07)]',
+                            sortKey === opt.key ? 'text-[#C5A059] font-medium' : 'text-[#5A4F44]',
+                          )}
+                        >
+                          {opt.label}
+                        </button>
+                      ))}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              {/* ── 2. View toggle Grid/Lista ── */}
+              <div className="flex items-center bg-[rgba(197,160,89,0.08)] rounded-full p-0.5">
+                <button
+                  onClick={() => setViewMode('grid')}
+                  className={cn(
+                    'p-1.5 rounded-full transition-colors',
+                    viewMode === 'grid' ? 'bg-white shadow-sm text-[#C5A059]' : 'text-[#5A4F44] hover:text-[#C5A059]',
+                  )}
+                  title="Vista griglia"
+                >
+                  <LayoutGrid size={13} />
+                </button>
+                <button
+                  onClick={() => setViewMode('list')}
+                  className={cn(
+                    'p-1.5 rounded-full transition-colors',
+                    viewMode === 'list' ? 'bg-white shadow-sm text-[#C5A059]' : 'text-[#5A4F44] hover:text-[#C5A059]',
+                  )}
+                  title="Vista lista"
+                >
+                  <ListIcon size={13} />
+                </button>
+              </div>
+
+              {/* ── 6. Map toggle ── */}
               <button
                 onClick={() => setShowMap(true)}
                 className="flex items-center gap-1.5 glass px-3.5 py-2 rounded-full text-xs text-[#5A4F44] hover:text-[#C5A059] transition-colors"
               >
-                <Map size={12} /> Mostra mappa
+                <Map size={12} /> Vedi sulla mappa
               </button>
             </div>
 
+            {/* ── 5. Skeleton loading 1s ── */}
             <AnimatePresence mode="wait">
               {loading ? (
                 <motion.div key="sk" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
@@ -410,6 +678,18 @@ export function ServiziPage() {
                       <button onClick={resetFilters} className="text-sm text-[#C5A059] underline">
                         Azzera filtri
                       </button>
+                    </div>
+                  ) : viewMode === 'list' ? (
+                    /* ── 2. Lista view ── */
+                    <div className="space-y-3">
+                      {filtered.map(l => (
+                        <ListingRow
+                          key={l.id}
+                          listing={l}
+                          compareSelected={isSelected(l.id)}
+                          onCompareToggle={() => toggleCompare(l.id)}
+                        />
+                      ))}
                     </div>
                   ) : filtered.length > 30 ? (
                     <VirtualGrid
@@ -430,8 +710,7 @@ export function ServiziPage() {
                       ))}
                     </div>
                   )}
-                  {/* Load more from generated content */}
-                  {!generatedLoaded && (
+                  {!generatedLoaded && viewMode === 'grid' && (
                     <div className="text-center pt-8">
                       <button
                         onClick={() => setGeneratedLoaded(true)}
@@ -452,8 +731,16 @@ export function ServiziPage() {
         <MapModal open={showMap} onClose={() => setShowMap(false)} count={filtered.length} />
       </AnimatePresence>
 
+      {/* ── 8. Compare bar & modal ── */}
       <CompareBar listings={comparingListings} onClear={clearCompare} onCompare={() => setShowCompare(true)} />
       {showCompare && <CompareModal listings={comparingListings} onClose={() => setShowCompare(false)} />}
     </div>
   )
+}
+
+// Export helper for other pages to record viewed listings
+export function recordRecentlyViewed(id: string) {
+  const existing = safeRead<string[]>(RV_KEY, [])
+  const next = [id, ...existing.filter(i => i !== id)].slice(0, 5)
+  safeWrite(RV_KEY, next)
 }
