@@ -1,7 +1,7 @@
-import { useState, useRef, useCallback } from 'react'
-import { motion } from 'framer-motion'
+import { useState, useRef, useCallback, useEffect } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { Helmet } from 'react-helmet-async'
-import { User, Heart, FileText, LogOut, Edit3, Check, Camera, Download, Bell, BellOff, RefreshCw, Star, Clock } from 'lucide-react'
+import { User, Heart, FileText, LogOut, Edit3, Check, Camera, Download, Bell, BellOff, RefreshCw, Star, Clock, Globe, CreditCard, ChevronDown, Phone, Mail, MessageCircle, X } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import { safeRead, safeWrite } from '@/lib/errorHandler'
 import { cn } from '@/lib/utils'
@@ -133,6 +133,37 @@ export function ProfiloPage() {
   const [emailNotif, setEmailNotif] = useState<boolean>(() => safeRead('theclass_notif_email', true))
   const [newsletter, setNewsletter] = useState<boolean>(() => safeRead('theclass_notif_newsletter', true))
   const fileRef = useRef<HTMLInputElement>(null)
+
+  // ── New feature states ──────────────────────────────────────────────────────
+  const [darkMode, setDarkMode] = useState<boolean>(() => safeRead('theclass_dark_mode', false))
+  const [notifOpen, setNotifOpen] = useState(false)
+  const [language, setLanguage] = useState<string>(() => safeRead('theclass_language', 'it'))
+  const [birthday, setBirthday] = useState<string>(() => safeRead('theclass_birthday', ''))
+  const [deleteOpen, setDeleteOpen] = useState(false)
+  const [deleteInput, setDeleteInput] = useState('')
+  const notifRef = useRef<HTMLDivElement>(null)
+
+  // Apply dark mode on mount and toggle
+  useEffect(() => {
+    if (darkMode) document.documentElement.classList.add('dark')
+    else document.documentElement.classList.remove('dark')
+  }, [darkMode])
+
+  // Close notif dropdown on outside click
+  useEffect(() => {
+    function handler(e: MouseEvent) {
+      if (notifRef.current && !notifRef.current.contains(e.target as Node)) setNotifOpen(false)
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
+
+  // Birthday check
+  const isBirthmonth = (() => {
+    if (!birthday) return false
+    const bd = new Date(birthday)
+    return bd.getMonth() === new Date().getMonth()
+  })()
 
   const requests = safeRead<StoredRequest[]>('theclass_requests', [])
   const myRequests = user ? requests.filter(r => r.email === user.email) : []
@@ -359,6 +390,48 @@ export function ProfiloPage() {
           <div className="flex items-center gap-3">
             {/* ── 10. Membership badge ── */}
             <MembershipBadge requestCount={conciergeRequests.length + myRequests.length} />
+
+            {/* ── 2. Notification bell ── */}
+            <div className="relative" ref={notifRef}>
+              <button
+                onClick={() => setNotifOpen(v => !v)}
+                className="relative p-2 rounded-full border border-[rgba(197,160,89,0.2)] text-[#5A4F44] hover:text-[#C5A059] transition-colors"
+              >
+                <Bell size={14} />
+                {myRequests.filter(r => Date.now() - r.timestamp < 7 * 24 * 60 * 60 * 1000).length > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 w-3 h-3 rounded-full bg-red-500 border border-white text-[7px] text-white flex items-center justify-center">
+                    {myRequests.filter(r => Date.now() - r.timestamp < 7 * 24 * 60 * 60 * 1000).length}
+                  </span>
+                )}
+              </button>
+              <AnimatePresence>
+                {notifOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -6, scale: 0.97 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -6, scale: 0.97 }}
+                    className="absolute right-0 top-full mt-2 w-72 bg-white border border-[rgba(197,160,89,0.2)] rounded-2xl shadow-lg z-30 overflow-hidden"
+                  >
+                    <div className="px-4 py-3 border-b border-[rgba(197,160,89,0.15)]">
+                      <p className="text-xs font-medium text-[#1C1C1C]">Notifiche recenti</p>
+                    </div>
+                    {myRequests.slice(0, 3).length === 0 ? (
+                      <p className="text-xs text-[#5A4F44] p-4 text-center font-light">Nessuna notifica</p>
+                    ) : (
+                      myRequests.slice(0, 3).map(r => (
+                        <div key={r.id} className="px-4 py-3 border-b border-[rgba(197,160,89,0.08)] hover:bg-[rgba(197,160,89,0.04)] transition-colors">
+                          <p className="text-xs font-medium text-[#1C1C1C] line-clamp-1">{r.listingTitle}</p>
+                          <p className="text-[10px] text-[#5A4F44] mt-0.5">
+                            {new Date(r.timestamp).toLocaleDateString('it-IT')}
+                          </p>
+                        </div>
+                      ))
+                    )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
             <button
               onClick={() => { logout(); toast.success('Disconnesso') }}
               className="flex items-center gap-1.5 text-xs text-[#5A4F44] hover:text-[#1C1C1C] transition-colors"
@@ -457,6 +530,29 @@ export function ProfiloPage() {
           )}
         </div>
 
+        {/* ── 6. Recent activity quick-view (horizontal) ── */}
+        {myRequests.slice(0, 3).length > 0 && (
+          <div className="mb-10">
+            <h2 className="font-[family-name:var(--font-family-display)] text-base font-medium text-[#1C1C1C] mb-3">Attività recente</h2>
+            <div className="flex gap-3 overflow-x-auto pb-1 scrollbar-hide">
+              {myRequests.slice(0, 3).map(r => (
+                <div
+                  key={r.id}
+                  className="shrink-0 min-w-[180px] bg-white rounded-xl border border-[rgba(197,160,89,0.15)] p-3"
+                >
+                  <div className="w-6 h-6 rounded-full bg-[rgba(197,160,89,0.1)] flex items-center justify-center mb-2">
+                    <FileText size={10} className="text-[#C5A059]" />
+                  </div>
+                  <p className="text-xs font-medium text-[#1C1C1C] line-clamp-2 leading-tight">{r.listingTitle}</p>
+                  <p className="text-[10px] text-[#5A4F44] mt-1">
+                    {new Date(r.timestamp).toLocaleDateString('it-IT')}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* ── 5. Preferenze viaggio ── */}
         <TravelPreferences userId={user.id} />
 
@@ -553,6 +649,56 @@ export function ProfiloPage() {
           </div>
         </div>
 
+        {/* ── 5. Referral tracker ── */}
+        <div className="mb-10 p-5 bg-[#FCFAF5] rounded-2xl border border-[rgba(197,160,89,0.15)]">
+          <p className="text-xs text-[#5A4F44] uppercase tracking-wider mb-2">I tuoi referral</p>
+          <p className="text-sm text-[#1C1C1C] mb-1">0 amici invitati · €0 crediti maturati</p>
+          <div className="w-full h-2 bg-[rgba(197,160,89,0.1)] rounded-full overflow-hidden mb-1">
+            <div className="h-full w-0 bg-[#C5A059] rounded-full" />
+          </div>
+          <p className="text-[10px] text-[#5A4F44]">€0 / €100 per il prossimo reward</p>
+        </div>
+
+        {/* ── 4. Lifetime value ── */}
+        {(() => {
+          const allReqs = safeRead<Array<{ timestamp: number }>>('theclass_requests', [])
+          const lifetime = allReqs.length * 5000
+          if (lifetime === 0) return null
+          return (
+            <div className="mb-10 p-5 bg-[rgba(197,160,89,0.06)] border border-[rgba(197,160,89,0.2)] rounded-2xl text-center">
+              <p className="text-[10px] uppercase tracking-wider text-[#5A4F44] mb-1">Le tue esperienze totali</p>
+              <p className="font-[family-name:var(--font-family-display)] text-3xl text-[#C5A059] font-medium">
+                €{lifetime.toLocaleString('it-IT')}
+              </p>
+              <p className="text-[10px] text-[#5A4F44] mt-1">in esperienze richieste</p>
+            </div>
+          )
+        })()}
+
+        {/* ── 9. This month summary ── */}
+        {(() => {
+          const now = new Date()
+          const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).getTime()
+          const allReqs = safeRead<Array<{ timestamp: number }>>('theclass_requests', [])
+          const monthReqs = allReqs.filter(r => r.timestamp >= monthStart).length
+          const bookmarks = safeRead<string[]>(`theclass_favorites_${user.id}`, []).length
+          return (
+            <div className="mb-10 p-5 bg-[#FCFAF5] rounded-2xl border border-[rgba(197,160,89,0.15)]">
+              <p className="text-xs text-[#5A4F44] uppercase tracking-wider mb-3">Questo mese hai fatto</p>
+              <div className="flex items-center gap-6">
+                <div className="text-center">
+                  <p className="font-[family-name:var(--font-family-mono)] text-2xl font-medium text-[#C5A059]">{monthReqs}</p>
+                  <p className="text-[10px] text-[#5A4F44]">richieste</p>
+                </div>
+                <div className="text-center">
+                  <p className="font-[family-name:var(--font-family-mono)] text-2xl font-medium text-[#C5A059]">{bookmarks}</p>
+                  <p className="text-[10px] text-[#5A4F44]">bookmark</p>
+                </div>
+              </div>
+            </div>
+          )
+        })()}
+
         {/* ── Activity timeline ── */}
         {(() => {
           const items: Array<{ type: string; label: string; ts: number }> = []
@@ -584,6 +730,25 @@ export function ProfiloPage() {
             </div>
           )
         })()}
+
+        {/* ── 7. Birthday ── */}
+        <div className="mb-10 p-5 bg-[#FCFAF5] rounded-2xl border border-[rgba(197,160,89,0.15)]">
+          <p className="text-xs text-[#5A4F44] uppercase tracking-wider mb-3">Data di nascita (opzionale)</p>
+          {isBirthmonth && (
+            <div className="mb-3 p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800 font-medium">
+              Buon compleanno! 🎂 Hai diritto a un upgrade gratuito — contatta il concierge
+            </div>
+          )}
+          <input
+            type="date"
+            value={birthday}
+            onChange={e => {
+              setBirthday(e.target.value)
+              safeWrite('theclass_birthday', e.target.value)
+            }}
+            className="bg-white border border-[rgba(197,160,89,0.25)] rounded-xl px-3 py-2 text-sm text-[#1C1C1C] focus:outline-none focus:border-[#C5A059] transition-colors"
+          />
+        </div>
 
         {/* ── 8. Privacy settings ── */}
         <div className="mb-10 p-6 bg-[#FCFAF5] rounded-2xl border border-[rgba(197,160,89,0.15)]">

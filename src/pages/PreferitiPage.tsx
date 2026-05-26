@@ -330,13 +330,44 @@ export function PreferitiPage() {
 
                 {sharedIds.length === 0 && (
                   <button
-                    onClick={shareWishlist}
-                    className="flex items-center gap-2 border border-[rgba(197,160,89,0.28)] text-[#5A4F44] px-5 py-2.5 rounded-full text-sm font-light hover:border-[#C5A059] hover:text-[#C5A059] transition-colors"
+                    onClick={() => {
+                      if (wishlistPrivate) {
+                        toast.error('Rendi pubblica la wishlist per condividere')
+                      } else {
+                        shareWishlist()
+                      }
+                    }}
+                    className={cn(
+                      'flex items-center gap-2 border px-5 py-2.5 rounded-full text-sm font-light transition-colors',
+                      wishlistPrivate
+                        ? 'border-[rgba(197,160,89,0.15)] text-[#5A4F44]/40 cursor-not-allowed'
+                        : 'border-[rgba(197,160,89,0.28)] text-[#5A4F44] hover:border-[#C5A059] hover:text-[#C5A059]',
+                    )}
+                    title={wishlistPrivate ? 'Rendi pubblica per condividere' : 'Condividi wishlist'}
                   >
-                    <Share2 size={13} />
+                    {wishlistPrivate ? <Lock size={13} /> : <Share2 size={13} />}
                     Condividi
                   </button>
                 )}
+
+                {/* ── 2. Wishlist privacy toggle ── */}
+                <button
+                  onClick={() => {
+                    const next = !wishlistPrivate
+                    setWishlistPrivate(next)
+                    safeWrite('theclass_wishlist_private', next)
+                    toast(next ? '🔒 Wishlist privata' : '🌐 Wishlist condivisibile')
+                  }}
+                  className={cn(
+                    'flex items-center gap-2 border px-5 py-2.5 rounded-full text-sm font-light transition-colors',
+                    wishlistPrivate
+                      ? 'bg-[#1C1C1C] text-white border-[#1C1C1C]'
+                      : 'border-[rgba(197,160,89,0.28)] text-[#5A4F44] hover:border-[#C5A059] hover:text-[#C5A059]',
+                  )}
+                >
+                  <Lock size={13} />
+                  {wishlistPrivate ? 'Privata' : 'Pubblica'}
+                </button>
 
                 <button
                   onClick={() => window.print()}
@@ -344,6 +375,38 @@ export function PreferitiPage() {
                 >
                   <Printer size={13} />
                   Esporta PDF
+                </button>
+
+                {/* ── 1. Export as SVG "image" ── */}
+                <button
+                  onClick={() => {
+                    const titles = favListings.map(l => l.title).join('\n')
+                    const svgContent = `<svg xmlns="http://www.w3.org/2000/svg" width="400" height="${100 + favListings.length * 28}" viewBox="0 0 400 ${100 + favListings.length * 28}"><rect width="400" height="${100 + favListings.length * 28}" fill="#FDF9F2"/><text x="20" y="36" font-family="serif" font-size="18" fill="#C5A059">La mia selezione The Class</text><line x1="20" y1="48" x2="380" y2="48" stroke="#C5A059" stroke-opacity="0.3"/>${titles.split('\n').map((t, i) => `<text x="20" y="${72 + i * 28}" font-size="13" fill="#1C1C1C">${t.slice(0, 48)}</text>`).join('')}<text x="20" y="${88 + favListings.length * 28}" font-size="9" fill="#5A4F44" font-style="italic">the-class-luxury.pages.dev</text></svg>`
+                    const blob = new Blob([svgContent], { type: 'image/svg+xml' })
+                    const url = URL.createObjectURL(blob)
+                    const a = document.createElement('a')
+                    a.href = url
+                    a.download = 'wishlist-the-class.svg'
+                    a.click()
+                    URL.revokeObjectURL(url)
+                    toast.success('Immagine SVG scaricata')
+                  }}
+                  className="flex items-center gap-2 border border-[rgba(197,160,89,0.28)] text-[#5A4F44] px-5 py-2.5 rounded-full text-sm font-light hover:border-[#C5A059] hover:text-[#C5A059] transition-colors"
+                >
+                  <Download size={13} />
+                  Condividi come immagine
+                </button>
+
+                {/* ── 3. Build itinerary CTA ── */}
+                <button
+                  onClick={() => {
+                    const cats = [...new Set(favListings.map(l => l.category))].join(',')
+                    void navigate({ to: '/itinerari', search: { suggest: cats } as Record<string, string> })
+                  }}
+                  className="flex items-center gap-2 border border-[rgba(197,160,89,0.28)] text-[#5A4F44] px-5 py-2.5 rounded-full text-sm font-light hover:border-[#C5A059] hover:text-[#C5A059] transition-colors"
+                >
+                  <Map size={13} />
+                  Costruisci itinerario
                 </button>
 
                 <button
@@ -442,6 +505,46 @@ export function PreferitiPage() {
                 </motion.div>
               )}
 
+              {/* ── 5. Category breakdown ── */}
+              {(() => {
+                const catCounts: Partial<Record<Category, number>> = {}
+                favListings.forEach(l => { catCounts[l.category] = (catCounts[l.category] ?? 0) + 1 })
+                return Object.keys(catCounts).length > 1 ? <CategoryBreakdown cats={catCounts} /> : null
+              })()}
+
+              {/* ── 4. Estimated trip builder ── */}
+              {favListings.length > 0 && (
+                <div className="mb-8 p-5 bg-[rgba(197,160,89,0.06)] border border-[rgba(197,160,89,0.18)] rounded-2xl">
+                  <p className="text-[10px] uppercase tracking-wider text-[#C5A059] mb-2">Viaggio ideale con i tuoi preferiti</p>
+                  <div className="flex flex-wrap items-center gap-4 mb-4">
+                    <div>
+                      <p className="text-xs text-[#5A4F44]">Durata stimata</p>
+                      <p className="text-sm font-medium text-[#1C1C1C]">
+                        {favListings.length === 1 ? '3 giorni' : favListings.length === 2 ? '5 giorni' : '7+ giorni'}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-[#5A4F44]">Prezzo totale</p>
+                      <p className="font-[family-name:var(--font-family-mono)] text-sm text-[#C5A059]">
+                        {formatPrice(favListings.reduce((s, l) => s + l.price, 0))}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-[#5A4F44]">Destinazione suggerita</p>
+                      <p className="text-sm font-medium text-[#1C1C1C]">
+                        {favListings[0]?.location?.split(',')[0] ?? 'Mediterraneo'}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setBulkModal(true)}
+                    className="text-xs px-4 py-2 bg-[#C5A059] text-white rounded-full hover:bg-[#b8924a] transition-colors"
+                  >
+                    Richiedi preventivo combinato →
+                  </button>
+                </div>
+              )}
+
               {/* Grouped by category */}
               {CATEGORY_ORDER.filter(cat => grouped[cat]?.length).map(cat => (
                 <div key={cat} className="mb-12">
@@ -479,6 +582,52 @@ export function PreferitiPage() {
                           )}
                           <ServiceCard listing={l} delay={i * 0.05} />
                         </div>
+
+                        {/* ── 6. Saved date ── */}
+                        <p className="mt-2 text-[10px] text-[#5A4F44]/60 pl-1">
+                          {savedDates[l.id]
+                            ? `Salvato il ${savedDates[l.id]}`
+                            : 'Salvato recentemente'}
+                        </p>
+
+                        {/* ── 7. Price trend + ── 8. Availability alert ── */}
+                        {(() => {
+                          const trend = priceTrend(l.id)
+                          const inAvailAlert = availabilityAlerts.includes(l.id)
+                          return (
+                            <div className="mt-2 flex items-center gap-2 flex-wrap">
+                              {/* Price trend */}
+                              <span className={cn(
+                                'flex items-center gap-1 text-[10px] font-medium',
+                                trend.dir === 'up' ? 'text-red-500' : trend.dir === 'down' ? 'text-emerald-600' : 'text-[#5A4F44]',
+                              )}>
+                                {trend.dir === 'up' ? <TrendingUp size={10} /> : trend.dir === 'down' ? <TrendingDown size={10} /> : <Minus size={10} />}
+                                {trend.dir !== 'flat' ? `${trend.dir === 'up' ? '+' : '-'}${trend.pct}% ultima settimana` : 'Prezzo stabile'}
+                              </span>
+
+                              {/* Availability alert */}
+                              <button
+                                onClick={() => {
+                                  const next = inAvailAlert
+                                    ? availabilityAlerts.filter(x => x !== l.id)
+                                    : [...availabilityAlerts, l.id]
+                                  setAvailabilityAlerts(next)
+                                  safeWrite('theclass_avail_alerts', next)
+                                  toast(next.includes(l.id) ? '🔔 Avviso disponibilità attivato' : 'Avviso rimosso')
+                                }}
+                                className={cn(
+                                  'flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] border transition-colors',
+                                  inAvailAlert
+                                    ? 'border-[#C5A059] bg-[rgba(197,160,89,0.1)] text-[#C5A059]'
+                                    : 'border-[rgba(197,160,89,0.2)] text-[#5A4F44] hover:border-[#C5A059]',
+                                )}
+                              >
+                                <Bell size={9} />
+                                {inAvailAlert ? 'Avviso attivo' : 'Avvisami se disponibile'}
+                              </button>
+                            </div>
+                          )
+                        })()}
 
                         {/* Note + Price alert row */}
                         <div className="mt-2 flex items-center gap-2">
