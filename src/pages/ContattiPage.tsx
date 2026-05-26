@@ -1,14 +1,24 @@
 // src/pages/ContattiPage.tsx
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
 import { Helmet } from 'react-helmet-async'
-import { Mail, Phone, MapPin, Check, Zap } from 'lucide-react'
+import { Mail, Phone, MapPin, Check, Zap, X, Eye } from 'lucide-react'
 import { toast } from 'sonner'
 import { Link } from '@tanstack/react-router'
 import { generateId } from '@/lib/utils'
 import { safeWrite, safeRead } from '@/lib/errorHandler'
 
-interface ContactMsg { id: string; name: string; email: string; subject: string; message: string; timestamp: number }
+interface ContactMsg {
+  id: string
+  name: string
+  email: string
+  subject: string
+  message: string
+  phone?: string
+  priority: string
+  preferredContact: string
+  timestamp: number
+}
 
 const isValidEmail = (e: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)
 
@@ -16,20 +26,93 @@ const QUICK_SUBJECTS = ['Preventivo yacht', 'Noleggio jet', 'Evento privato', 'P
 
 const DRAFT_KEY = 'theclass_contact_draft'
 
-const OFFICES = ['Milano', 'Monaco', 'Dubai', 'Singapore']
+// 2. Office hours configuration
+const OFFICE_HOURS: Record<string, { open: number; close: number; tz: number }> = {
+  Milano:    { open: 9,  close: 18, tz: 1 },
+  Monaco:    { open: 9,  close: 18, tz: 1 },
+  Dubai:     { open: 10, close: 19, tz: 4 },
+  Singapore: { open: 9,  close: 17, tz: 8 },
+}
+
+function isOfficeOpen(city: string): boolean {
+  const cfg = OFFICE_HOURS[city]
+  if (!cfg) return false
+  const now = new Date()
+  const utcHour = now.getUTCHours() + now.getUTCMinutes() / 60
+  const localHour = (utcHour + cfg.tz) % 24
+  return localHour >= cfg.open && localHour < cfg.close
+}
+
+// 6. Appointment slots for next 2 days
+function getAppointmentSlots(): { label: string; time: string }[] {
+  const slots: { label: string; time: string }[] = []
+  const days = ['Domani', 'Dopodomani']
+  const hours = ['10:00', '11:30', '14:00', '16:30']
+  days.forEach(day => hours.forEach(h => slots.push({ label: day, time: h })))
+  return slots
+}
+
+const APPOINTMENT_SLOTS = getAppointmentSlots()
+
+// 9. Response time badge
+function getResponseBadge(): string {
+  const now = new Date()
+  const dayOfWeek = now.getUTCDay() // 0=Sun, 6=Sat
+  const hourUTC = now.getUTCHours()
+  const milanoHour = hourUTC + 1 // approx CET
+  const isWeekend = dayOfWeek === 0 || dayOfWeek === 6
+  const isOutOfHours = milanoHour < 9 || milanoHour >= 21
+  if (isWeekend) return 'Risposta entro lunedì mattina'
+  if (isOutOfHours) return 'Risposta entro domani mattina'
+  return '< 2h in orario lavorativo'
+}
 
 export function ContattiPage() {
-  const [form, setForm] = useState({ name: '', email: '', subject: '', message: '' })
+  const [form, setForm] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    subject: '',
+    message: '',
+    priority: 'Normal',
+    preferredContact: 'Email',
+  })
   const [sent, setSent] = useState(false)
   const [loading, setLoading] = useState(false)
   const [touched, setTouched] = useState<Record<string, boolean>>({})
   const [draftRestored, setDraftRestored] = useState(false)
 
+  // 4. File attachment
+  const [attachedFile, setAttachedFile] = useState<File | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // 7. Language selector
+  const [lang, setLang] = useState<'it' | 'en' | 'ar'>('it')
+  const PLACEHOLDERS: Record<typeof lang, { name: string; email: string; subject: string; message: string }> = {
+    it: { name: 'Alessandro Bianchi', email: 'a@example.com', subject: 'Richiesta preventivo yacht...', message: 'Descrivici la tua richiesta...' },
+    en: { name: 'John Smith', email: 'j@example.com', subject: 'Request for yacht quote...', message: 'Describe your request...' },
+    ar: { name: 'محمد علي', email: 'a@example.com', subject: 'طلب عرض أسعار...', message: 'صف طلبك...' },
+  }
+  const ph = PLACEHOLDERS[lang]
+
+  // 6. Selected appointment slot
+  const [selectedSlot, setSelectedSlot] = useState<string | null>(null)
+
+  // 10. Preview mode
+  const [showPreview, setShowPreview] = useState(false)
+
+  // 9. Live response badge
+  const [responseBadge, setResponseBadge] = useState(getResponseBadge())
+  useEffect(() => {
+    const t = setInterval(() => setResponseBadge(getResponseBadge()), 60000)
+    return () => clearInterval(t)
+  }, [])
+
   // Restore draft on mount
   useEffect(() => {
     const draft = safeRead<typeof form | null>(DRAFT_KEY, null)
     if (draft && (draft.name || draft.email || draft.subject || draft.message)) {
-      setForm(draft)
+      setForm(prev => ({ ...prev, ...draft }))
       if (!draftRestored) {
         setDraftRestored(true)
         toast.info('Bozza ripristinata', { description: 'Abbiamo recuperato il tuo messaggio precedente.' })
@@ -46,17 +129,42 @@ export function ContattiPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (form.message.length < 20) { toast.error('Scrivi almeno 20 caratteri nel messaggio'); return }
-    setLoading(true)
-    await new Promise(r => setTimeout(r, 800))
-    const msg: ContactMsg = { ...form, id: generateId(), timestamp: Date.now() }
-    const existing = safeRead<ContactMsg[]>('theclass_contacts', [])
-    safeWrite('theclass_contacts', [msg, ...existing])
-    safeWrite(DRAFT_KEY, { name: '', email: '', subject: '', message: '' })
-    setSent(true)
-    setLoading(false)
-    toast.success('Messaggio inviato!', { description: 'Ti risponderemo entro 2 ore.' })
+    if (showPreview) {
+      // Actually send
+      if (form.message.length < 20) { toast.error('Scrivi almeno 20 caratteri nel messaggio'); return }
+      setLoading(true)
+      await new Promise(r => setTimeout(r, 800))
+      const msg: ContactMsg = {
+        ...form,
+        phone: form.phone || undefined,
+        id: generateId(),
+        timestamp: Date.now(),
+      }
+      const existing = safeRead<ContactMsg[]>('theclass_contacts', [])
+      safeWrite('theclass_contacts', [msg, ...existing])
+      safeWrite(DRAFT_KEY, { name: '', email: '', phone: '', subject: '', message: '', priority: 'Normal', preferredContact: 'Email' })
+      setSent(true)
+      setLoading(false)
+      setShowPreview(false)
+      toast.success('Messaggio inviato!', { description: 'Ti risponderemo entro 2 ore.' })
+    } else {
+      if (form.message.length < 20) { toast.error('Scrivi almeno 20 caratteri nel messaggio'); return }
+      setShowPreview(true)
+    }
   }
+
+  const PRIORITIES = [
+    { value: 'Normal', label: 'Normale', note: null },
+    { value: 'Urgente', label: 'Urgente (entro 24h)', note: '+€50 gestione prioritaria' },
+    { value: 'Critica', label: 'Critica (entro 4h)', note: '+€50 gestione prioritaria' },
+  ]
+
+  const CONTACT_METHODS = ['Email', 'Telefono', 'WhatsApp', 'Zoom']
+  const LANGS: { code: typeof lang; flag: string; label: string }[] = [
+    { code: 'it', flag: '🇮🇹', label: 'Italiano' },
+    { code: 'en', flag: '🇬🇧', label: 'English' },
+    { code: 'ar', flag: '🇦🇪', label: 'العربية' },
+  ]
 
   return (
     <div className="min-h-screen bg-[#FDF9F2] pt-24 pb-20">
@@ -79,7 +187,7 @@ export function ContattiPage() {
         </motion.div>
 
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-12">
-          {/* Info */}
+          {/* Info sidebar */}
           <div className="lg:col-span-2 space-y-6">
             {[
               { icon: Mail, label: 'Email', value: 'concierge@theclass.it' },
@@ -108,7 +216,7 @@ export function ContattiPage() {
               Scrivici su WhatsApp
             </a>
 
-            <div className="mt-2 p-5 bg-white rounded-2xl border border-[rgba(197,160,89,0.15)]">
+            <div className="p-5 bg-white rounded-2xl border border-[rgba(197,160,89,0.15)]">
               <p className="text-xs text-[#5A4F44] uppercase tracking-wider mb-2">Orari</p>
               <p className="text-sm text-[#1C1C1C]">Lun–Ven 9:00–21:00</p>
               <p className="text-sm text-[#1C1C1C]">Sab–Dom 10:00–18:00</p>
@@ -118,12 +226,10 @@ export function ContattiPage() {
             {/* Social links */}
             <div className="flex gap-3">
               <a href="#" className="flex items-center gap-2 text-xs text-[#5A4F44] bg-white border border-[rgba(197,160,89,0.2)] rounded-xl px-4 py-2.5 hover:border-[#C5A059] transition-colors">
-                <span className="text-[#C5A059] text-[10px] font-bold">in</span>
-                LinkedIn
+                <span className="text-[#C5A059] text-[10px] font-bold">in</span> LinkedIn
               </a>
               <a href="#" className="flex items-center gap-2 text-xs text-[#5A4F44] bg-white border border-[rgba(197,160,89,0.2)] rounded-xl px-4 py-2.5 hover:border-[#C5A059] transition-colors">
-                <span className="text-[#C5A059] text-sm font-bold">IG</span>
-                Instagram
+                <span className="text-[#C5A059] text-sm font-bold">IG</span> Instagram
               </a>
             </div>
 
@@ -132,15 +238,70 @@ export function ContattiPage() {
               Consulta le FAQ →
             </Link>
 
-            {/* Sedi */}
+            {/* 2. Sedi con "Aperto ora" indicator */}
             <div>
               <p className="text-[10px] text-[#5A4F44] uppercase tracking-wider mb-2">Sedi</p>
-              <div className="flex flex-wrap gap-2">
-                {OFFICES.map(city => (
-                  <span key={city} className="text-xs bg-white border border-[rgba(197,160,89,0.2)] text-[#1C1C1C] px-3 py-1 rounded-full">
-                    {city}
-                  </span>
-                ))}
+              <div className="flex flex-col gap-2">
+                {Object.keys(OFFICE_HOURS).map(city => {
+                  const open = isOfficeOpen(city)
+                  return (
+                    <div key={city} className="flex items-center justify-between text-xs bg-white border border-[rgba(197,160,89,0.15)] px-3 py-2 rounded-xl">
+                      <span className="text-[#1C1C1C]">{city}</span>
+                      <span className={`flex items-center gap-1.5 ${open ? 'text-emerald-600' : 'text-[#5A4F44]/50'}`}>
+                        <span className={`w-1.5 h-1.5 rounded-full ${open ? 'bg-emerald-500' : 'bg-[#5A4F44]/30'}`} />
+                        {open ? 'Aperto ora' : 'Chiuso'}
+                      </span>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+
+            {/* 9. Live response badge */}
+            <div className="flex items-center gap-2 bg-[rgba(197,160,89,0.08)] border border-[rgba(197,160,89,0.2)] rounded-xl px-4 py-3">
+              <Zap size={13} className="text-[#C5A059] shrink-0" />
+              <p className="text-xs text-[#5A4F44]">{responseBadge}</p>
+            </div>
+
+            {/* 3. Static map placeholder */}
+            <div className="h-48 bg-[#E8E0D4] rounded-2xl flex flex-col items-center justify-center gap-2 border border-[rgba(197,160,89,0.15)]">
+              <span className="text-2xl">📍</span>
+              <p className="text-xs text-[#5A4F44] font-medium text-center">Via Montenapoleone 8, Milano</p>
+              <a
+                href="https://maps.google.com?q=Via+Montenapoleone+8+Milano"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs text-[#C5A059] hover:underline underline-offset-2"
+              >
+                Apri in Maps →
+              </a>
+            </div>
+
+            {/* 6. Appointment picker */}
+            <div className="bg-white rounded-2xl border border-[rgba(197,160,89,0.15)] p-5">
+              <p className="text-xs text-[#5A4F44] uppercase tracking-wider mb-3">Prenota una call</p>
+              <div className="grid grid-cols-2 gap-2">
+                {APPOINTMENT_SLOTS.map(slot => {
+                  const key = `${slot.label} ${slot.time}`
+                  const isSelected = selectedSlot === key
+                  return (
+                    <button
+                      key={key}
+                      onClick={() => {
+                        setSelectedSlot(key)
+                        toast.success(`Slot prenotato: ${slot.label} alle ${slot.time}`)
+                      }}
+                      className={`text-xs px-3 py-2 rounded-xl border transition-colors text-left ${
+                        isSelected
+                          ? 'bg-[#C5A059] text-white border-[#C5A059]'
+                          : 'border-[rgba(197,160,89,0.2)] text-[#5A4F44] hover:border-[#C5A059]'
+                      }`}
+                    >
+                      <p className="font-medium">{slot.label}</p>
+                      <p className={isSelected ? 'text-white/80' : 'text-[#C5A059]'}>{slot.time}</p>
+                    </button>
+                  )
+                })}
               </div>
             </div>
           </div>
@@ -175,8 +336,62 @@ export function ContattiPage() {
                   </a>
                 </p>
               </motion.div>
+            ) : showPreview ? (
+              /* 10. Inline preview */
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-white rounded-2xl border border-[rgba(197,160,89,0.15)] p-8"
+              >
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="font-[family-name:var(--font-family-display)] text-lg font-medium text-[#1C1C1C]">Anteprima messaggio</h2>
+                  <button onClick={() => setShowPreview(false)} className="text-[#5A4F44] hover:text-[#C5A059]">
+                    <X size={18} />
+                  </button>
+                </div>
+                <div className="space-y-3 bg-[#FDF9F2] rounded-xl p-5 mb-6 text-sm text-[#5A4F44]">
+                  <div className="flex gap-2"><span className="text-[#5A4F44]/50 w-24 shrink-0">Nome</span><span className="text-[#1C1C1C]">{form.name}</span></div>
+                  <div className="flex gap-2"><span className="text-[#5A4F44]/50 w-24 shrink-0">Email</span><span className="text-[#1C1C1C]">{form.email}</span></div>
+                  {form.phone && <div className="flex gap-2"><span className="text-[#5A4F44]/50 w-24 shrink-0">Telefono</span><span className="text-[#1C1C1C]">{form.phone}</span></div>}
+                  <div className="flex gap-2"><span className="text-[#5A4F44]/50 w-24 shrink-0">Oggetto</span><span className="text-[#1C1C1C]">{form.subject || '—'}</span></div>
+                  <div className="flex gap-2"><span className="text-[#5A4F44]/50 w-24 shrink-0">Priorità</span><span className="text-[#1C1C1C]">{form.priority}</span></div>
+                  <div className="flex gap-2"><span className="text-[#5A4F44]/50 w-24 shrink-0">Contatto</span><span className="text-[#1C1C1C]">{form.preferredContact}</span></div>
+                  <div className="flex gap-2 pt-2 border-t border-[rgba(197,160,89,0.1)]">
+                    <span className="text-[#5A4F44]/50 w-24 shrink-0">Messaggio</span>
+                    <span className="text-[#1C1C1C] leading-relaxed">{form.message}</span>
+                  </div>
+                </div>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setShowPreview(false)}
+                    className="flex-1 border border-[rgba(197,160,89,0.3)] text-[#5A4F44] py-3 rounded-xl text-sm hover:border-[#C5A059] transition-colors"
+                  >
+                    Modifica
+                  </button>
+                  <button
+                    onClick={handleSubmit as unknown as React.MouseEventHandler}
+                    disabled={loading}
+                    className="flex-1 bg-[#C5A059] text-white py-3 rounded-xl text-sm hover:bg-[#b8924a] transition-colors disabled:opacity-60"
+                  >
+                    {loading ? 'Invio...' : 'Conferma e invia'}
+                  </button>
+                </div>
+              </motion.div>
             ) : (
               <form onSubmit={handleSubmit} className="bg-white rounded-2xl border border-[rgba(197,160,89,0.15)] p-8 space-y-5">
+                {/* 7. Language selector */}
+                <div className="flex justify-end">
+                  <select
+                    value={lang}
+                    onChange={e => setLang(e.target.value as typeof lang)}
+                    className="text-xs bg-[#FDF9F2] border border-[rgba(197,160,89,0.22)] rounded-xl px-3 py-1.5 text-[#5A4F44] focus:outline-none focus:border-[#C5A059] transition-colors"
+                  >
+                    {LANGS.map(l => (
+                      <option key={l.code} value={l.code}>{l.flag} {l.label}</option>
+                    ))}
+                  </select>
+                </div>
+
                 {/* Quick subject chips */}
                 <div>
                   <label className="text-[10px] text-[#5A4F44] uppercase tracking-wider mb-2 block">Seleziona argomento</label>
@@ -200,8 +415,8 @@ export function ContattiPage() {
 
                 <div className="grid grid-cols-2 gap-4">
                   {[
-                    { key: 'name', label: 'Nome *', type: 'text', placeholder: 'Alessandro Bianchi' },
-                    { key: 'email', label: 'Email *', type: 'email', placeholder: 'a@example.com' },
+                    { key: 'name', label: 'Nome *', type: 'text', placeholder: ph.name },
+                    { key: 'email', label: 'Email *', type: 'email', placeholder: ph.email },
                   ].map(f => (
                     <div key={f.key}>
                       <label className="text-[10px] text-[#5A4F44] uppercase tracking-wider mb-1.5 block">{f.label}</label>
@@ -218,20 +433,37 @@ export function ContattiPage() {
                         <p className="text-xs text-red-500 mt-1">Email non valida</p>
                       )}
                       {f.key === 'email' && touched.email && form.email && isValidEmail(form.email) && (
-                        <p className="text-xs text-emerald-600 mt-1 flex items-center gap-1">✓ Email valida</p>
+                        <p className="text-xs text-emerald-600 mt-1">✓ Email valida</p>
                       )}
                     </div>
                   ))}
                 </div>
+
+                {/* 1. Phone number */}
+                <div>
+                  <label className="text-[10px] text-[#5A4F44] uppercase tracking-wider mb-1.5 block">Telefono (opzionale)</label>
+                  <div className="relative">
+                    <Phone size={13} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#C5A059]" />
+                    <input
+                      type="tel"
+                      value={form.phone}
+                      onChange={e => setForm(p => ({ ...p, phone: e.target.value }))}
+                      placeholder="+39 333 1234567"
+                      className="w-full pl-9 bg-[#FDF9F2] border border-[rgba(197,160,89,0.22)] rounded-xl px-3.5 py-2.5 text-sm text-[#1C1C1C] placeholder:text-[#5A4F44]/35 focus:outline-none focus:border-[#C5A059] transition-colors"
+                    />
+                  </div>
+                </div>
+
                 <div>
                   <label className="text-[10px] text-[#5A4F44] uppercase tracking-wider mb-1.5 block">Oggetto</label>
                   <input
                     value={form.subject}
                     onChange={e => setForm(p => ({ ...p, subject: e.target.value }))}
-                    placeholder="Richiesta preventivo yacht..."
+                    placeholder={ph.subject}
                     className="w-full bg-[#FDF9F2] border border-[rgba(197,160,89,0.22)] rounded-xl px-3.5 py-2.5 text-sm text-[#1C1C1C] placeholder:text-[#5A4F44]/35 focus:outline-none focus:border-[#C5A059] transition-colors"
                   />
                 </div>
+
                 <div>
                   <label className="text-[10px] text-[#5A4F44] uppercase tracking-wider mb-1.5 block">Messaggio *</label>
                   <textarea
@@ -240,21 +472,113 @@ export function ContattiPage() {
                     maxLength={1000}
                     value={form.message}
                     onChange={e => setForm(p => ({ ...p, message: e.target.value }))}
-                    placeholder="Descrivici la tua richiesta..."
+                    placeholder={ph.message}
                     className="w-full bg-[#FDF9F2] border border-[rgba(197,160,89,0.22)] rounded-xl px-3.5 py-2.5 text-sm text-[#1C1C1C] placeholder:text-[#5A4F44]/35 focus:outline-none focus:border-[#C5A059] transition-colors resize-none"
                   />
-                  {/* Character counter */}
                   <p className={`text-[11px] text-right mt-0.5 ${form.message.length > 900 ? 'text-amber-500' : 'text-[#5A4F44]/50'}`}>
                     {form.message.length}/1000
                   </p>
                 </div>
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="btn-ripple w-full bg-[#C5A059] text-white py-3.5 rounded-xl text-sm hover:bg-[#b8924a] transition-colors disabled:opacity-60"
-                >
-                  {loading ? 'Invio...' : 'Invia Messaggio'}
-                </button>
+
+                {/* 5. Priority selector */}
+                <div>
+                  <label className="text-[10px] text-[#5A4F44] uppercase tracking-wider mb-2 block">Priorità richiesta</label>
+                  <div className="flex flex-wrap gap-2">
+                    {PRIORITIES.map(p => (
+                      <button
+                        key={p.value}
+                        type="button"
+                        onClick={() => setForm(prev => ({ ...prev, priority: p.value }))}
+                        className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${
+                          form.priority === p.value
+                            ? 'bg-[#1C1C1C] text-white border-[#1C1C1C]'
+                            : 'border-[rgba(197,160,89,0.3)] text-[#5A4F44] hover:border-[#C5A059]'
+                        }`}
+                      >
+                        {p.label}
+                      </button>
+                    ))}
+                  </div>
+                  {(form.priority === 'Urgente' || form.priority === 'Critica') && (
+                    <p className="text-[10px] text-amber-600 mt-1.5">
+                      {PRIORITIES.find(p => p.value === form.priority)?.note}
+                    </p>
+                  )}
+                </div>
+
+                {/* 8. Contact method preference */}
+                <div>
+                  <label className="text-[10px] text-[#5A4F44] uppercase tracking-wider mb-2 block">Preferisci essere contattato via</label>
+                  <div className="flex flex-wrap gap-2">
+                    {CONTACT_METHODS.map(method => (
+                      <button
+                        key={method}
+                        type="button"
+                        onClick={() => setForm(p => ({ ...p, preferredContact: method }))}
+                        className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${
+                          form.preferredContact === method
+                            ? 'bg-[#C5A059] text-white border-[#C5A059]'
+                            : 'border-[rgba(197,160,89,0.3)] text-[#5A4F44] hover:border-[#C5A059]'
+                        }`}
+                      >
+                        {method}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 4. File attachment */}
+                <div>
+                  <label className="text-[10px] text-[#5A4F44] uppercase tracking-wider mb-2 block">Allega documento (opzionale)</label>
+                  {attachedFile ? (
+                    <div className="flex items-center gap-2 bg-[rgba(197,160,89,0.08)] border border-[rgba(197,160,89,0.2)] rounded-xl px-4 py-2.5">
+                      <span className="text-xs text-[#5A4F44] flex-1 truncate">{attachedFile.name}</span>
+                      <button
+                        type="button"
+                        onClick={() => { setAttachedFile(null); if (fileInputRef.current) fileInputRef.current.value = '' }}
+                        className="text-[#5A4F44]/50 hover:text-red-400 transition-colors"
+                      >
+                        <X size={13} />
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="w-full border border-dashed border-[rgba(197,160,89,0.3)] rounded-xl px-4 py-3 text-xs text-[#5A4F44]/60 hover:border-[#C5A059] hover:text-[#C5A059] transition-colors text-center"
+                    >
+                      + Clicca per allegare PDF, JPG o PNG
+                    </button>
+                  )}
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".pdf,.jpg,.jpeg,.png"
+                    className="hidden"
+                    onChange={e => { if (e.target.files?.[0]) setAttachedFile(e.target.files[0]) }}
+                  />
+                </div>
+
+                {/* 10. Preview + submit */}
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (form.message.length < 20) { toast.error('Scrivi almeno 20 caratteri nel messaggio'); return }
+                      setShowPreview(true)
+                    }}
+                    className="flex items-center gap-1.5 px-5 py-3.5 rounded-xl border border-[rgba(197,160,89,0.3)] text-[#5A4F44] text-sm hover:border-[#C5A059] transition-colors"
+                  >
+                    <Eye size={14} /> Anteprima
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="btn-ripple flex-1 bg-[#C5A059] text-white py-3.5 rounded-xl text-sm hover:bg-[#b8924a] transition-colors disabled:opacity-60"
+                  >
+                    {loading ? 'Invio...' : 'Invia Messaggio'}
+                  </button>
+                </div>
               </form>
             )}
           </div>

@@ -785,6 +785,58 @@ export function ProfiloPage() {
                 </div>
               )
             })}
+
+            {/* ── 1. Dark mode toggle ── */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <span className="text-[#C5A059] text-base">🌙</span>
+                <div>
+                  <p className="text-sm text-[#1C1C1C]">Modalità scura</p>
+                  <p className="text-[10px] text-[#5A4F44]">Attiva il tema scuro sul sito</p>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  const next = !darkMode
+                  setDarkMode(next)
+                  safeWrite('theclass_dark_mode', next)
+                }}
+                className={cn(
+                  'w-10 h-6 rounded-full transition-colors relative',
+                  darkMode ? 'bg-[#C5A059]' : 'bg-[rgba(197,160,89,0.2)]',
+                )}
+              >
+                <span className={cn(
+                  'absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform',
+                  darkMode ? 'translate-x-5' : 'translate-x-1',
+                )} />
+              </button>
+            </div>
+
+            {/* ── 3. Language preference ── */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Globe size={15} className="text-[#C5A059]" />
+                <div>
+                  <p className="text-sm text-[#1C1C1C]">Lingua preferita</p>
+                  <p className="text-[10px] text-[#5A4F44]">Imposta la lingua dell'interfaccia</p>
+                </div>
+              </div>
+              <select
+                value={language}
+                onChange={e => {
+                  setLanguage(e.target.value)
+                  safeWrite('theclass_language', e.target.value)
+                  toast('Lingua aggiornata (funzionalità in sviluppo)')
+                }}
+                className="border border-[rgba(197,160,89,0.25)] text-[#5A4F44] text-xs rounded-lg px-2 py-1.5 bg-white outline-none hover:border-[#C5A059] transition-colors"
+              >
+                <option value="it">🇮🇹 Italiano</option>
+                <option value="en">🇬🇧 English</option>
+                <option value="fr">🇫🇷 Français</option>
+                <option value="es">🇪🇸 Español</option>
+              </select>
+            </div>
           </div>
         </div>
 
