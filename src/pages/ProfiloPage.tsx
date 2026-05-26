@@ -850,6 +850,94 @@ export function ProfiloPage() {
           </button>
         </div>
 
+        {/* ── 10. Concierge direct line (shown if at least 1 request) ── */}
+        {myRequests.length > 0 && (
+          <div className="mb-10 p-5 bg-[#FCFAF5] rounded-2xl border border-[rgba(197,160,89,0.15)]">
+            <p className="text-xs text-[#5A4F44] uppercase tracking-wider mb-3">La tua linea diretta</p>
+            <p className="text-sm font-medium text-[#1C1C1C] mb-1">Concierge The Class</p>
+            <p className="text-xs text-[#5A4F44] mb-3">Disponibile lun–ven 9:00–19:00 · sab 10:00–16:00</p>
+            <div className="flex items-center gap-3 flex-wrap">
+              <a
+                href="tel:+390287243300"
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[rgba(197,160,89,0.1)] border border-[rgba(197,160,89,0.25)] text-[#5A4F44] text-xs hover:border-[#C5A059] transition-colors"
+              >
+                <Phone size={12} className="text-[#C5A059]" /> +39 02 8724 3300
+              </a>
+              <a
+                href="mailto:concierge@the-class.it"
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[rgba(197,160,89,0.1)] border border-[rgba(197,160,89,0.25)] text-[#5A4F44] text-xs hover:border-[#C5A059] transition-colors"
+              >
+                <Mail size={12} className="text-[#C5A059]" /> concierge@the-class.it
+              </a>
+              <a
+                href="https://wa.me/390287243300"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[rgba(37,211,102,0.1)] border border-[rgba(37,211,102,0.3)] text-emerald-700 text-xs hover:border-[rgba(37,211,102,0.6)] transition-colors"
+              >
+                <MessageCircle size={12} className="text-emerald-600" /> WhatsApp
+              </a>
+            </div>
+          </div>
+        )}
+
+        {/* ── 8. Account deletion ── */}
+        <div className="mb-10">
+          <details className="group">
+            <summary className="cursor-pointer text-xs text-[#5A4F44]/60 hover:text-[#5A4F44] transition-colors list-none flex items-center gap-1.5">
+              <ChevronDown size={12} className="group-open:rotate-180 transition-transform" />
+              Impostazioni avanzate
+            </summary>
+            <div className="mt-4 p-5 bg-red-50 border border-red-200 rounded-2xl">
+              <p className="text-sm font-medium text-red-800 mb-2">Elimina account</p>
+              <p className="text-xs text-red-600 mb-4">Questa azione è irreversibile. Tutti i dati verranno cancellati.</p>
+              {!deleteOpen ? (
+                <button
+                  onClick={() => setDeleteOpen(true)}
+                  className="px-4 py-2 bg-red-500 text-white text-xs rounded-xl hover:bg-red-600 transition-colors"
+                >
+                  Elimina account
+                </button>
+              ) : (
+                <div className="space-y-3">
+                  <p className="text-xs text-red-700 font-medium">Digita <strong>ELIMINA</strong> per confermare:</p>
+                  <div className="flex gap-2">
+                    <input
+                      value={deleteInput}
+                      onChange={e => setDeleteInput(e.target.value)}
+                      placeholder="ELIMINA"
+                      className="flex-1 border border-red-300 rounded-xl px-3 py-2 text-xs text-[#1C1C1C] focus:outline-none focus:border-red-500 bg-white"
+                    />
+                    <button
+                      onClick={() => {
+                        if (deleteInput === 'ELIMINA') {
+                          for (let i = localStorage.length - 1; i >= 0; i--) {
+                            const k = localStorage.key(i)
+                            if (k?.startsWith('theclass_')) localStorage.removeItem(k)
+                          }
+                          logout()
+                          toast.success('Account eliminato')
+                        } else {
+                          toast.error('Testo non corretto')
+                        }
+                      }}
+                      className="px-3 py-2 bg-red-500 text-white text-xs rounded-xl hover:bg-red-600 transition-colors"
+                    >
+                      Conferma
+                    </button>
+                    <button
+                      onClick={() => { setDeleteOpen(false); setDeleteInput('') }}
+                      className="px-3 py-2 border border-red-300 text-red-600 text-xs rounded-xl"
+                    >
+                      <X size={12} />
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </details>
+        </div>
+
         {/* ── Booking history ── */}
         <div>
           <h2 className="font-[family-name:var(--font-family-display)] text-lg font-medium text-[#1C1C1C] mb-4">
